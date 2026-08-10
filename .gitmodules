@@ -1,0 +1,7 @@
+[submodule "submodules/omp-mypai"]
+	path = submodules/omp-mypai
+	url = https://github.com/wuxxin/omp-mypai.git
+[submodule "submodules/agents-shared"]
+	path = submodules/agents-shared
+	url = https://github.com/wuxxin/agents-shared.git
+

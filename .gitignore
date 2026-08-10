@@ -1,0 +1,9 @@
+.fresh
+scratch/
+__pycache__
+mypai_tools.egg-info
+
+# Ignore private seeds contents except .gitkeep
+submodules/private-seeds/*
+!submodules/private-seeds/.gitkeep
+

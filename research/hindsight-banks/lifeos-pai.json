@@ -1,0 +1,50 @@
+{
+  "version": "1",
+  "bank": {
+    "disposition_skepticism": 4,
+    "disposition_literalism": 4,
+    "disposition_empathy": 5,
+    "retain_mission": "Extract overall LifeOS strategic goals (TELOS framework: IDEAL_STATE, CURRENT_STATE), Digital Assistant peer identity guidelines, explicit user preferences, system architectural invariants, Anti-Criteria forbidden failure modes, and long-term project vision. Ignore intermediate subagent thought chains, raw terminal outputs, line-level code patches, transient debugging output, and boilerplate.",
+    "enable_observations": true,
+    "observations_mission": "Track active TELOS goal progress, ongoing task state, user intent alignment, Anti-Criteria compliance, Ideal State Criteria test outcomes, system architectural boundaries, and Digital Assistant peer interactions over time.",
+    "reflect_mission": "Synthesize a strategic alignment briefing summarizing current TELOS goals, active Ideal State Criteria, Anti-Criteria constraints, user preferences, Digital Assistant persona guidelines, and key architectural invariants."
+  },
+  "mental_models": [
+    {
+      "id": "lifeos-telos-goals",
+      "name": "TELOS Framework & Ideal State Criteria",
+      "source_query": "What are the active TELOS goals, IDEAL_STATE definitions, CURRENT_STATE gap analyses, and testable Ideal State Criteria (ISC) for this project?",
+      "max_tokens": 2048,
+      "trigger": {
+        "refresh_after_consolidation": true
+      }
+    },
+    {
+      "id": "lifeos-anti-criteria",
+      "name": "Anti-Criteria & System Invariants",
+      "source_query": "What are the explicit Anti-Criteria (forbidden outcomes, security hazards, breaking changes) and non-negotiable architectural invariants?",
+      "max_tokens": 1024,
+      "trigger": {
+        "refresh_after_consolidation": true
+      }
+    },
+    {
+      "id": "lifeos-user-identity",
+      "name": "Digital Assistant & User Preference Profile",
+      "source_query": "What are the primary user preferences, coding conventions, persona traits, and intent engineering rules for the PAI Digital Assistant?",
+      "max_tokens": 1024,
+      "trigger": {
+        "refresh_after_consolidation": true
+      }
+    },
+    {
+      "id": "lifeos-intent-engineering",
+      "name": "Intent Engineering & Algorithm Controls",
+      "source_query": "What are the core intent engineering constraints, 7-phase Algorithm execution rules, and subagent routing directives?",
+      "max_tokens": 1024,
+      "trigger": {
+        "refresh_after_consolidation": true
+      }
+    }
+  ]
+}
