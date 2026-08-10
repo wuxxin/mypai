@@ -1,8 +1,10 @@
 # mypai — my Personal-AI
 
-Local, Private, Experimental, and Opinionated Personal Artificial Intelligence (PAI) infrastructure based on **Oh-my-PI** (`omp`) and **Hindsight** long-term vector memory.
+Local, private, experimental and opinionated Personal Artificial Intelligence (PAI) infrastructure based on **Oh-my-PI** (`omp`) and **Hindsight** long-term memory service.
 
-`mypai` provides a complete local multi-agent orchestration harness, integrated local OpenAI-compatible inference routing (`local-router`), containerized sandbox containment (`sandbox-ctl`), and custom ROCm/HIP hardware-accelerated binaries.
+`mypai` provides a complete local multi-agent orchestration harness, integrated local OpenAI-compatible inference and  routing (`local-router`), containerized sandbox containment (`sandbox-ctl`), and custom ROCm/HIP hardware-accelerated binaries.
+
+Based on the ideas and inspiration taken from LifeOS and Openclaw like agent harnesses for implementing a minimal PAI.
 
 ---
 
@@ -70,7 +72,15 @@ Download required LLM, vision, embedding, reranking, STT, and TTS models using t
 
 *Or select specific model suites (e.g., `--llm --embedding --reranker`).*
 
-### 3. Provision Sandbox Environment
+
+### 3. Provision Local Inference
+
+```bash
+./submodules/agents-shared/assistants/local-inference.sh install --new-config
+```
+
+
+### 4. Provision oh-my-pi Environment
 
 Provision the sandbox environment and generate the `omp` binary launcher in `~/.local/bin` using `sandbox-ctl`:
 
@@ -81,9 +91,8 @@ Provision the sandbox environment and generate the `omp` binary launcher in `~/.
 `sandbox-ctl install` performs the following automated steps:
 1. Copies configuration files from `sandbox-templates/omp/omp/*` into `$HOME/.omp/`.
 2. Creates a dedicated Python virtual environment at `$HOME/.omp/venv`.
-3. Installs `mypai_tools` python package into the sandbox environment.
-4. Installs required tools (`arbor-agent[mcp]`, `openadapt[browser,capture]`).
-5. Executes `update-memory-banks.sh` to initialize and auto-seed Hindsight long-term memory banks.
+3. Installs `mypai_tools` python package and other packages into the sandbox environment.
+4. Executes `update-memory-banks.sh` to initialize and auto-seed Hindsight long-term memory banks.
 
 ### 4. Launch Oh-my-PI
 
@@ -95,13 +104,12 @@ omp
 
 ---
 
-## Oh-my-PI Plugin (`submodules/omp-mypai`)
+## Oh-my-PI myPAI Plugin (`submodules/omp-mypai`)
 
 The `omp-mypai` submodule serves as the core extension plugin for Oh-my-PI. It includes:
 
 - **Custom Python Tools (`mypai_tools`)**: Native tools installed directly into the sandbox virtual environment (`$HOME/.omp/venv`).
 - **Model Context Protocol (MCP) Servers**:
-  - `arbor`: File and system management MCP service.
   - `chat-channel`: Channel messaging MCP service (`mypai_tools.chat_mcp`).
   - `cron-scheduler`: Task & reminder background scheduling (`mypai_tools.cron_mcp`).
   - `local-speech`: Local speech synthesis & audio output (`mypai_tools.speech_mcp`).
