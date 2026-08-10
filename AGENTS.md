@@ -26,7 +26,7 @@
 
 
 ### Workspace & Documentation
-- **Workspace Isolation:** Use `scratch/` in repo root for temporary files, research, and git checkouts (`scratch/*-sources`).
+- **Workspace Isolation:** Use `scratch/` for temporary files, research, and git checkouts (`scratch/*-sources`). Always use the top-level repository root `scratch/`: if checked out independently, use its own root `scratch/`; if checked out as a git submodule, use the parent repository's root `scratch/`.
 - create and activate an venv for testing the mypai_tools, dont try to pip install with break system packages.
 
 ### Sandboxing & Bubblewrap (`bwrap`) Discipline
@@ -37,6 +37,7 @@ Check if running inside a bwrap sandbox:
 **If bwrapped (systemd socket unavailable):**
 - **Restriction:** Do **NOT** execute systemd service management commands (`systemctl start/stop/restart/status`).
 - **Introspection:** You **can** however inspect all active processes and logs using `journalctl` (`--user`), `ps`, `/proc`, and `pgrep`.
+- **Dummy Install:** You **can** however use the scripts install function to create the files in the bwrapped environment (they cant become active), to look at the created files, to check functionality of scripts. dont get fooled by files in systemd user dir, they are not active.
 
 ## Agent Delegation Rules
 
