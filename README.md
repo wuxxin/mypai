@@ -7,8 +7,9 @@ Complete configuration for Oh-my-PI (`omp`) with multi-agent orchestration, loca
 ## Setup, Installation, and Teardown
 
 Dependencies:
-- Uses `submodules/agents-shared` for sandboxctl
-- Uses `submodules`omp-mypai` as omp-plugin
+- Uses `submodules/agents-shared` for sandboxctl and local-inference tools
+- Uses `submodules/omp-mypai` as omp-plugin
+- Uses `submodules/aur-packages` for `libggml-git-hip` packages and custom packages not ready in official AUR for `agents-shared` local-inference
 
 ### 1. Create and Provision Sandbox
 
@@ -35,6 +36,7 @@ omp
 - `submodules/`
   - `omp-mypai`
   - `agents-shared`
+  - `aur-packages` - Custom PKGBUILDs for `libggml-git-hip` and local-inference packages not ready in official AUR
   - `private-seeds`
 - `research/` - Research Findings
 - `scratch/` - temporary workdir
