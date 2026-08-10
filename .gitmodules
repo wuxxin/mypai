@@ -5,3 +5,6 @@
 	path = submodules/agents-shared
 	url = https://github.com/wuxxin/agents-shared.git
 
+[submodule "submodules/aur-packages"]
+	path = submodules/aur-packages
+	url = https://github.com/wuxxin/aur-packages
