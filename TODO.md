@@ -1,6 +1,53 @@
 + reconsile roles and commands: eg. debugging, git-master, review-work, ulw-plan
-+ Agent Tools: AUR
-    + `agent-browser camofox-browser-bin python-camoufox`
+
++ research plugins
+```
+/plugin marketplace add anthropics/claude-plugins-official
+
+
+https://github.com/cathrynlavery/diagram-design
+/plugin marketplace add cathrynlavery/diagram-design
+/plugin install diagram-design@diagram-design
+
+https://github.com/obra/superpowers
+/plugin marketplace add obra/superpowers
+/plugin install superpowers@superpowers-marketplace
+
+https://athola.github.io/claude-night-market/plugins/domain-specialists.html
+/plugin marketplace add athola/claude-night-market
+/plugin install archetypes@claude-night-market
+(archetypes parseltongue cartograph scribe tome scry pensive)
+
+https://github.com/garrytan/gbrain
+```
+
+
++ look into
+  + https://github.com/mvanhorn/printing-press-library/tree/main/library/commerce/amazon-orders
+  + https://github.com/mvanhorn/printing-press-library/tree/main/library/media-and-entertainment/archive-is
+  + https://github.com/mvanhorn/printing-press-library/tree/main/library/travel/booking-com
+  + https://github.com/mvanhorn/printing-press-library/tree/main/library/developer-tools/domain-goat
+  + https://github.com/mvanhorn/printing-press-library/tree/main/library/marketing/trendhunter
+  + https://github.com/mvanhorn/printing-press-library/tree/main/library/media-and-entertainment/wikipedia
+  + https://github.com/mvanhorn/last30days-skill
+
+
++ look into
+  https://github.com/RUC-NLPIR/DeepAgent
+  https://github.com/google/mantis/
+  https://github.com/simonucl/PolySkill
+  https://github.com/itigges22/ATLAS
+  https://github.com/router-for-me/CLIProxyAPI
+  https://github.com/Arize-ai/phoenix
+  https://github.com/davidwynter/HiVA
+
++ mcp and other interesting
+  https://github.com/slettmayer/geosphere-mcp-server
+
+  https://github.com/xberg-io/xberg
+  https://github.com/lucasjinreal/Crane
+  https://github.com/memvid/memvid
+
 
 + External Models Speed Observed in OMP
 
@@ -14,35 +61,3 @@ deepseek/deepseek-v4-flash                 913ms  97.6/s   512     5.2s
 deepseek/deepseek-v4-pro                   911ms  45.6/s   512     11.3s
 google-antigravity/claude-opus-4-6         2.4s   37.0/s   2355    1m3s
 ```
-
-+ look into
-  + https://github.com/mvanhorn/printing-press-library/tree/main/library/developer-tools/agent-desktop
-  + https://github.com/mvanhorn/printing-press-library/tree/main/library/commerce/amazon-orders
-  + https://github.com/mvanhorn/printing-press-library/tree/main/library/media-and-entertainment/archive-is
-  + https://github.com/mvanhorn/printing-press-library/tree/main/library/travel/booking-com
-  + https://github.com/mvanhorn/printing-press-library/tree/main/library/developer-tools/domain-goat
-  + https://github.com/mvanhorn/printing-press-library/tree/main/library/payments/kalshi
-  + https://github.com/mvanhorn/printing-press-library/tree/main/library/payments/robinhood
-  + https://github.com/mvanhorn/printing-press-library/tree/main/library/marketing/trendhunter
-  + https://github.com/mvanhorn/printing-press-library/tree/main/library/media-and-entertainment/wikipedia
-  + https://github.com/mvanhorn/printing-press-library/tree/main/library/media-and-entertainment/youtube
-  + https://github.com/mvanhorn/last30days-skill
-
-
-+ look into
-  https://github.com/RUC-NLPIR/DeepAgent
-  https://github.com/google/mantis/
-  https://github.com/simonucl/PolySkill
-  https://github.com/itigges22/ATLAS
-  https://github.com/router-for-me/CLIProxyAPI
-  https://github.com/Arize-ai/phoenix
-
-+ mcp and other interesting
-
-  https://github.com/xberg-io/xberg
-  https://github.com/lucasjinreal/Crane
-  https://github.com/memvid/memvid
-
-
-
-+ and a script or readme example: on how to look readonly at the headless agent (omp share ...)  and (if possible) a read/write attachment to the running session. mvp target is that the mypai profile setup is running including heartbeat, and readonly and readwrite view to the headless agent, and the agent cann access the crontab using the mcp tools.
