@@ -183,6 +183,51 @@ Personal credentials, private memory seeds, and custom prompt overrides can be s
 
 ---
 
+## Headless Agent Execution & Session Observation
+
+`mypai` supports background daemon execution with automated task scheduling via the **Heartbeat daemon** and **`omp_rpc`**.
+
+### 1. Headless Execution & Heartbeat Sidecar
+
+When `omp.env` has `LAUNCHER_SERVICE_ENABLED="true"`, launching the sandbox automatically starts the Heartbeat sidecar daemon:
+
+```bash
+# Run headless daemon mode
+python3 -m mypai_tools.heartbeat daemon --project-dir ~/agent-shared/mypai-workspace
+```
+
+### 2. Read-Only Session Observation (`omp share`)
+
+Observe the active headless agent session, inspect output logs, and monitor turn execution in real time without sending inputs:
+
+```bash
+# Stream active session output in read-only mode
+omp share --readonly
+```
+
+### 3. Read/Write Session Attachment
+
+Attach an interactive TUI or send RPC commands directly to the running session:
+
+```bash
+# Attach interactive terminal session
+omp attach <session_id>
+
+# Or inject steering commands programmatically via omp_rpc:
+python3 -c "from omp_rpc import RpcClient; client = RpcClient(); client.prompt('Check active cron jobs')"
+```
+
+### 4. Cron Task Management via MCP Tools
+
+The agent can query and modify its own cron schedule using MCP tools exposed by `cron-scheduler` (`mypai_tools.cron_mcp`):
+
+- **`cron_add_job(name, cron_expression, prompt, job_type, job_action)`**: Add a new RPC, HTTP, Shell, or Python scheduled task.
+- **`cron_list_jobs()`**: List registered scheduled tasks along with execution telemetry (`last_start`, `last_stop`, `last_runtime`, `last_returncode`, `last_output`, `total_calls`).
+- **`cron_pause_job(job_id)`** / **`cron_resume_job(job_id)`**: Toggle job schedule status.
+- **`cron_export_jobs(file_path)`** / **`cron_import_jobs(file_path)`**: Backup or restore schedule definitions in JSON format.
+
+---
+
 ## Workspace Isolation Guidelines
 
 When working in this repository or any of its submodules:
@@ -191,3 +236,4 @@ When working in this repository or any of its submodules:
 - **Submodule Behavior**:
   - If operating within a **submodule checkout**, agents and tools must defer to the top-level parent repository's root `scratch/` directory (`mypai/scratch/`).
   - If operating within a **standalone checkout** of a submodule, use the local repository's root `./scratch/`.
+
