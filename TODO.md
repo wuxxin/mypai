@@ -45,29 +45,4 @@ google-antigravity/claude-opus-4-6         2.4s   37.0/s   2355    1m3s
 
 
 
-# Make MVP for mypai
-
-+ make a research/mypai-MVP-plan.md
-
-+ interactivly (ask me until im satisified) submodules/omp-mypai/plugin.json with me to make it a full filled plugin config.
-+ explain and interactivly resolve how python packages needed for mypai_tools are default integrated into an venv for an agent-plugin
-+ make all things interactivly with me more agent plugin conform.
-+ make working omp.env setup for venv creation
-+ interactivly with me: a merge of hindsight configs for our new mypai hindsight bank config. also check: can a project override the default omp hindsight config ? . we want a mixture of slim default omp hindsight config extended to 
-+ extend om-mypai:focus on the cron features with the heartbeat daemon interactivly with me:
-  + it needs to be very clean code, if splitting code in shared python files of mypai_tools helps do it.
-  + describe heartbeat.md every function that heartbeat solves, a md that lists all features of hearbeat, as a rerceation requirement
-  + add import export of json jobs to hearbeat.py as cmdline possibility.
-  + change: job_type rpc: make the omp_python sdk rpc available here
-      + action: one of prompt,steer,followup,abort_and_prompt,switch_session,branch
-      + parameter: rpc parameter args
-  + change: job_type http_get, http_post, http_put, ?other?
-      + parameter: url, payload, ?other?
-  + add: job_type shell, to call shell scripts, commands, and for output: either: ignore, or prompt (with additional prompt param), steer,followup,abort_and_prompt, and output_type: stdout (default), stderr, combined
-  + if easy: job_type python, to call inside async hearbeat.py, no priority if complicated to get right.
-  + add (if possible on heartbeat async task execution): last_start, last_stop, last_runtime, last_returncode, last_output, total_calls
-  + check if heartbeat on a project sqlite db is running and a mcp server modifies the sqlite db, is this safe for single user mcp adds and modifies entries, heartbeat executes them, and sets results, make suggestions if that simple usecase is still not working, on alternative routes (postgres)
-+ extend mypai: we want a mypai  to be able to re/install over and over with sandbox-ctl omp install and the envfile whe are bootstraping from.
-+ interactivly search for all that is not agent plugin conform, and suggest moving parts to the plugin and or parts to the mypai base setup.
-+ we want a omp.env that spawns a mypai project dir (maybe ~/agent-shared/mypai-workspace), and have the hearbeat as sidecar
 + and a script or readme example: on how to look readonly at the headless agent (omp share ...)  and (if possible) a read/write attachment to the running session. mvp target is that the mypai profile setup is running including heartbeat, and readonly and readwrite view to the headless agent, and the agent cann access the crontab using the mcp tools.

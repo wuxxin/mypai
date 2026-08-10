@@ -6,7 +6,7 @@
 - `omp/agent/` — Target `~/.omp/agent/` templates (`config.yml`, commands, extensions)
 - `submodules/` — Embedded repos (`agents-shared`, `aur-packages`, `omp-mypai`, `private-seeds`)
 - `research/` — Development research notes and benchmark reports
-- `scratch/` — Agent workspace for temporary files (`scratch/*-sources`)
+- `scratch/` — Agent workspace for temporary files (`scratch/*`)
 
 ## Code Style & Commands
 
