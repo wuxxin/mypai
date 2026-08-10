@@ -1,12 +1,15 @@
 # mypai --- my Personal-AI
 
+Local, Experimental, Opinionated, Personal Artificial Intelligence (PAI) based on **Oh-my-PI** and **Hindsight**
+
 Complete configuration for Oh-my-PI (`omp`) with multi-agent orchestration, local OpenAI-compatible inference routing (`local-router`), native Hindsight long-term memory and additional MCP Services.
 
 ## Setup, Installation, and Teardown
 
 Dependencies:
-- Uses `~/agent-shared/code/agents-shared` for sandboxctl
-- 
+- Uses `submodules/agents-shared` for sandboxctl
+- Uses `submodules`omp-mypai` as omp-plugin
+
 ### 1. Create and Provision Sandbox
 
 Run `sandbox-ctl` from `agents-shared/scripts/` to provision the sandbox environment and create the `omp` binary launcher in `~/.local/bin`:
@@ -25,15 +28,33 @@ omp
 
 ## Repo Directory Structure
 
-- omp.env                   # sandbox-ctl environment config
-- omp/agent/                # resolves to ~/.omp/agent on target
-  - agents/                 # Custom subagents (*.md)
-  - commands/               # Custom slash commands & macros
-  - config.yml              # OMP main engine configuration
-  - extensions/             # OMP plugins & extension modules
-- research                  # Research Findings
-- scratch/                  # temporary workdir
-- submodules/                # Submodules (omp-mypai, agents-shared) & private-seeds
+- `omp.env` - sandbox-ctl environment config
+- `omp/agent/` - resolves to ~/.omp/agent on target
+  - `agents/` - Custom subagents (*.md)
+  - `config.yml` - OMP main engine configuration
+- `submodules/`
+  - `omp-mypai`
+  - `agents-shared`
+  - `private-seeds`
+- `research/` - Research Findings
+- `scratch/` - temporary workdir
+
+### Private Information Management
+
+You can manage personal or private seeds in `submodules/private-seeds/` in three ways:
+
+1. **Local Un-tracked Files**: Copy seed files directly into `submodules/private-seeds/`.
+2. **Local-Only Git Repository**: Initialize an independent local Git repository:
+   ```bash
+   cd submodules/private-seeds && git init -b main
+   git add . && git commit -m "initial local seeds commit"
+   ```
+3. **Private Submodule**: Clone your private remote seeds repository as a Git submodule:
+   ```bash
+   git submodule add git@github.com:yourusername/private-seeds.git submodules/private-seeds
+   ```
+
+*Note: Contents of `submodules/private-seeds/` (including nested local `.git` repos) are git-ignored (except `.gitkeep`) to guarantee your private seeds are never committed.*
 
 ## Configured Local Services & Environment
 
@@ -53,23 +74,5 @@ Hindsight long-term memory is natively integrated into OMP's core engine:
 - **Auto-Seeding**: Enabled via `hindsight.mentalModelAutoSeed: true`. OMP automatically creates built-in seed mental models (`principal-telos`, `user-preferences`, `project-conventions`, `project-decisions`, `active-initiatives-and-commitments`) on the server at session start.
 - **Scoping**: `per-project-tagged` ensures global memories and project-specific memories are seamlessly merged on recall.
 - **Smart Idempotent Updates**: `update-memory-banks.sh` inspects existing bank configs and mental models via `GET /v1/default/banks/<bank_id>/config` and `GET /v1/default/banks/<bank_id>/mental-models`. It issues `PATCH`/`POST`/`DELETE` requests **only when local definitions differ from server state**. Pass `--prune` to remove leftover mental models on the server.
-
-### Private Information Seeding (Optional)
-
-You can manage personal or private seeds in `submodules/private-seeds/` in three ways:
-
-1. **Local Un-tracked Files**: Copy seed files directly into `submodules/private-seeds/`.
-2. **Local-Only Git Repository**: Initialize an independent local Git repository:
-   ```bash
-   cd submodules/private-seeds && git init -b main
-   git add . && git commit -m "initial local seeds commit"
-   ```
-3. **Private Submodule**: Clone your private remote seeds repository as a Git submodule:
-   ```bash
-   git submodule add git@github.com:yourusername/private-seeds.git submodules/private-seeds
-   ```
-
-*Note: Contents of `submodules/private-seeds/` (including nested local `.git` repos) are git-ignored (except `.gitkeep`) to guarantee your private seeds are never committed.*
-
 
 
