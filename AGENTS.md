@@ -1,5 +1,13 @@
 # AGENTS.md
 
+## Repository Structure
+
+- `omp.env` — Sandbox launcher config
+- `omp/agent/` — Target `~/.omp/agent/` templates (`config.yml`, commands, extensions)
+- `submodules/` — Embedded repos (`agents-shared`, `aur-packages`, `omp-mypai`, `private-seeds`)
+- `research/` — Development research notes and benchmark reports
+- `scratch/` — Agent workspace for temporary files (`scratch/*-sources`)
+
 ## Code Style & Commands
 
 - **Style:** dont use long visual lines for comment sections, eg. "# -----------"

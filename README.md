@@ -171,24 +171,15 @@ Personal credentials, private memory seeds, and custom prompt overrides can be s
 
 ## Repository Structure
 
-```
-mypai/
-├── README.md               # Main documentation
-├── AGENTS.md               # Agent guidelines and system rules
-├── omp.env                 # Sandbox launcher environment configuration
-├── omp/                    # Target configuration templates (~/.omp/)
-│   └── agent/
-│       ├── config.yml      # OMP main engine configuration
-│       ├── commands/       # Custom commands
-│       └── extensions/     # Custom extensions
-├── submodules/             # Git Submodules
-│   ├── agents-shared/      # Infrastructure, sandbox-ctl, and model downloaders
-│   ├── aur-packages/       # Custom ROCm/HIP Arch Linux PKGBUILDs
-│   ├── omp-mypai/          # Core Oh-my-PI plugin (tools, MCP, rules)
-│   └── private-seeds/      # Git-ignored directory for private seeds
-├── research/               # Architecture research, benchmarks, and notes
-└── scratch/                # Temporary workspace directory (git-ignored)
-```
+- `omp.env` — Sandbox launcher environment config
+- `omp/agent/` — Target `~/.omp/agent/` templates (`config.yml`, commands, extensions)
+- `submodules/`
+  - `agents-shared` — Infrastructure, `sandbox-ctl`, and model downloaders
+  - `aur-packages` — Custom ROCm/HIP Arch Linux PKGBUILDs
+  - `omp-mypai` — Core Oh-my-PI plugin (tools, MCP, rules)
+  - `private-seeds` — Git-ignored directory for private credentials and seeds
+- `research/` — Architecture reports, benchmarks, and research notes
+- `scratch/` — Workspace for temporary files and checkout sources (`scratch/*-sources`)
 
 ---
 
