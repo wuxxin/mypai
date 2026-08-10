@@ -2,7 +2,7 @@
 
 Local, private, experimental and opinionated Personal Artificial Intelligence (PAI) infrastructure based on **Oh-my-PI** (`omp`) and **Hindsight** long-term memory service.
 
-`mypai` provides a complete local multi-agent orchestration harness, integrated local OpenAI-compatible inference and  routing (`local-router`), containerized sandbox containment (`sandbox-ctl`), and custom ROCm/HIP hardware-accelerated binaries.
+`mypai` provides a complete local multi-agent orchestration harness, integrated local OpenAI-compatible inference and routing (`local-router`), containerized sandbox containment (`sandbox-ctl`), and custom ROCm/HIP hardware-accelerated binaries.
 
 Based on the ideas and inspiration taken from LifeOS and Openclaw like agent harnesses for implementing a minimal PAI.
 
@@ -22,6 +22,7 @@ Based on the ideas and inspiration taken from LifeOS and Openclaw like agent har
 - [Hindsight Long-Term Memory Configuration](#hindsight-long-term-memory-configuration)
 - [Private Information Management (`submodules/private-seeds`)](#private-information-management-submodulesprivate-seeds)
 - [Repository Structure](#repository-structure)
+- [Headless Agent Execution & Session Observation](#headless-agent-execution--session-observation)
 - [Workspace Isolation Guidelines](#workspace-isolation-guidelines)
 
 ---
@@ -197,11 +198,14 @@ Personal credentials, private memory seeds, and custom prompt overrides can be s
 
 ### 1. Headless Execution & Heartbeat Sidecar
 
-When `omp.env` has `LAUNCHER_SERVICE_ENABLED="true"`, launching the sandbox automatically starts the Heartbeat sidecar daemon:
+When `omp.env` has `LAUNCHER_SERVICE_ENABLED="true"`, launching the sandbox automatically starts the headless `omp` service and Heartbeat sidecar daemon:
 
 ```bash
 # Run headless daemon mode
 python3 -m mypai_tools.heartbeat daemon --project-dir ~/agent-shared/mypai-workspace
+
+# Import default scheduled tasks into project SQLite DB
+python3 -m mypai_tools.heartbeat --import default --project-dir ~/agent-shared/mypai-workspace
 ```
 
 ### 2. Read-Only Session Observation (`omp share`)
@@ -229,10 +233,10 @@ python3 -c "from omp_rpc import RpcClient; client = RpcClient(); client.prompt('
 
 The agent can query and modify its own cron schedule using MCP tools exposed by `cron-scheduler` (`mypai_tools.cron_mcp`):
 
-- **`cron_add_job(name, cron_expression, prompt, job_type, job_action)`**: Add a new RPC, HTTP, Shell, or Python scheduled task.
+- **`cron_add_job(name, cron, type, action, output_prompt, output_action, output_channel)`**: Add a new RPC, HTTP, Shell, or Python scheduled task.
 - **`cron_list_jobs()`**: List registered scheduled tasks along with execution telemetry (`last_start`, `last_stop`, `last_runtime`, `last_returncode`, `last_output`, `total_calls`).
 - **`cron_pause_job(job_id)`** / **`cron_resume_job(job_id)`**: Toggle job schedule status.
-- **`cron_export_jobs(file_path)`** / **`cron_import_jobs(file_path)`**: Backup or restore schedule definitions in JSON format.
+- **`cron_export_jobs(file_path)`** / **`cron_import_jobs(file_path)`**: Backup or restore schedule definitions in JSON format (or `file_path="default"`).
 
 ---
 
@@ -244,4 +248,3 @@ When working in this repository or any of its submodules:
 - **Submodule Behavior**:
   - If operating within a **submodule checkout**, agents and tools must defer to the top-level parent repository's root `scratch/` directory (`mypai/scratch/`).
   - If operating within a **standalone checkout** of a submodule, use the local repository's root `./scratch/`.
-
