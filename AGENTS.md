@@ -71,4 +71,3 @@ As a user facing agent assume the `@orchestrator` role.
 - Delegate Execution: Multi-file edits or complex tasks go to `@fixer`, except if running on antigravity or agy harness.
 - Research: Use `@explorer` for codebase searches (no manual grep/glob) and `@librarian` for web/docs.
 - Escalations: Route to `@oracle` for complex bugs or after 2 failed fix attempts. Route to `@council` before risky breaking changes.
-

@@ -16,6 +16,7 @@ Based on the ideas and inspiration taken from LifeOS and Openclaw like agent har
   - [2. Download Local AI Models](#2-download-local-ai-models)
   - [3. Provision Sandbox Environment](#3-provision-sandbox-environment)
   - [4. Launch Oh-my-PI](#4-launch-oh-my-pi)
+- [Development & Testing (`Makefile`)](#development--testing-makefile)
 - [Oh-my-PI Plugin (`submodules/omp-mypai`)](#oh-my-pi-plugin-submodulesomp-mypai)
 - [Local Inference Services (`submodules/agents-shared`)](#local-inference-services-submodulesagents-shared)
 - [Custom AUR Packages (`submodules/aur-packages`)](#custom-aur-packages-submodulesaur-packages)
@@ -101,6 +102,21 @@ Launch the interactive PAI session:
 
 ```bash
 omp
+```
+
+---
+
+## Development & Testing (`Makefile`)
+
+To build local testing virtual environments, execute unit test suites, or run code linters, use the `omp-mypai` Makefile:
+
+```bash
+# Run tests & linting via Makefile (manages .venv automatically)
+make -C submodules/omp-mypai buildenv  # Builds .venv & installs editable dependencies
+make -C submodules/omp-mypai test      # Runs unit tests inside .venv
+make -C submodules/omp-mypai lint      # Runs ruff check inside .venv
+make -C submodules/omp-mypai check     # Runs linter and unit tests
+make -C submodules/omp-mypai cleanenv  # Removes .venv
 ```
 
 ---
@@ -204,8 +220,8 @@ When `omp.env` has `LAUNCHER_SERVICE_ENABLED="true"`, launching the sandbox auto
 # Run headless daemon mode
 python3 -m mypai_tools.heartbeat daemon --project-dir ~/agent-shared/mypai-workspace
 
-# Import default scheduled tasks into project SQLite DB
-python3 -m mypai_tools.heartbeat --import default --project-dir ~/agent-shared/mypai-workspace
+# Import scheduled tasks from JSON file into project SQLite DB
+python3 -m mypai_tools.heartbeat import ~/agent-shared/code/mypai/submodules/omp-mypai/config/default_jobs.json --project-dir ~/agent-shared/mypai-workspace
 ```
 
 ### 2. Read-Only Session Observation (`omp share`)
@@ -234,9 +250,10 @@ python3 -c "from omp_rpc import RpcClient; client = RpcClient(); client.prompt('
 The agent can query and modify its own cron schedule using MCP tools exposed by `cron-scheduler` (`mypai_tools.cron_mcp`):
 
 - **`cron_add_job(name, cron, type, action, output_prompt, output_action, output_channel)`**: Add a new RPC, HTTP, Shell, or Python scheduled task.
+- **`cron_run_once(name, type, action, args, kwargs, output_prompt, output_action, output_channel)`**: Queue or reschedule an immediate one-shot task (`cron="now"`).
 - **`cron_list_jobs()`**: List registered scheduled tasks along with execution telemetry (`last_start`, `last_stop`, `last_runtime`, `last_returncode`, `last_output`, `total_calls`).
 - **`cron_pause_job(job_id)`** / **`cron_resume_job(job_id)`**: Toggle job schedule status.
-- **`cron_export_jobs(file_path)`** / **`cron_import_jobs(file_path)`**: Backup or restore schedule definitions in JSON format (or `file_path="default"`).
+- **`cron_export_jobs(file_path)`** / **`cron_import_jobs(file_path)`**: Backup or restore schedule definitions in JSON format.
 
 ---
 
