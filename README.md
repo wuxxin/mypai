@@ -87,7 +87,7 @@ Download required LLM, vision, embedding, reranking, STT, and TTS models using t
 Provision the sandbox environment and generate the `omp` binary launcher in `~/.local/bin` using `sandbox-ctl`:
 
 ```bash
-./submodules/agents-shared/scripts/sandbox-ctl install omp --no-start --new-config-from ./omp.env
+./submodules/agents-shared/scripts/sandbox-ctl install omp --no-start --new-config-from ./
 ```
 
 `sandbox-ctl install` performs the following automated steps:
