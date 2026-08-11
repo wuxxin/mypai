@@ -249,10 +249,10 @@ python3 -c "from omp_rpc import RpcClient; client = RpcClient(); client.prompt('
 
 The agent can query and modify its own cron schedule using MCP tools exposed by `cron-scheduler` (`mypai_tools.cron_mcp`):
 
-- **`cron_add_job(name, cron, type, action, result_prompt, result_error_prompt, result_action, result_channel)`**: Add a new RPC, HTTP, Shell, or Python scheduled task.
-- **`cron_run_once(name, type, action, args, kwargs, result_prompt, result_error_prompt, result_action, result_channel)`**: Queue or reschedule an immediate one-shot task (`cron="now"`).
+- **`cron_add_job(name, cron, kind, action, result_prompt, result_error_prompt, result_action, result_channel)`**: Add a new RPC, HTTP, Shell, or Python scheduled task.
+- **`cron_run_once(name, kind, action, args, kwargs, result_prompt, result_error_prompt, result_action, result_channel)`**: Queue or reschedule an immediate one-shot task (`cron="now"`).
 - **`cron_list_jobs()`**: List registered scheduled tasks along with execution telemetry (`last_start`, `last_stop`, `last_runtime`, `last_returncode`, `last_output`, `total_calls`).
-- **`cron_pause_job(job_id)`** / **`cron_resume_job(job_id)`**: Toggle job schedule status.
+- **`cron_disable_job(job_id)`** / **`cron_enable_job(job_id)`**: Toggle job schedule status.
 - **`cron_export_jobs(file_path)`** / **`cron_import_jobs(file_path)`**: Backup or restore schedule definitions in JSON format.
 
 ---
