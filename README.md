@@ -92,8 +92,8 @@ Provision the sandbox environment and generate the `omp` binary launcher in `~/.
 
 `sandbox-ctl install` performs the following automated steps:
 1. Copies configuration files from `sandbox-templates/omp/omp/*` into `$HOME/.omp/`.
-2. Creates a dedicated Python virtual environment at `$HOME/.omp/venv`.
-3. Installs `mypai_tools` python package and other packages into the sandbox environment.
+2. Creates a managed Python virtual environment at `$HOME/.omp/python-env` (containing `openadapt` and `arbor`).
+3. Provisions the plugin virtual environment at `$HOME/.omp/data/omp-mypai/venv` (containing `mypai_tools` and `omp-rpc`).
 4. Executes `update-memory-banks.sh` to initialize and auto-seed Hindsight long-term memory banks.
 
 ### 4. Launch Oh-my-PI
@@ -125,7 +125,7 @@ make -C submodules/omp-mypai cleanenv  # Removes .venv
 
 The `omp-mypai` submodule serves as the core extension plugin for Oh-my-PI. It includes:
 
-- **Custom Python Tools (`mypai_tools`)**: Native tools installed directly into the sandbox virtual environment (`$HOME/.omp/venv`).
+- **Custom Python Tools (`mypai_tools`)**: Native tools installed directly into the plugin virtual environment (`$HOME/.omp/data/omp-mypai/venv`).
 - **Model Context Protocol (MCP) Servers**:
   - `chat-channel`: Channel messaging MCP service (`mypai_tools.chat_mcp`).
   - `cron-scheduler`: Task & reminder background scheduling (`mypai_tools.cron_mcp`).
