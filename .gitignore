@@ -1,7 +1,11 @@
 .fresh
-scratch/
+.pytest_cache
+.ruff_cache
+.venv
 __pycache__
+
 mypai_tools.egg-info
+scratch/
 
 # Ignore private seeds contents except .gitkeep
 submodules/private-seeds/*
