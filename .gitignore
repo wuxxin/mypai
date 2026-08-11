@@ -2,6 +2,7 @@
 .pytest_cache
 .ruff_cache
 .venv
+.coverage
 __pycache__
 
 mypai_tools.egg-info
