@@ -4,7 +4,7 @@
 
 This document provides a comprehensive research summary and a grand multi-step implementation plan for transposing the core featureset of **LifeOS** ([scratch/LifeOS](file:///home/wuxxin/agent-shared/code/agents-shared/scratch/LifeOS)) into a dedicated **Oh-My-PI (OMP)** profile ([sandbox-templates/omp](file:///home/wuxxin/agent-shared/code/agents-shared/sandbox-templates/omp)).
 
-By leveraging **Hindsight** for long-term memory (vector recall, turn retention, mental model reflection), Python background daemons for heartbeat/cron tasks, Python-native **Conveyor** (file inbox ingestion) and **Bunker Monitor** (infrastructure health), and an RPC-poke **Nanobot Signal Gateway**, we eliminate LifeOS's complex 53+ lifecycle hooks and file-based markdown reconcilers in favor of a clean, performant, background-service architecture.
+By leveraging **Hindsight** for long-term memory (vector recall, turn retention, mental model reflection), Python background daemons for heartbeat/cron tasks, Python-native **Conveyor** (file inbox ingestion) and **Bunker Monitor** (infrastructure health), and an **Nanobot Signal Gateway**, we eliminate LifeOS's complex 53+ lifecycle hooks and file-based markdown reconcilers in favor of a clean, performant, background-service architecture.
 
 ---
 
@@ -14,9 +14,9 @@ By leveraging **Hindsight** for long-term memory (vector recall, turn retention,
 |---|---|---|
 | **TELOS & Ideal State** | Markdown files in `TELOS/`, `ISAGate.hook.ts`, `ISA.md` per task | Native **Hindsight Mental Model** (`principal-telos`) automatically recalled on turns. |
 | **Memory & Reconcile Loop** | `Cortex`, `MemoryWriter.ts`, `MemoryReviewer.ts`, `ISAReconcile.ts` | **Hindsight REST API** (`http://localhost:8888`) with `autoRecall`, `autoRetain`, and background `reflect` calls. |
-| **Heartbeat / Cron System** | macOS `launchd` `.plist` & Linux `systemd --user` running Bun scripts | **Python `apscheduler` Service Daemon** (`omp_service_heartbeat.py`) issuing RPC pokes to OMP. |
+| **Heartbeat / Cron System** | macOS `launchd` `.plist` & Linux `systemd --user` running Bun scripts | **Python `apscheduler` Service Daemon** (`omp_service_heartbeat.py`) issuing RPC calls to OMP. |
 | **Conveyor Ingestion** | TypeScript `Watcher.ts` / `Runner.ts` monitoring inbox drop folders | **Python `watchdog` + `asyncio` Ingestion Daemon** (`omp_conveyor.py`) with quiescence gating, SHA256 hashing, sidecar parsing, and automated Hindsight insertion. |
-| **Signal Messaging Gateway** | Custom node/bun wrappers | **Nanobot Signal Sidecar** (`python3 -m omp_tools.nanobot_mcp` + `signal-cli` port 50889) receiving RPC pokes. |
+| **Signal Messaging Gateway** | Custom node/bun wrappers | **Nanobot Signal Sidecar** (`python3 -m omp_tools.nanobot_mcp` + `signal-cli` port 50889) |
 | **Lifecycle Hooks (53+)** | TS/Bun hooks intercepting 6 Claude Code events | **Native OMP Extensions & Rules** (`~/.omp/agent/rules/`) with zero hook performance overhead. |
 
 ---
@@ -174,7 +174,7 @@ graph TD
 - **Tasks**:
   1. Implement `omp_service_heartbeat.py` using `apscheduler`, `httpx`, and `asyncio`.
   2. Configure periodic jobs for **Work Sweep** (every 30 mins) and **Hindsight Reflection** (every 2 hours).
-  3. Test RPC poke communication with the OMP background daemon.
+  3. Test RPC communication with the OMP background daemon.
 
 ### Phase 3: Python Conveyor Ingestion Pipeline
 - **Goal**: Ingest external drop-folder content automatically into long-term memory.
@@ -193,7 +193,7 @@ graph TD
 - **Goal**: Connect Signal messaging channel to OMP background daemon without per-message process overhead.
 - **Tasks**:
   1. Verify `nanobot-signal` MCP (`python3 -m omp_tools.nanobot_mcp`) and `signal-cli` daemon (port 50889).
-  2. Route incoming Signal messages to OMP service via `agent_poke(message, sender_id)` RPC calls.
+  2. Route incoming Signal messages to OMP service via RPC calls.
   3. Formulate responses using Hindsight memory context and dispatch replies via `nanobot-signal`.
 
 ### Phase 6: Diagnostics & End-to-End Verification
@@ -201,7 +201,7 @@ graph TD
 - **Tasks**:
   1. Run `omp doctor` to verify service readiness.
   2. Drop test audio/text files into `~/Recordings/Inbox` to verify Conveyor ingestion and Hindsight memory retention.
-  3. Trigger background RPC pokes and verify Hindsight reflection log output.
+  3. Trigger background RPC and verify Hindsight reflection log output.
 
 ---
 
