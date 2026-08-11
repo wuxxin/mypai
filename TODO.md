@@ -1,4 +1,19 @@
+reconsile skills,roles,and commands:
+
++ get all buildin omp skills, roles and commands
++ reconsile with the oh-myopencode-slim-agents profiles
 + reconsile roles and commands: eg. debugging, git-master, review-work, ulw-plan
++ reconsile with: https://github.com/obra/superpowers
+/plugin marketplace add obra/superpowers
+/plugin install superpowers@superpowers-marketplace
++ reconsile with:
+https://athola.github.io/claude-night-market/plugins/domain-specialists.html
+/plugin marketplace add athola/claude-night-market
+/plugin install archetypes@claude-night-market
+(archetypes parseltongue cartograph scribe tome scry pensive)
+
+we want debugging, git control, review, really good plan, and beside the orchestrator agent, which is our main agent, other good definition. and all work with our hingsight plugin.
+
 
 + research plugins
 ```
