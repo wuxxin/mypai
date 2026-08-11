@@ -2,7 +2,7 @@
 
 ## Executive Summary
 
-This document provides a comprehensive research summary and a grand multi-step implementation plan for transposing the core featureset of **LifeOS** ([scratch/LifeOS](file:///home/wuxxin/agent-shared/code/agents-shared/scratch/LifeOS)) into a dedicated **Oh-My-PI (OMP)** profile ([sandbox-templates/omp](file:///home/wuxxin/agent-shared/code/agents-shared/sandbox-templates/omp)).
+This document provides a comprehensive research summary and a grand multi-step implementation plan for transposing the core featureset of **LifeOS** ([scratch/LifeOS](file:///home/wuxxin/agent-shared/code/mypai/scratch/LifeOS)) into a dedicated **omp-mypai plugin profile** ([submodules/omp-mypai](file:///home/wuxxin/agent-shared/code/mypai/submodules/omp-mypai)).
 
 By leveraging **Hindsight** for long-term memory (vector recall, turn retention, mental model reflection), Python background daemons for heartbeat/cron tasks, Python-native **Conveyor** (file inbox ingestion) and **Bunker Monitor** (infrastructure health), and an **Nanobot Signal Gateway**, we eliminate LifeOS's complex 53+ lifecycle hooks and file-based markdown reconcilers in favor of a clean, performant, background-service architecture.
 

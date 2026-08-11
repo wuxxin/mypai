@@ -63,7 +63,7 @@ with RpcClient() as client:
 
 ## 2. Analysis of `mypai_tools` Daemon Injection Pipeline
 
-The `mypai_tools` suite (`omp/agent/tools/mypai_tools/`) contains background daemons and MCP tool servers designed to operate headlessly and communicate with `omp` using `omp_rpc.RpcClient`.
+The `mypai_tools` suite (`submodules/omp-mypai/tools/mypai_tools/`) contains background daemons and MCP tool servers designed to operate headlessly and communicate with `omp` using `omp_rpc.RpcClient`.
 
 ```mermaid
 graph TD
