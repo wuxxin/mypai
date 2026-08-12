@@ -212,18 +212,18 @@ Personal credentials, private memory seeds, and custom prompt overrides can be s
 
 ## Headless Agent Execution & Session Observation
 
-`mypai` supports background daemon execution with automated task scheduling via the **Heartbeat daemon** and **`omp_rpc`**.
+`mypai` supports background daemon execution with automated task scheduling via **`mypai_daemon`** and **`omp_rpc`**.
 
-### 1. Headless Execution & Heartbeat Sidecar
+### 1. Headless Execution & MyPAI Daemon Sidecar
 
-When `omp.env` has `LAUNCHER_SERVICE_ENABLED="true"`, launching the sandbox automatically starts the headless `omp` service and Heartbeat sidecar daemon:
+When `omp.env` has `LAUNCHER_SERVICE_ENABLED="true"`, launching the sandbox automatically starts the headless `omp` service and `mypai_daemon` sidecar:
 
 ```bash
 # Run headless daemon mode
-python3 -m mypai_tools.heartbeat daemon --project-dir ~/agent-shared/mypai-workspace
+python3 -m mypai_tools.daemon --project-dir ~/agent-shared/mypai-workspace
 
 # Import scheduled tasks from JSON file into project SQLite DB
-python3 -m mypai_tools.heartbeat import ~/agent-shared/code/mypai/submodules/omp-mypai/config/default_jobs.json --project-dir ~/agent-shared/mypai-workspace
+python3 -m mypai_tools.daemon import ~/agent-shared/code/mypai/submodules/omp-mypai/config/default_jobs.json --project-dir ~/agent-shared/mypai-workspace
 ```
 
 ### 2. Read-Only Session Observation (`omp share`)

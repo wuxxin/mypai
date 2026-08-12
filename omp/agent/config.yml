@@ -1,7 +1,8 @@
 providers:
-  webSearchOrder: []
+  webSearchOrder:
+    []
 modelRoles:
-  default: google-antigravity/gemini-3.6-flash
+  default: llama.cpp/qwen3
 symbolPreset: unicode
 theme:
   dark: titanium
@@ -10,7 +11,7 @@ statusLine:
   preset: default
   separator: powerline-thin
 stt:
-  enabled: true
+  enabled: false
   provider: local
   baseUrl: "http://localhost:50090/v1"
 compaction:
@@ -23,7 +24,7 @@ autolearn:
   enabled: true
 hindsight:
   apiUrl: http://localhost:8888
-  bankId: omp-orchestrator
+  bankId: omp
   scoping: per-project-tagged
   retainMode: full-session
   autoRecall: true
