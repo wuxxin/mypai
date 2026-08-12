@@ -220,7 +220,7 @@ When `omp.env` has `LAUNCHER_SERVICE_ENABLED="true"`, launching the sandbox auto
 
 ```bash
 # Run headless daemon mode
-python3 -m mypai_tools.daemon --project-dir ~/agent-shared/mypai-workspace
+python3 -m mypai_tools.daemon serve --project-dir ~/agent-shared/mypai-workspace
 
 # Import scheduled tasks from JSON file into project SQLite DB
 python3 -m mypai_tools.daemon import ~/agent-shared/code/mypai/submodules/omp-mypai/config/default_jobs.json --project-dir ~/agent-shared/mypai-workspace
