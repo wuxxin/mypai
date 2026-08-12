@@ -35,21 +35,6 @@ mcpServers:
     command:
       - arbor
       - mcp
-  chat-channel:
-    command:
-      - python3
-      - -m
-      - mypai_tools.chat_mcp
-  cron-scheduler:
-    command:
-      - python3
-      - -m
-      - mypai_tools.cron_mcp
-  local-speech:
-    command:
-      - python3
-      - -m
-      - mypai_tools.speech_mcp
 bash:
   autoBackground:
     enabled: true
