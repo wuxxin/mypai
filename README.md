@@ -114,8 +114,8 @@ The `omp-mypai` submodule serves as the core extension plugin for Oh-my-PI. It i
 - **CLI Control Utilities (`bin/membank-ctl`)**: Management CLI tool for Hindsight memory bank updates, JSON/YAML parsing, and exports.
 - **Custom Python Tools (`mypai_tools`)**: Native tools installed directly into the plugin virtual environment (`$HOME/.omp/data/omp-mypai/venv`).
 - **Model Context Protocol (MCP) Servers**:
-  - `chat-channel`: Channel messaging MCP service (`mypai_tools.chat_mcp`).
-  - `cron-scheduler`: Task & reminder background scheduling (`mypai_tools.cron_mcp`).
+  - `signal_chat`: Channel messaging MCP service (`mypai_tools.chat_mcp`).
+  - `cron`: Task & reminder background scheduling (`mypai_tools.cron_mcp`).
   - `local-speech`: Local speech synthesis & audio output (`mypai_tools.speech_mcp`).
 - **Agent Definitions & System Prompts**: Specialized subagent profiles and operating procedures.
 
