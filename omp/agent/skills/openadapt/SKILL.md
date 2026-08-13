@@ -5,7 +5,7 @@ description: Headless browser rendering, DOM state inspection, visual web elemen
 
 # OpenAdapt Browser Skill
 
-Provides headless browser inspection and web automation paired with `openadapt[browser]` MCP tools (`mcp__openadapt__*`).
+Provides headless browser inspection and web automation.
 
 ## Overview & Scope
 
