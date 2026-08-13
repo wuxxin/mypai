@@ -69,7 +69,8 @@ Provision the sandbox environment and generate the `omp` binary launcher in `~/.
 1. Copies configuration files from `./omp/agent/*` into `$HOME/.omp/agent/`.
 2. Creates a managed Python virtual environment at `$HOME/.omp/python-env` (containing `openadapt` and `arbor`).
 3. Provisions the plugin virtual environment at `$HOME/.omp/data/omp-mypai/venv` (containing `mypai_tools` and `omp-rpc`).
-4. Executes `membank-ctl update` to initialize and auto-seed Hindsight long-term memory banks.
+4. Imports default scheduled cron jobs from `submodules/omp-mypai/config/default_jobs.yaml` into the project SQLite database.
+5. Executes `membank-ctl update` to initialize and auto-seed Hindsight long-term memory banks.
 
 ### 5. Launch Oh-my-PI
 
