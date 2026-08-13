@@ -25,6 +25,17 @@ When running inside `mypai_daemon` (e.g. as the main daemon session, or when hos
 
 ---
 
+## Daemon Startup & Signal Channel Ingest Protocol
+
+Upon session startup when running under `mypai_daemon`:
+1. **Check Pending Signal Messages**: Check if unread Signal channel messages exist using `chat_mcp.get_next_unread_message`.
+2. **Evaluate Message Age (1-Hour Freshness Threshold)**:
+   - Calculate the age of each unread message relative to the current system time.
+   - **Fresh Messages ($\le$ 1 Hour Old / $\le$ 3600s)**: Process and execute the request turn automatically.
+   - **Stale Messages ($>$ 1 Hour Old / $>$ 3600s)**: Display and summarize the message text, sender, and timestamp to the user for visibility, but **do NOT execute or process the request** to prevent stale command side-effects.
+
+---
+
 ## ACP Intra-Agent Delegation Tools (`acp_task` Suite)
 
 When host tools starting with `acp_*` are present in your available toolset, ACP (Agent Control Protocol) intra-agent delegation is active under `mypai_daemon`.
