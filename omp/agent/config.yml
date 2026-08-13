@@ -24,7 +24,7 @@ autolearn:
   enabled: true
 hindsight:
   apiUrl: http://localhost:8888
-  bankId: omp
+  bankId: oh-my-pi
   scoping: per-project-tagged
   retainMode: full-session
   autoRecall: true
