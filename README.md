@@ -1,19 +1,19 @@
 # mypai — my Personal-AI
 
-Local, private, experimental and opinionated Personal Artificial Intelligence (PAI) infrastructure based on **Oh-my-PI** (`omp`) and **Hindsight** long-term memory service.
+**mypai** is a local, private, and experimental **Personal Artificial Intelligence (PAI)** infrastructure powered by:
+
+- **Oh-my-PI** (`omp`) — High-performance agent execution harness
+- **Hindsight** — Persistent vector memory and mental model reflection service
 
 
----
+Core Architecture & Components:
 
-`mypai` provides a complete local multi-agent orchestration harness, with
-  - integrated local OpenAI-compatible inference and routing (`local-router`)
-  - containerized sandbox containment (`sandbox-ctl`)
-  - custom ROCm/HIP hardware-accelerated binaries
+- **`mypai_daemon`**: Central background coordinator, APScheduler engine, OMP RPC session host, turn-serializing event queue, and ACP intra-agent delegation manager.
+- **Local Inference (`local-router`)**: Unified OpenAI-compatible API routing for chat, vision, embeddings, reranking, STT, TTS, and image generation.
+- **Sandbox Containment (`sandbox-ctl`)**: Containerized sandbox isolation and automated sidecar process management.
+- **ROCm/HIP Hardware Acceleration**: Custom Arch Linux PKGBUILD stack optimized for low-latency AMD GPU local inference.
 
-
-It is based on ideas from LifeOS, and Openclaw like agent harnesses for implementing a **minimal version of a PAI**.
-
-
+Inspired by concepts from **LifeOS** and **OpenClaw** agent loops, `mypai` delivers a robust, autonomous, 24/7-capable background AI system.
 
 ## Setup & Installation
 
