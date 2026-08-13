@@ -1,0 +1,44 @@
+{
+  "version": "1",
+  "bank": {
+    "disposition_skepticism": 3,
+    "disposition_literalism": 3,
+    "disposition_empathy": 4,
+    "retain_extraction_mode": "concise",
+    "enable_observations": true,
+    "enable_auto_consolidation": true,
+    "recall_max_tokens": 1536
+  },
+  "mental_models": [
+    {
+      "id": "user-preferences",
+      "name": "User Preferences",
+      "source_query": "What does the user prefer in coding style, tooling, communication, and review? Capture only durable preferences expressed across sessions, not one-off requests.",
+      "max_tokens": 600,
+      "trigger": {
+        "mode": "delta",
+        "refresh_after_consolidation": true
+      }
+    },
+    {
+      "id": "project-conventions",
+      "name": "Project Conventions",
+      "source_query": "What are this project's conventions for code style, build, testing, release, and pull-request review? Only include conventions that are explicit in the project (settings, scripts, contributor docs, repeatedly enforced in review).",
+      "max_tokens": 800,
+      "trigger": {
+        "mode": "delta",
+        "refresh_after_consolidation": true
+      }
+    },
+    {
+      "id": "project-decisions",
+      "name": "Project Decisions",
+      "source_query": "What durable architectural or product decisions have been made for this project, and what rationale or trade-offs were recorded? Include only decisions that are stable across sessions; exclude transient plans, unresolved ideas, and active task state.",
+      "max_tokens": 800,
+      "trigger": {
+        "mode": "delta",
+        "refresh_after_consolidation": true
+      }
+    }
+  ]
+}

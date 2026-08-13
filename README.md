@@ -169,7 +169,7 @@ Hindsight vector memory is natively integrated into OMP's orchestration engine:
 - **Idempotent Updates**: `update-memory-banks.sh` inspects existing bank configurations via `GET /v1/default/banks/<bank_id>/config` and issues `PATCH`/`POST`/`DELETE` requests only when local definitions differ from server state.
   ```bash
   # Prune obsolete mental models on the server
-  ./submodules/omp-mypai/agent/update-memory-banks.sh ./omp/agent/hindsight-bankconfig "http://localhost:8888" --prune
+  ./submodules/omp-mypai/agent/update-memory-banks.sh ./omp/agent/memorybanks "http://localhost:8888" --prune
   ```
 
 ---
