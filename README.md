@@ -199,7 +199,10 @@ Personal credentials, private memory seeds, and custom prompt overrides can be s
 - `omp.env` — Sandbox launcher environment config
 - `omp/agent/` — Target `~/.omp/agent/` templates
   - `config.yml`
-  - `agents' , extensions)
+  - `agents'
+  - `skills`
+    - **`arbor`**: [SKILL.md](skills/arbor/SKILL.md) — Graph-native AST code intelligence and workspace navigation.
+    - **`openadapt`**: [SKILL.md](skills/openadapt/SKILL.md) — Browser capture and UI automation.
 - `submodules/`
   - `agents-shared` — Infrastructure, `sandbox-ctl`, and model downloaders
   - `aur-packages` — Custom ROCm/HIP Arch Linux PKGBUILDs

@@ -13,7 +13,7 @@ statusLine:
 stt:
   enabled: false
   provider: local
-  baseUrl: "http://localhost:50090/v1"
+  baseUrl: http://localhost:51080/v1
 compaction:
   strategy: snapcompact
   thresholdPercent: 85
@@ -33,8 +33,8 @@ hindsight:
   mentalModelAutoSeed: true
 mcpServers:
   arbor:
-    command:
-      - arbor
+    command: $OMP_PYTHON_VENV/bin/arbor
+    args:
       - mcp
 bash:
   autoBackground:
@@ -52,7 +52,6 @@ github:
 todo:
   remindersMax: 8
 computer:
-  backend: auto
   display: all
 task:
   eager: default
