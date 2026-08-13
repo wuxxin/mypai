@@ -37,16 +37,22 @@
 
 ## Operating Guidelines
 
+### Workspace Guidelines
 
-### Workspace & Documentation
-- **Workspace Isolation:** Use `scratch/` for temporary files, research, and git checkouts (`scratch/*-sources`). Always use the top-level repository root `scratch/`: if checked out independently, use its own root `scratch/`; if checked out as a git submodule, use the parent repository's root `scratch/`.
-- create and activate an venv for testing the mypai_tools, dont try to pip install with break system packages.
+When working in this repository or any of its submodules:
+
+- **Workspace Isolation**: Always use `scratch/` for temporary files, build logs and temporary git checkouts.
+- **Submodule Behavior**:
+  - If operating within a **submodule checkout**, agents and tools must defer to the top-level parent repository's root `scratch/` directory (`mypai/scratch/`).
+  - If operating within a **standalone checkout** of a submodule, use the local repository's root `./scratch/`.
 
 ### Sandboxing & Bubblewrap (`bwrap`) Discipline
+
 Check if running inside a bwrap sandbox:
 ```bash
 [ -S "${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/systemd/private" ] || echo "bwrapped"
 ```
+
 **If bwrapped (systemd socket unavailable):**
 - **Restriction:** Do **NOT** execute systemd service management commands (`systemctl start/stop/restart/status`).
 - **Introspection:** You **can** however inspect all active processes and logs using `journalctl` (`--user`), `ps`, `/proc`, and `pgrep`.

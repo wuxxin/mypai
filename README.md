@@ -2,42 +2,17 @@
 
 Local, private, experimental and opinionated Personal Artificial Intelligence (PAI) infrastructure based on **Oh-my-PI** (`omp`) and **Hindsight** long-term memory service.
 
-`mypai` provides a complete local multi-agent orchestration harness, integrated local OpenAI-compatible inference and routing (`local-router`), containerized sandbox containment (`sandbox-ctl`), and custom ROCm/HIP hardware-accelerated binaries.
-
-Based on the ideas and inspiration taken from LifeOS and Openclaw like agent harnesses for implementing a minimal PAI.
-
 ---
 
-## Table of Contents
+## About
 
-- [Architecture & Submodules](#architecture--submodules)
-- [Setup & Installation](#setup--installation)
-  - [1. Clone Repository & Initialize Submodules](#1-clone-repository--initialize-submodules)
-  - [2. Download Local AI Models](#2-download-local-ai-models)
-  - [3. Provision Sandbox Environment](#3-provision-sandbox-environment)
-  - [4. Launch Oh-my-PI](#4-launch-oh-my-pi)
-- [Development & Testing (`Makefile`)](#development--testing-makefile)
-- [Oh-my-PI Plugin (`submodules/omp-mypai`)](#oh-my-pi-plugin-submodulesomp-mypai)
-- [Local Inference Services (`submodules/agents-shared`)](#local-inference-services-submodulesagents-shared)
-- [Custom AUR Packages (`submodules/aur-packages`)](#custom-aur-packages-submodulesaur-packages)
-- [Hindsight Long-Term Memory Configuration](#hindsight-long-term-memory-configuration)
-- [Private Information Management (`submodules/private-seeds`)](#private-information-management-submodulesprivate-seeds)
-- [Repository Structure](#repository-structure)
-- [Headless Agent Execution & Session Observation](#headless-agent-execution--session-observation)
-- [Workspace Isolation Guidelines](#workspace-isolation-guidelines)
+`mypai` provides a complete local multi-agent orchestration harness, with
+  - integrated local OpenAI-compatible inference and routing (`local-router`)
+  - containerized sandbox containment (`sandbox-ctl`)
+  - custom ROCm/HIP hardware-accelerated binaries
 
----
 
-## Architecture & Submodules
-
-`mypai` is composed of a core configuration layer and specialized submodules:
-
-| Submodule Path | Repository | Purpose |
-|---|---|---|
-| `submodules/omp-mypai` | [omp-mypai](https://github.com/wuxxin/omp-mypai) | Main **Oh-my-PI plugin** providing custom agents, tools (`mypai_tools`), MCP services, skills, and execution rules. |
-| `submodules/agents-shared` | [agents-shared](https://github.com/wuxxin/agents-shared) | Shared infrastructure: sandbox control scripts (`sandbox-ctl`), inference service wrappers, benchmark tools, and model downloaders. |
-| `submodules/aur-packages` | [aur-packages](https://github.com/wuxxin/aur-packages) | Private Arch User Repository (AUR) PKGBUILDs for hardware-accelerated dependencies (e.g. `libggml-git-hip`, `tei-rocm`, `mlc-llm`) tailored for ROCm/HIP local inference. |
-| `submodules/private-seeds` | *Private / Local* | Git-ignored directory for managing personal mental models, credentials, and private seed data. |
+It is based on ideas from LifeOS, and Openclaw like agent harnesses for implementing a **minimal version of a PAI**.
 
 ---
 
@@ -74,13 +49,13 @@ Download required LLM, vision, embedding, reranking, STT, and TTS models using t
 
 *Or select specific model suites (e.g., `--llm --embedding --reranker`).*
 
-
 ### 3. Provision Local Inference
+
+Provision local inference services:
 
 ```bash
 ./submodules/agents-shared/assistants/local-inference.sh install --new-config
 ```
-
 
 ### 4. Provision oh-my-pi Environment
 
@@ -91,12 +66,12 @@ Provision the sandbox environment and generate the `omp` binary launcher in `~/.
 ```
 
 `sandbox-ctl install` performs the following automated steps:
-1. Copies configuration files from `sandbox-templates/omp/omp/*` into `$HOME/.omp/`.
+1. Copies configuration files from `./omp/agent/*` into `$HOME/.omp/agent/`.
 2. Creates a managed Python virtual environment at `$HOME/.omp/python-env` (containing `openadapt` and `arbor`).
 3. Provisions the plugin virtual environment at `$HOME/.omp/data/omp-mypai/venv` (containing `mypai_tools` and `omp-rpc`).
-4. Executes `update-memory-banks.sh` to initialize and auto-seed Hindsight long-term memory banks.
+4. Executes `membank-ctl update` to initialize and auto-seed Hindsight long-term memory banks.
 
-### 4. Launch Oh-my-PI
+### 5. Launch Oh-my-PI
 
 Launch the interactive PAI session:
 
@@ -106,25 +81,36 @@ omp
 
 ---
 
-## Development & Testing (`Makefile`)
 
-To build local testing virtual environments, execute unit test suites, or run code linters, use the `omp-mypai` Makefile:
+## Repository Structure
 
-```bash
-# Run tests & linting via Makefile (manages .venv automatically)
-make -C submodules/omp-mypai buildenv  # Builds .venv & installs editable dependencies
-make -C submodules/omp-mypai test      # Runs unit tests inside .venv
-make -C submodules/omp-mypai lint      # Runs ruff check inside .venv
-make -C submodules/omp-mypai check     # Runs linter and unit tests
-make -C submodules/omp-mypai cleanenv  # Removes .venv
-```
+- `omp.env` — Sandbox launcher environment config
+- `omp/agent/` — Target `~/.omp/agent/` configuration templates
+  - `config.yml` — Main OMP configuration
+  - `mcp.json` — Model Context Protocol servers
+  - `models.yml` — Local model inference mapping
+  - `agents/` — Custom agent roles
+  - `commands/` — Custom slash commands
+  - `extensions/` — Extension scripts
+  - `memorybanks/` — Memory bank definitions (.json / .yaml)
+  - `skills/` — Skill instruction packs
+    - **`arbor`**: [SKILL.md](omp/agent/skills/arbor/SKILL.md) — Graph-native AST code intelligence and workspace navigation.
+    - **`openadapt`**: [SKILL.md](omp/agent/skills/openadapt/SKILL.md) — Browser capture and UI automation.
+- `submodules/`
+  - `omp-mypai` — Core Oh-my-PI plugin (`bin/membank-ctl`, `mypai_tools`, skills, MCP, rules)
+  - `agents-shared` — Shared Infrastructure, `sandbox-ctl`, Inference and model downloaders
+  - `aur-packages` — Custom hardware-accelerated ROCm/HIP Arch Linux PKGBUILDs
+  - `private-seeds` — Git-ignored directory for private credentials and seeds
+- `research/` — Architecture reports, benchmarks, and research notes
+- `scratch/` — Workspace for temporary files and checkout sources (`scratch/*-sources`)
 
----
+## Modules
 
-## Oh-my-PI myPAI Plugin (`submodules/omp-mypai`)
+### Oh-my-PI myPAI Plugin (`submodules/omp-mypai`)
 
 The `omp-mypai` submodule serves as the core extension plugin for Oh-my-PI. It includes:
 
+- **CLI Control Utilities (`bin/membank-ctl`)**: Management CLI tool for Hindsight memory bank updates, JSON/YAML parsing, and exports.
 - **Custom Python Tools (`mypai_tools`)**: Native tools installed directly into the plugin virtual environment (`$HOME/.omp/data/omp-mypai/venv`).
 - **Model Context Protocol (MCP) Servers**:
   - `chat-channel`: Channel messaging MCP service (`mypai_tools.chat_mcp`).
@@ -134,7 +120,7 @@ The `omp-mypai` submodule serves as the core extension plugin for Oh-my-PI. It i
 
 ---
 
-## Local Inference Services (`submodules/agents-shared`)
+### Local Inference Services (`submodules/agents-shared`)
 
 Local inference services run in background containers or user systemd services and are exposed through unified endpoints:
 
@@ -148,7 +134,7 @@ Local inference services run in background containers or user systemd services a
 
 ---
 
-## Custom AUR Packages (`submodules/aur-packages`)
+### Custom AUR Packages (`submodules/aur-packages`)
 
 The `aur-packages` submodule contains custom Arch Linux PKGBUILDs designed specifically for ROCm/HIP hardware acceleration and bleeding-edge local inference:
 
@@ -160,16 +146,19 @@ The `aur-packages` submodule contains custom Arch Linux PKGBUILDs designed speci
 
 ---
 
-## Hindsight Long-Term Memory Configuration
+## Hindsight Memory Banks Configuration
 
 Hindsight vector memory is natively integrated into OMP's orchestration engine:
 
 - **Auto-Seeding**: Configured via `hindsight.mentalModelAutoSeed: true`. Built-in mental models (`principal-telos`, `user-preferences`, `project-conventions`, `project-decisions`, `active-initiatives-and-commitments`) are automatically seeded into the server on startup.
 - **Project Scoping**: `per-project-tagged` scoping seamlessly merges global user preferences with project-specific memories on every recall query.
-- **Idempotent Updates**: `update-memory-banks.sh` inspects existing bank configurations via `GET /v1/default/banks/<bank_id>/config` and issues `PATCH`/`POST`/`DELETE` requests only when local definitions differ from server state.
+- **Idempotent Updates**: `membank-ctl update` inspects existing bank configurations via `GET /v1/default/banks/<bank_id>/config` and issues `PATCH`/`POST`/`DELETE` requests only when local definitions differ from server state. Supports JSON and YAML bank definitions.
   ```bash
-  # Prune obsolete mental models on the server
-  ./submodules/omp-mypai/agent/update-memory-banks.sh ./omp/agent/memorybanks "http://localhost:8888" --prune
+  # Update memory banks and prune obsolete mental models on the server
+  ./submodules/omp-mypai/bin/membank-ctl update "http://localhost:8888" ./omp/agent/memorybanks --yes --prune
+
+  # Export a memory bank to JSON or YAML
+  ./submodules/omp-mypai/bin/membank-ctl export "http://localhost:8888" oh-my-pi --yaml --out oh-my-pi.yaml
   ```
 
 ---
@@ -192,81 +181,3 @@ Personal credentials, private memory seeds, and custom prompt overrides can be s
 
 *Note: All contents of `submodules/private-seeds/` (except `.gitkeep`) are git-ignored in the parent repository to prevent accidental credential leakage.*
 
----
-
-## Repository Structure
-
-- `omp.env` — Sandbox launcher environment config
-- `omp/agent/` — Target `~/.omp/agent/` templates
-  - `config.yml`
-  - `agents'
-  - `skills`
-    - **`arbor`**: [SKILL.md](skills/arbor/SKILL.md) — Graph-native AST code intelligence and workspace navigation.
-    - **`openadapt`**: [SKILL.md](skills/openadapt/SKILL.md) — Browser capture and UI automation.
-- `submodules/`
-  - `agents-shared` — Infrastructure, `sandbox-ctl`, and model downloaders
-  - `aur-packages` — Custom ROCm/HIP Arch Linux PKGBUILDs
-  - `omp-mypai` — Core Oh-my-PI plugin (tools, skills, MCP, rules)
-  - `private-seeds` — Git-ignored directory for private credentials and seeds
-- `research/` — Architecture reports, benchmarks, and research notes
-- `scratch/` — Workspace for temporary files and checkout sources (`scratch/*-sources`)
-
----
-
-## Headless Agent Execution & Session Observation
-
-`mypai` supports background daemon execution with automated task scheduling via **`mypai_daemon`** and **`omp_rpc`**.
-
-### 1. Headless Execution & MyPAI Daemon Sidecar
-
-When `omp.env` has `LAUNCHER_SERVICE_ENABLED="true"`, launching the sandbox automatically starts the headless `omp` service and `mypai_daemon` sidecar:
-
-```bash
-# Run headless daemon mode
-python3 -m mypai_tools.daemon serve --project-dir ~/agent-shared/mypai-workspace
-
-# Import scheduled tasks from YAML file into project SQLite DB
-python3 -m mypai_tools.daemon import ~/agent-shared/code/mypai/submodules/omp-mypai/config/default_jobs.yaml --project-dir ~/agent-shared/mypai-workspace
-```
-
-### 2. Read-Only Session Observation (`omp share`)
-
-Observe the active headless agent session, inspect output logs, and monitor turn execution in real time without sending inputs:
-
-```bash
-# Stream active session output in read-only mode
-omp share --readonly
-```
-
-### 3. Read/Write Session Attachment
-
-Attach an interactive TUI or send RPC commands directly to the running session:
-
-```bash
-# Attach interactive terminal session
-omp attach <session_id>
-
-# Or inject steering commands programmatically via omp_rpc:
-python3 -c "from omp_rpc import RpcClient; client = RpcClient(); client.prompt('Check active cron jobs')"
-```
-
-### 4. Cron Task Management via MCP Tools
-
-The agent can query and modify its own cron schedule using MCP tools exposed by `cron-scheduler` (`mypai_tools.cron_mcp`):
-
-- **`cron_add_job(name, cron, kind, action, result_prompt, result_error_prompt, result_action, result_channel)`**: Add a new RPC, HTTP, Shell, or Python scheduled task.
-- **`cron_run_once(name, kind, action, args, kwargs, result_prompt, result_error_prompt, result_action, result_channel)`**: Queue or reschedule an immediate one-shot task (`cron="now"`).
-- **`cron_list_jobs()`**: List registered scheduled tasks along with execution telemetry (`last_start`, `last_stop`, `last_runtime`, `last_returncode`, `last_output`, `total_calls`).
-- **`cron_disable_job(job_id)`** / **`cron_enable_job(job_id)`**: Toggle job schedule status.
-- **`cron_export_jobs(file_path)`** / **`cron_import_jobs(file_path)`**: Backup or restore schedule definitions in JSON format.
-
----
-
-## Workspace Isolation Guidelines
-
-When working in this repository or any of its submodules:
-
-- **Workspace Isolation**: Always use `scratch/` for temporary files, build logs, and git checkouts (`scratch/*-sources`).
-- **Submodule Behavior**:
-  - If operating within a **submodule checkout**, agents and tools must defer to the top-level parent repository's root `scratch/` directory (`mypai/scratch/`).
-  - If operating within a **standalone checkout** of a submodule, use the local repository's root `./scratch/`.
