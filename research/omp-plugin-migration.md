@@ -24,16 +24,16 @@ Tertiary cause: the plugin's `tools/` directory (the Python package) collided wi
 
 - `package.json`: added `"omp": {}` — the discovery gate.
 - Deleted `plugin.json` and `mcp.json` (Agent Plugins standard).
-- Added `.mcp.json` (OMP-native): bare server names, `command: "./.plugin-venv/bin/python3"` (plugin-relative; OMP resolves `./` against the plugin root).
+- Added `.mcp.json` (OMP-native): bare server names, `command: "./.venv/bin/python3"` (plugin-relative; OMP resolves `./` against the plugin root).
 - Renamed `tools/` → `src/` (stops the custom-tools scanner noise).
-- Added `scripts/build_runtime_env.py` + `make installenv` → snapshot `.plugin-venv` (isolated; installs the `omp-rpc` wheel + `mypai_tools` from `src/`), separate from the editable dev `.venv`.
+- Added `scripts/build_runtime_env.py` + `make installenv` → snapshot `.venv` (isolated; installs the `omp-rpc` wheel + `mypai_tools` from `src/`), separate from the editable dev `.venv`.
 - Refreshed `Makefile`, `README.md`, `.gitignore`.
 
-### Base `mypai` — commit `3e75a18` "Retire MYPAI_PLUGIN_VENV; use plugin .plugin-venv"
+### Base `mypai` — commit `3e75a18` "Retire MYPAI_PLUGIN_VENV; use plugin .venv"
 
 - Retired `MYPAI_PLUGIN_DATA` (`~/.omp/data/omp-mypai`).
-- `MYPAI_PLUGIN_VENV` now points at `$HOME/agent-shared/code/mypai/submodules/omp-mypai/.plugin-venv`.
-- `LAUNCHER_INSTALL_CMDS` builds `.plugin-venv` inline: `uv venv` + `omp-rpc` wheel + `uv pip install …/src`.
+- `MYPAI_PLUGIN_VENV` now points at `$HOME/agent-shared/code/mypai/submodules/omp-mypai/.venv`.
+- `LAUNCHER_INSTALL_CMDS` builds `.venv` inline: `uv venv` + `omp-rpc` wheel + `uv pip install …/src`.
 - Sidecars (`mypai_daemon`, `input_spooler`) run from `$MYPAI_PLUGIN_VENV/bin/python`.
 - Merged pending uncommitted work (`README.md`, `omp/agent/config.yml`, `omp/agent/mcp.json`, `omp/agent/models.yml`, `research/omp_rpc_functions.md`).
 
@@ -45,9 +45,9 @@ Tertiary cause: the plugin's `tools/` directory (the Python package) collided wi
 
 ## Next steps
 
-1. **Full sandbox reinstall** — run the real `sandbox-ctl install` flow (`LAUNCHER_INSTALL_CMDS`) to confirm the `.plugin-venv` build + `omp plugin install` link work end-to-end (so far only the manual `.plugin-venv` build was exercised).
-2. **Sidecar verification** — confirm `mypai_daemon` and `input_spooler` actually launch from `.plugin-venv/bin/python` (only the MCP servers were handshake-tested).
+1. **Full sandbox reinstall** — run the real `sandbox-ctl install` flow (`LAUNCHER_INSTALL_CMDS`) to confirm the `.venv` build + `omp plugin install` link work end-to-end (so far only the manual `.venv` build was exercised).
+2. **Sidecar verification** — confirm `mypai_daemon` and `input_spooler` actually launch from `.venv/bin/python` (only the MCP servers were handshake-tested).
 3. **README sidecar section is stale** — the plugin README "Sandbox Launcher" block still shows `python3` / `--project-dir` / `--session-name` / `LAUNCHER_SIDECARS="mypai_daemon input_spooler"`; actual is `$MYPAI_PLUGIN_VENV/bin/python --agent-dir $MYPAI_AGENT_DIR` / `LAUNCHER_SIDECARS="mypai_daemon"`.
-4. **Snapshot rebuild discipline** — `.plugin-venv` is non-editable; any change to `src/mypai_tools/` requires `make installenv` (or the install flow) before runtime picks it up.
-5. **Path coupling** — `omp.env` hardcodes `$HOME/agent-shared/code/mypai/submodules/omp-mypai/.plugin-venv`; breaks if the repo moves. Could instead use OMP's link `$HOME/.omp/plugins/node_modules/omp-mypai/.plugin-venv`.
+4. **Snapshot rebuild discipline** — `.venv` is non-editable; any change to `src/mypai_tools/` requires `make installenv` (or the install flow) before runtime picks it up.
+5. **Path coupling** — `omp.env` hardcodes `$HOME/agent-shared/code/mypai/submodules/omp-mypai/.venv`; breaks if the repo moves. Could instead use OMP's link `$HOME/.omp/plugins/node_modules/omp-mypai/.venv`.
 
