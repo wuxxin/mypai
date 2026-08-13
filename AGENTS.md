@@ -3,7 +3,12 @@
 ## Repository Structure
 
 - `omp.env` — Sandbox launcher config
-- `omp/agent/` — Target `~/.omp/agent/` templates (`config.yml`, commands, extensions)
+- `omp/` — Target `~/.omp/`
+  - `agent/`
+    - `config.yml` omp config
+    - `mcp.json` omp mcp config
+    - `models.yml` omp local inference config
+    - `skills` — omp local skills 
 - `submodules/` — Embedded repos (`agents-shared`, `aur-packages`, `omp-mypai`, `private-seeds`)
 - `research/` — Development research notes and benchmark reports
 - `scratch/` — Agent workspace for temporary files (`scratch/*`)
