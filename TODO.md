@@ -1,12 +1,18 @@
-reconsile skills,roles,and commands:
+- reconsile and wright good memory banks, make the omp bank good for sw-dev
+- get a grip what is auto retained recalled reflected, and how we can map this for mypai
+- mypai: make the daemon inject system message that session is running as daemon.
+- mypai: make the mypai agent the "default", research what that means, so on omp session in this dir, or daemon session it always reads mypai agent, and because daemon injects system message the mypai agent knows if its running as daemon main or as other session.
+- check if we should --profile mypai out of our omp installation
+- make some limits for the daemon to observe about how long a prompt or how much tool calls a prompt consomues.
 
-+ get all buildin omp skills, roles and commands
-+ reconsile with the oh-myopencode-slim-agents profiles
-+ reconsile roles and commands: eg. debugging, git-master, review-work, ulw-plan
-+ reconsile with: https://github.com/obra/superpowers
+- reconsile skills,roles,and commands for my omp installation
+  + get all buildin omp skills, roles and commands
+  + reconsile with the oh-myopencode-slim-agents profiles
+  + reconsile roles and commands: eg. debugging, git-master, review-work, ulw-plan
+  + reconsile with: https://github.com/obra/superpowers
 /plugin marketplace add obra/superpowers
 /plugin install superpowers@superpowers-marketplace
-+ reconsile with:
+  + reconsile with:
 https://athola.github.io/claude-night-market/plugins/domain-specialists.html
 /plugin marketplace add athola/claude-night-market
 /plugin install archetypes@claude-night-market
@@ -15,10 +21,9 @@ https://athola.github.io/claude-night-market/plugins/domain-specialists.html
 we want debugging, git control, review, really good plan, and beside the orchestrator agent, which is our main agent, other good definition. and all work with our hingsight plugin.
 
 
-+ research plugins
++ add plugins
 ```
 /plugin marketplace add anthropics/claude-plugins-official
-
 
 https://github.com/cathrynlavery/diagram-design
 /plugin marketplace add cathrynlavery/diagram-design
