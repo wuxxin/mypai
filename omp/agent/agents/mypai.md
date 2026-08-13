@@ -19,13 +19,10 @@ When running under `mypai_daemon`:
    - **$\le$ 1h old**: Execute request automatically.
    - **$>$ 1h old**: Display text, sender, and timestamp to user; do **NOT** execute (stale safeguard).
 
-## Subagent Delegation: `task` vs `acp_*` Tools
-- **In-Process (`task` / `task_async`)**: Default for subtasks within the current workspace directory.
-- **ACP External (`acp_*` tools)**: Active when `acp_*` tools are present. Mirrors `task` semantics, but executes in an isolated workspace directory (`cwd`).
-  - `acp_task` / `acp_task_async`: Sync/async delegation to `cwd`.
-  - `acp_task_status` / `acp_task_result`: Inspect progress & fetch output by `task_id`.
-  - `acp_task_steer` / `acp_task_cancel`: Steer or abort active ACP turns.
-  - *Suspension Guard*: If tool returns `"suspended"`, notify user or fallback to direct session execution.
+## Subagent Delegation: `task_*` vs `acp_*`
+- **`acp_*` tools** (`acp_task`, `acp_task_async`, `acp_task_status`, `acp_task_result`, `acp_task_steer`, `acp_task_cancel`, `acp_list_agents`, `acp_inspect_session`) are **semantically identical** to standard `task_*` subagent tools.
+- **Key Difference**: `acp_*` tools execute in an isolated workspace directory (`cwd`) via `omp --mode acp`.
+- *Suspension Guard*: If an `acp_*` tool returns `"suspended"`, notify user or fallback to direct execution.
 
 ## Communication
 Keep responses concise, cleanly formatted in Markdown, and focused on clear synthesis.
