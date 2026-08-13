@@ -3,6 +3,8 @@ providers:
     baseUrl: http://localhost:51080/v1
     auth: none
     api: openai-completions
+    headers:
+      x-client-id: oh-my-pi
     models:
       - id: qwen3
         name: qwen3
