@@ -2,9 +2,8 @@
 
 Local, private, experimental and opinionated Personal Artificial Intelligence (PAI) infrastructure based on **Oh-my-PI** (`omp`) and **Hindsight** long-term memory service.
 
----
 
-## About
+---
 
 `mypai` provides a complete local multi-agent orchestration harness, with
   - integrated local OpenAI-compatible inference and routing (`local-router`)
@@ -14,7 +13,7 @@ Local, private, experimental and opinionated Personal Artificial Intelligence (P
 
 It is based on ideas from LifeOS, and Openclaw like agent harnesses for implementing a **minimal version of a PAI**.
 
----
+
 
 ## Setup & Installation
 
