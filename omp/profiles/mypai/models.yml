@@ -4,7 +4,7 @@ providers:
     auth: none
     api: openai-completions
     headers:
-      x-client-id: oh-my-pi
+      x-client-id: mypai
     models:
       - id: qwen3
         name: qwen3

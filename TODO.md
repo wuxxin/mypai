@@ -1,3 +1,6 @@
+# TODO
+
+
 - reconsile and wright good memory banks, make the omp bank good for sw-dev
 - get a grip what is auto retained recalled reflected, and how we can map this for mypai
 - mypai: make the daemon inject system message that session is running as daemon.
@@ -21,7 +24,7 @@ https://athola.github.io/claude-night-market/plugins/domain-specialists.html
 we want debugging, git control, review, really good plan, and beside the orchestrator agent, which is our main agent, other good definition. and all work with our hingsight plugin.
 
 
-+ add plugins
++ research and add if fitting: plugins
 ```
 /plugin marketplace add anthropics/claude-plugins-official
 
@@ -61,7 +64,7 @@ https://github.com/garrytan/gbrain
   https://github.com/Arize-ai/phoenix
   https://github.com/davidwynter/HiVA
 
-+ mcp and other interesting
++ look into mcp and other interesting
   https://github.com/slettmayer/geosphere-mcp-server
 
   https://github.com/xberg-io/xberg
@@ -69,7 +72,7 @@ https://github.com/garrytan/gbrain
   https://github.com/memvid/memvid
 
 
-+ External Models Speed Observed in OMP
+## External Models Speed Observed in OMP
 
 ```
 model                                      TTFT   TPS      tokens  total

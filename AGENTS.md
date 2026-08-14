@@ -2,19 +2,19 @@
 
 ## Repository Structure
 
-- `omp.env` — Sandbox launcher config (provisions Base OMP and MyPai Profile environment)
+- `omp.env` — Sandbox launcher config (provisions Base OMP and MyPai Profile)
 - `omp/` — Target `~/.omp/` configuration templates
-  - `agent/` — Target `~/.omp/agent/` (Base OMP configuration & memory bank `oh-my-pi`)
-    - `config.yml` — Base OMP configuration (`bankId: oh-my-pi`)
-    - `mcp.json` — Base OMP MCP config
-    - `models.yml` — Base OMP model config
-    - `skills/` — Base OMP skills 
+  - `agent/` — Target `~/.omp/agent/` (Base OMP configuration `oh-my-pi`)
+    - `config.yml` — configuration (`bankId: oh-my-pi`)
+    - `mcp.json` — MCP config
+    - `models.yml` — model config (`x-client-id: oh-my-pi`)
+    - `skills/` — skills 
     - `memorybanks/` — `oh-my-pi.yaml`
   - `profiles/`
-    - `mypai/` — Target `~/.omp/profiles/mypai/agent/` (MyPai Profile configuration & memory bank `mypai`)
-      - `config.yml` — MyPai profile config (`bankId: mypai`)
-      - `mcp.json` — MyPai profile MCP config
-      - `models.yml` — MyPai profile model config (`llama.cpp/qwen3`)
+    - `mypai/` — Target `~/.omp/profiles/mypai/agent/` (MyPai Profile configuration `mypai`)
+      - `config.yml` — MyPai config (`bankId: mypai`)
+      - `mcp.json` — MyPai MCP config
+      - `models.yml` — MyPai model config (`llama.cpp/qwen3`, `x-client-id: mypai`)
       - `memorybanks/` — `mypai.yaml`, `mypai-developer-profile.yaml`, `mypai-knowledge.yaml`
 - `submodules/` — Embedded repos (`agents-shared`, `aur-packages`, `omp-mypai`, `private-seeds`)
 - `research/` — Development research notes and benchmark reports
