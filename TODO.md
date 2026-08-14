@@ -2,7 +2,7 @@
 - get a grip what is auto retained recalled reflected, and how we can map this for mypai
 - mypai: make the daemon inject system message that session is running as daemon.
 - mypai: make the mypai agent the "default", research what that means, so on omp session in this dir, or daemon session it always reads mypai agent, and because daemon injects system message the mypai agent knows if its running as daemon main or as other session.
-- check if we should --profile mypai out of our omp installation
+- [x] refactored mypai as an omp profile (`omp --profile mypai`) with isolated memory banks and settings
 - make some limits for the daemon to observe about how long a prompt or how much tool calls a prompt consomues.
 
 - reconsile skills,roles,and commands for my omp installation

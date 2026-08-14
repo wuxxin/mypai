@@ -1,0 +1,62 @@
+providers:
+  webSearchOrder:
+    []
+modelRoles:
+  default: llama.cpp/qwen3
+symbolPreset: unicode
+theme:
+  dark: titanium
+setupVersion: 1
+statusLine:
+  preset: default
+  separator: powerline-thin
+stt:
+  enabled: false
+  provider: local
+  baseUrl: http://localhost:51080/v1
+compaction:
+  strategy: snapcompact
+  thresholdPercent: 85
+  handoffSaveToDisk: false
+memory:
+  backend: hindsight
+autolearn:
+  enabled: true
+hindsight:
+  apiUrl: http://localhost:8888
+  bankId: mypai
+  scoping: per-project-tagged
+  retainMode: full-session
+  autoRecall: true
+  autoRetain: true
+  mentalModelsEnabled: true
+  mentalModelAutoSeed: true
+mcpServers:
+  arbor:
+    command: $OMP_PYTHON_VENV/bin/arbor
+    args:
+      - mcp
+bash:
+  autoBackground:
+    enabled: true
+bashInterceptor:
+  enabled: false
+shellMinimizer:
+  sourceOutlineLevel: default
+astGrep:
+  enabled: true
+checkpoint:
+  enabled: true
+github:
+  enabled: true
+todo:
+  remindersMax: 8
+computer:
+  display: all
+task:
+  eager: default
+  maxConcurrency: 32
+  agentIdleTtlMs: 420000
+  prewalk: false
+secrets:
+  enabled: false

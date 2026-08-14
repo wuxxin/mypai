@@ -1,0 +1,39 @@
+version: '1'
+bank:
+  disposition_skepticism: 4
+  disposition_literalism: 4
+  disposition_empathy: 5
+  retain_mission: 'Extract overall LifeOS strategic goals (TELOS framework: IDEAL_STATE,
+    CURRENT_STATE), active task status, project commitments, session handoffs, subagent
+    routing outcomes, and Anti-Criteria forbidden modes. Ignore intermediate thought
+    process text, raw terminal outputs, line-level code patches, and transient debugging
+    output.'
+  enable_observations: true
+  observations_mission: Track active TELOS goal progress, ongoing task state, user
+    intent alignment, Anti-Criteria compliance, session handoffs, and multi-agent
+    coordination history over time.
+  reflect_mission: Synthesize a strategic alignment briefing summarizing active TELOS
+    goals, current task status, Anti-Criteria constraints, active commitments, and
+    recent session handoffs.
+mental_models:
+- id: lifeos-telos-goals
+  name: TELOS Framework & Ideal State Criteria
+  source_query: What are the active TELOS goals, IDEAL_STATE definitions, CURRENT_STATE
+    gap analyses, and testable Ideal State Criteria (ISC) for this project?
+  max_tokens: 2048
+  trigger:
+    refresh_after_consolidation: true
+- id: lifeos-anti-criteria
+  name: Anti-Criteria & System Architectural Invariants
+  source_query: What are the explicit Anti-Criteria (forbidden outcomes, security
+    hazards, breaking changes) and non-negotiable architectural invariants?
+  max_tokens: 1024
+  trigger:
+    refresh_after_consolidation: true
+- id: project-status-and-handoffs
+  name: Project Status, Active Tasks & Session Handoffs
+  source_query: What are the primary goals, active tasks, session handoffs left by
+    previous runs, subagent assignments, and user instructions for the current session?
+  max_tokens: 2048
+  trigger:
+    refresh_after_consolidation: true

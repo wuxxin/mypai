@@ -65,18 +65,26 @@ Provision the sandbox environment and generate the `omp` binary launcher in `~/.
 ```
 
 `sandbox-ctl install` performs the following automated steps:
-1. Copies configuration files from `./omp/agent/*` into `$HOME/.omp/agent/`.
-2. Creates a managed Python virtual environment at `$HOME/.omp/python-env` (containing `openadapt` and `arbor`).
-3. Provisions the plugin virtual environment at `$HOME/.omp/data/omp-mypai/venv` (containing `mypai_tools` and `omp-rpc`).
-4. Imports default scheduled cron jobs from `submodules/omp-mypai/config/default_jobs.yaml` into the project SQLite database.
-5. Executes `membank-ctl update` to initialize and auto-seed Hindsight long-term memory banks.
+1. Copies configuration files from `./omp/agent/*` into `$HOME/.omp/agent/` for Base OMP.
+2. Copies configuration files from `./omp/profiles/mypai/*` into `$HOME/.omp/profiles/mypai/agent/` for the MyPai profile.
+3. Installs `omp-mypai` plugin strictly inside the `mypai` profile (`omp --profile mypai plugin install`).
+4. Creates a managed Python virtual environment at `$HOME/.omp/python-env` (containing `openadapt` and `arbor`).
+5. Provisions the plugin virtual environment at `$HOME/agent-shared/code/mypai/submodules/omp-mypai/.venv` (containing `mypai_tools` and `omp-rpc`).
+6. Imports default scheduled cron jobs from `submodules/omp-mypai/config/default_jobs.yaml` into the project SQLite database.
+7. Executes `membank-ctl update` in separate steps for `oh-my-pi` (Base OMP) and `mypai` (MyPai Profile) memory banks.
 
-### 5. Launch Oh-my-PI
+### 5. Launch Oh-my-PI & MyPai Profile
 
-Launch the interactive PAI session:
+Launch interactive Base OMP session:
 
 ```bash
 omp
+```
+
+Launch MyPai Profile session:
+
+```bash
+omp --profile mypai
 ```
 
 ---
@@ -85,17 +93,21 @@ omp
 ## Repository Structure
 
 - `omp.env` — Sandbox launcher environment config
-- `omp/agent/` — Target `~/.omp/agent/` configuration templates
-  - `config.yml` — Main OMP configuration
-  - `mcp.json` — Model Context Protocol servers
-  - `models.yml` — Local model inference mapping
-  - `agents/` — Custom agent roles
-  - `commands/` — Custom slash commands
-  - `extensions/` — Extension scripts
-  - `memorybanks/` — Memory bank definitions (.json / .yaml)
-  - `skills/` — Skill instruction packs
-    - **`arbor`**: [SKILL.md](omp/agent/skills/arbor/SKILL.md) — Graph-native AST code intelligence and workspace navigation.
-    - **`openadapt`**: [SKILL.md](omp/agent/skills/openadapt/SKILL.md) — Browser capture and UI automation.
+- `omp/`
+  - `agent/` — Target `~/.omp/agent/` configuration templates (Base OMP, bankId: `oh-my-pi`)
+    - `config.yml` — Main Base OMP configuration
+    - `mcp.json` — Base Model Context Protocol servers
+    - `models.yml` — Local model inference mapping
+    - `memorybanks/` — `oh-my-pi.yaml`
+    - `skills/` — Base skill instruction packs
+      - **`arbor`**: [SKILL.md](omp/agent/skills/arbor/SKILL.md) — Graph-native AST code intelligence and workspace navigation.
+      - **`openadapt`**: [SKILL.md](omp/agent/skills/openadapt/SKILL.md) — Browser capture and UI automation.
+  - `profiles/`
+    - `mypai/` — Target `~/.omp/profiles/mypai/agent/` configuration templates (MyPai Profile, bankId: `mypai`)
+      - `config.yml` — MyPai Profile configuration (`bankId: mypai`)
+      - `mcp.json` — Profile MCP servers
+      - `models.yml` — Profile model mapping (`llama.cpp/qwen3`)
+      - `memorybanks/` — `mypai.yaml`, `mypai-developer-profile.yaml`, `mypai-knowledge.yaml`
 - `submodules/`
   - `omp-mypai` — Core Oh-my-PI plugin (`bin/membank-ctl`, `mypai_tools`, skills, MCP, rules)
   - `agents-shared` — Shared Infrastructure, `sandbox-ctl`, Inference and model downloaders

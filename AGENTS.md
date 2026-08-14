@@ -2,13 +2,20 @@
 
 ## Repository Structure
 
-- `omp.env` — Sandbox launcher config
-- `omp/` — Target `~/.omp/`
-  - `agent/`
-    - `config.yml` omp config
-    - `mcp.json` omp mcp config
-    - `models.yml` omp local inference config
-    - `skills` — omp local skills 
+- `omp.env` — Sandbox launcher config (provisions Base OMP and MyPai Profile environment)
+- `omp/` — Target `~/.omp/` configuration templates
+  - `agent/` — Target `~/.omp/agent/` (Base OMP configuration & memory bank `oh-my-pi`)
+    - `config.yml` — Base OMP configuration (`bankId: oh-my-pi`)
+    - `mcp.json` — Base OMP MCP config
+    - `models.yml` — Base OMP model config
+    - `skills/` — Base OMP skills 
+    - `memorybanks/` — `oh-my-pi.yaml`
+  - `profiles/`
+    - `mypai/` — Target `~/.omp/profiles/mypai/agent/` (MyPai Profile configuration & memory bank `mypai`)
+      - `config.yml` — MyPai profile config (`bankId: mypai`)
+      - `mcp.json` — MyPai profile MCP config
+      - `models.yml` — MyPai profile model config (`llama.cpp/qwen3`)
+      - `memorybanks/` — `mypai.yaml`, `mypai-developer-profile.yaml`, `mypai-knowledge.yaml`
 - `submodules/` — Embedded repos (`agents-shared`, `aur-packages`, `omp-mypai`, `private-seeds`)
 - `research/` — Development research notes and benchmark reports
 - `scratch/` — Agent workspace for temporary files (`scratch/*`)

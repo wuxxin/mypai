@@ -1,0 +1,21 @@
+version: '1'
+bank:
+  disposition_skepticism: 3
+  disposition_literalism: 4
+  disposition_empathy: 3
+  retain_mission: Extract codebase architecture choices, key design patterns, API
+    contracts, data schemas, module boundaries, library integration strategies, and
+    technical decisions. Ignore line-level patches and transient logs.
+  enable_observations: true
+  observations_mission: Track architectural changes, technical debt cleanup, API modifications,
+    and codebase design patterns over time.
+  reflect_mission: Synthesize a technical overview of codebase architecture, component
+    interaction patterns, design conventions, and key API contracts.
+mental_models:
+- id: codebase-architecture-patterns
+  name: Codebase Architecture, Schemas & Design Patterns
+  source_query: What is the overall codebase architecture, core module structure,
+    data models, component interactions, and key design patterns?
+  max_tokens: 2048
+  trigger:
+    refresh_after_consolidation: true

@@ -1,0 +1,22 @@
+version: '1'
+bank:
+  disposition_skepticism: 2
+  disposition_literalism: 5
+  disposition_empathy: 3
+  retain_mission: Extract exact facts about the user's host machine, hardware profile,
+    operating system version, installed packages, user preferences, editor choices,
+    framework choices, tool flags, shell environment variables, and shared directory
+    paths. Ignore conversational fluff and transient command outputs.
+  enable_observations: true
+  observations_mission: Track host environment evolution, developer tool preferences,
+    path mounts, and system configurations over time.
+  reflect_mission: Synthesize a concise summary of developer preferences, host hardware
+    profile, operating system specifications, and configured tool environments.
+mental_models:
+- id: developer-host-profile
+  name: Developer Preferences, Host Machine & Agent Environment
+  source_query: What are the exact facts about the user, their host hardware, operating
+    system, preferred tools, shell aliases, shared path mounts, and environment configuration?
+  max_tokens: 2048
+  trigger:
+    refresh_after_consolidation: true
