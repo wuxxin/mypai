@@ -35,7 +35,7 @@ hindsight:
 | Configuration Key | Type | Default Value | Description |
 | :--- | :--- | :--- | :--- |
 | **`memory.backend`** | `string` | `"hindsight"` | Selects the active memory provider backend. |
-| **`autolearn.enabled`** | `boolean` | `true` | Enables background learning and automated pattern extraction. |
+| **`autolearn.enabled`** | `boolean` | `true` | Enables background learning, error self-correction, preference distillation, and mental model refinement. |
 | **`hindsight.apiUrl`** | `string` | `"http://localhost:8888"` | Base URL of the Hindsight REST API server. Overridden by environment variable `HINDSIGHT_API_URL`. |
 | **`hindsight.bankId`** | `string` | `"oh-my-pi"` | Memory bank namespace ID (e.g. `oh-my-pi` or `mypai`). Overridden by `HINDSIGHT_BANK_ID`. |
 | **`hindsight.scoping`** | `enum` | `"per-project-tagged"` | Controls how memory queries are filtered. Options: `per-project-tagged` (filters by project tags), `per-project` (filters by workspace root), `global` (unfiltered across projects). |
@@ -44,6 +44,45 @@ hindsight:
 | **`hindsight.autoRetain`** | `boolean` | `true` | When `true`, automatically extracts facts from completed turns and sends them to `/retain`. |
 | **`hindsight.mentalModelsEnabled`** | `boolean` | `true` | When `true`, synthesizes and injects mental model summary blocks into the agent system context. |
 | **`hindsight.mentalModelAutoSeed`** | `boolean` | `true` | When `true`, provisions bank missions and mental model definitions from `./memorybanks/*.yaml` on launcher boot. |
+
+---
+
+### Deep Dive: `autolearn.enabled: true` Mechanics
+
+`autolearn` is Oh-My-Pi's active knowledge distillation and self-correction engine. It operates at a higher semantic level than passive turn retention (`hindsight.autoRetain`).
+
+#### 1. `autolearn.enabled` vs `hindsight.autoRetain`
+
+```
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                           MEMORY & LEARNING PIPELINE                            │
+├─────────────────────────────────────────────────────────────────────────────────┤
+│ 1. PASSIVE INGESTION (hindsight.autoRetain: true)                               │
+│    • Raw Turn Output ──> /retain Endpoint ──> Fact Chunks & Vector Database    │
+├─────────────────────────────────────────────────────────────────────────────────┤
+│ 2. ACTIVE DISTILLATION (autolearn.enabled: true)                                │
+│    • Ingestion Streams ──> Pattern & Rule Extractor ──> Mental Models          │
+│    • Triggers: User Corrections, Mistakes, /learn Slash Command, Handoffs      │
+│    • Produces: Durable User Preferences, Project Conventions, Anti-Criteria     │
+└─────────────────────────────────────────────────────────────────────────────────┘
+```
+
+#### 2. Functional Behaviors when `autolearn.enabled: true`
+
+1. **User Preference & Convention Distillation**:
+   - Analyzes ongoing turns for recurring instructions, preferred tool flags, coding styles, and architectural guidelines.
+   - Automatically distills these observations into persistent mental models (e.g. `user-preferences`, `project-conventions`).
+
+2. **Self-Correction & Mistake Prevention**:
+   - Detects user corrections (e.g. "Do not run cd in run_command", "Use shfmt with 4-space indent").
+   - Immediately generates a **Negative Constraint / Anti-Criteria** rule in vector memory to prevent repeating the mistake in future turns.
+
+3. **Mental Model Delta Refinement**:
+   - Triggers background Hindsight re-synthesis passes (`/consolidate` and `/mental-models/{id}/refresh`).
+   - Dynamically updates active mental model text blocks injected into system prompts without overwriting manually curated bootstrap seeds.
+
+4. **Slash Command Synergy (`/learn`)**:
+   - Powers the `/learn` slash command: when executed by the user, `autolearn` immediately distills recent turn context into permanent memory.
 
 ---
 
