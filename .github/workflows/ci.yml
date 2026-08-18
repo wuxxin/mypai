@@ -1,0 +1,64 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+    branches:
+      - main
+      - master
+
+jobs:
+  test-omp-mypai:
+    name: Test and Lint submodule/omp-mypai
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository and submodules
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Run omp-mypai lint and tests
+        working-directory: submodules/omp-mypai
+        run: |
+          make check
+
+  test-main-and-submodules:
+    name: Test and Lint Main Module & Other Submodules
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository and submodules
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Verify submodules checked out
+        run: |
+          echo "Checking submodules..."
+          ls -la submodules/agents-shared
+          ls -la submodules/aur-packages
+          ls -la submodules/omp-mypai
+
+      - name: Test submodules/agents-shared
+        run: |
+          echo "No tests configured for submodules/agents-shared yet."
+
+      - name: Test submodules/aur-packages
+        run: |
+          echo "No tests configured for submodules/aur-packages yet."
+
+      - name: Test main module
+        run: |
+          echo "No tests configured for main module yet."
