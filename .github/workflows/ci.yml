@@ -39,6 +39,6 @@ jobs:
       - name: Build omp-mypai env
         working-directory: submodules/omp-mypai
         run: |
-          buildenv OMP_RPC_SRC=scratch/oh-my-pi/python/omp-rpc
+          make buildenv OMP_RPC_SRC=scratch/oh-my-pi/python/omp-rpc
 
 
