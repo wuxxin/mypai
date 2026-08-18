@@ -29,6 +29,15 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v5
 
+      - name: Ensure omp-rpc package availability
+        working-directory: submodules/omp-mypai
+        run: |
+          if [ ! -d "/usr/share/oh-my-pi/python/omp-rpc" ]; then
+            echo "Cloning oh-my-pi into scratch directory for omp-rpc..."
+            mkdir -p scratch
+            git clone --depth 1 https://github.com/can1357/oh-my-pi.git scratch/oh-my-pi
+          fi
+
       - name: Run omp-mypai lint and tests
         working-directory: submodules/omp-mypai
         run: |
