@@ -44,6 +44,11 @@
 
 ## Operating Guidelines
 
+### Submodule & Monorepo Structure
+
+- **Organic Repository Concept:** The root `mypai` repo and its `submodules/` (`agents-shared`, `aur-packages`, `omp-mypai`, `private-seeds`) form a single organic repository.
+- **Commit Discipline:** Make edits and commits directly inside the target submodule repository (`submodules/<submodule-name>`) for submodule changes, then update the submodule commit pointer in the parent repository when appropriate.
+
 ### Workspace Guidelines
 
 When working in this repository or any of its submodules:
