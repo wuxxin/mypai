@@ -9,8 +9,8 @@ on:
       - main
 
 jobs:
-  prepare-env:
-    name: Test and Lint submodule/omp-mypai
+  omp-mypai-ci:
+    name: omp-mypai Plugin Environment Build, Test and Lint
     runs-on: ubuntu-latest
 
     steps:
@@ -27,7 +27,7 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v5
 
-      - name: Ensure omp-rpc availability
+      - name: Clone oh-my-pi for omp-rpc availability
         working-directory: submodules/omp-mypai
         run: |
           if [ ! -d "/usr/share/oh-my-pi/python/omp-rpc" ]; then
@@ -41,4 +41,10 @@ jobs:
         run: |
           make buildenv OMP_RPC_SRC=scratch/oh-my-pi/python/omp-rpc
 
+      - name: Run omp-mypai tests
+        working-directory: submodules/omp-mypai
+        run: make test
 
+      - name: Run omp-mypai lint
+        working-directory: submodules/omp-mypai
+        run: make lint
