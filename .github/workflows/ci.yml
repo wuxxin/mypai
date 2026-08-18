@@ -48,3 +48,15 @@ jobs:
       - name: Run omp-mypai lint
         working-directory: submodules/omp-mypai
         run: make lint
+
+      - name: Run omp-mypai tests with coverage
+        working-directory: submodules/omp-mypai
+        run: make coverage
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report-${{ matrix.python-version }}
+          path: submodules/omp-mypai/coverage.xml
+          retention-days: 30
+
