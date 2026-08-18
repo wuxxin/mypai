@@ -1,4 +1,20 @@
 # TODO
+
+.) refactor webui, keep current webui, make new modern webui as modern ts single page app,
+
+move app "/ui" to /api/v1/ui/classic-console
+make app "/" redirect to /api/v1/ui/classic-console
+make /api/v1/ui/console (a new modern ts alternative to the classic console.)
+discuss most modern frameworks to use for.
+add deps to makefile for building frontend as part of build process.
+
+
+.) daemon/api/app.py: cron jobs import and export should support yaml too.
+
+make @app.post("/api/v1/cron/import") take both json or yaml, make it like a typical rest endpoint would handle different but equal formats for definitions.
+@app.get("/api/v1/cron/export") make it configurable if you get an json or an yaml, make the webui choose yaml as default.
+
+
 - reconsile and wright good memory banks, make the oh-my-pi bank good for sw-dev, the mypai bank good for lifeos personal assistant
 - get a grip what is auto retained recalled reflected, and how we can map this for mypai
 - mypai: make the daemon inject system message that session is running as daemon.
