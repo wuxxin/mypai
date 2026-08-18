@@ -1,0 +1,44 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  prepare-env:
+    name: Test and Lint submodule/omp-mypai
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository and submodules
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Ensure omp-rpc availability
+        working-directory: submodules/omp-mypai
+        run: |
+          if [ ! -d "/usr/share/oh-my-pi/python/omp-rpc" ]; then
+            echo "Cloning oh-my-pi into scratch directory for omp-rpc..."
+            mkdir -p scratch
+            git clone --depth 1 https://github.com/can1357/oh-my-pi.git scratch/oh-my-pi
+          fi
+
+      - name: Build omp-mypai env
+        working-directory: submodules/omp-mypai
+        run: |
+          OMP_RPC_SRC="scratch/oh-my-pi/python/omp-rpc"
+          make buildenv
+
