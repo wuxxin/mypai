@@ -25,10 +25,10 @@ autolearn:
 hindsight:
   apiUrl: http://localhost:8888
   bankId: mypai
-  scoping: per-project-tagged
-  retainMode: full-session
-  autoRecall: true
-  autoRetain: true
+  scoping: global
+  retainMode: turn
+  autoRecall: false
+  autoRetain: false
   mentalModelsEnabled: true
   mentalModelAutoSeed: true
 mcpServers:
