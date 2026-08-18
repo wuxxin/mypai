@@ -46,13 +46,13 @@
 
 ### Workspace Guidelines
 
-When working in this repository or any of its submodules:
-
-- **Workspace Isolation**: Always use `scratch/` for temporary files, build logs and temporary git checkouts.
-- **Submodule Behavior**:
-  - If operating within a **submodule checkout**, agents and tools must defer to the top-level parent repository's root `scratch/` directory (`mypai/scratch/`).
-  - If operating within a **standalone checkout** of a submodule, use the local repository's root `./scratch/`.
-
+* **Project Scope:** `mypai` and its `submodules/` (`agents-shared`, `aur-packages`, `omp-mypai`) form a single workspace.
+* **Ephemeral Files:** Store build logs, temporary checkouts, and temp files in `scratch/`.
+  * Within the superproject: use parent root `mypai/scratch/`.
+  * Within a standalone submodule checkout: use `./scratch/`.
+* **Submodule Commits:** Commit directly inside `submodules/<name>`, then update the parent git pointer when ready.
+* **File Resolution:** If a user referenced file is missing, check main and submodules before creating a new file to match user intent.
+ 
 ### Sandboxing & Bubblewrap (`bwrap`) Discipline
 
 Check if running inside a bwrap sandbox:
