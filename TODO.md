@@ -1,35 +1,6 @@
 # TODO
 
-+ research and add if fitting: plugins
-```
-/plugin marketplace add anthropics/claude-plugins-official
-
-https://github.com/cathrynlavery/diagram-design
-/plugin marketplace add cathrynlavery/diagram-design
-/plugin install diagram-design@diagram-design
-
-https://github.com/obra/superpowers
-/plugin marketplace add obra/superpowers
-/plugin install superpowers@superpowers-marketplace
-
-https://athola.github.io/claude-night-market/plugins/domain-specialists.html
-/plugin marketplace add athola/claude-night-market
-/plugin install archetypes@claude-night-market
-(archetypes parseltongue cartograph scribe tome scry pensive)
-
-https://github.com/garrytan/gbrain
-```
-
-
-+ look into
-  + https://github.com/mvanhorn/printing-press-library/tree/main/library/commerce/amazon-orders
-  + https://github.com/mvanhorn/printing-press-library/tree/main/library/media-and-entertainment/archive-is
-  + https://github.com/mvanhorn/printing-press-library/tree/main/library/travel/booking-com
-  + https://github.com/mvanhorn/printing-press-library/tree/main/library/developer-tools/domain-goat
-  + https://github.com/mvanhorn/printing-press-library/tree/main/library/marketing/trendhunter
-  + https://github.com/mvanhorn/printing-press-library/tree/main/library/media-and-entertainment/wikipedia
-  + https://github.com/mvanhorn/last30days-skill
-
++ research and add if fitting
 
 + look into
   https://github.com/RUC-NLPIR/DeepAgent
@@ -46,6 +17,26 @@ https://github.com/garrytan/gbrain
   https://github.com/xberg-io/xberg
   https://github.com/lucasjinreal/Crane
   https://github.com/memvid/memvid
+
+```
+/plugin marketplace add anthropics/claude-plugins-official
+
+https://github.com/cathrynlavery/diagram-design
+/plugin marketplace add cathrynlavery/diagram-design
+/plugin install diagram-design@diagram-design
+
+https://github.com/garrytan/gbrain
+```
+
+
++ look into
+  + https://github.com/mvanhorn/printing-press-library/tree/main/library/commerce/amazon-orders
+  + https://github.com/mvanhorn/printing-press-library/tree/main/library/media-and-entertainment/archive-is
+  + https://github.com/mvanhorn/printing-press-library/tree/main/library/travel/booking-com
+  + https://github.com/mvanhorn/printing-press-library/tree/main/library/developer-tools/domain-goat
+  + https://github.com/mvanhorn/printing-press-library/tree/main/library/marketing/trendhunter
+  + https://github.com/mvanhorn/printing-press-library/tree/main/library/media-and-entertainment/wikipedia
+  + https://github.com/mvanhorn/last30days-skill
 
 
 ## External Models Speed Observed in OMP
