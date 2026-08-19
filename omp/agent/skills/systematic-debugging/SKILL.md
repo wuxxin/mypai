@@ -30,5 +30,9 @@ Use this skill whenever investigating test failures, bug reports, performance bo
 2. **Defense-in-Depth:** Add input assertions and type validation at intermediate layer boundaries so the invalid state is impossible.
 3. **Condition-Based Waiting:** When testing asynchronous systems, never use arbitrary `sleep` timeouts; poll or await explicit state predicates.
 4. **Verify & Regress Check:** Verify that the reproduction test passes cleanly, and run the entire project test suite (`make all`).
-5. **Retain in Hindsight:** Distill the defect pattern into Hindsight memory (`tool.retain()`) so the anti-criteria prevents recurrence.
+5. **Retain in Hindsight:**
+   - **Session Default Bank:** Use OMP loopback tools (`tool.retain()`, `tool.reflect()`) to record the defect pattern and update anti-criteria.
+   - **Cross-Bank / Non-Default Bank:** Use `mypai_runtime.hindsight` (`HindsightClient.retain(items=..., bank_id=...)`).
+
+
 

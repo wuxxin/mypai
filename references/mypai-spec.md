@@ -131,12 +131,16 @@ In the current architecture, all internal coordination, automation, and decision
 
 1. **Kernel Lifecycle:** `runner.py` maintains persistent process memory in the session venv. Variables, imported modules, and state dictionaries (`_SESSION_BOOTSTRAPPED`, `_MENTAL_MODELS`, `_CORRELATION_MAP`, `_LAST_ERROR`) persist across turns.
 2. **Native Host Loopback Proxy (`tool.*`):** `prelude.py` injects `tool = _ToolProxy()`. Calling host tools runs over local IPC in microseconds without spawning subshells:
-   - `tool.reflect(query="...", context="...")` -> Synthesizes answers from Hindsight mental models.
-   - `tool.recall(query="...")` -> Performs semantic vector & keyword search over memory facts.
-   - `tool.retain(items=[{"content": "...", "context": "..."}])` -> Persists durable facts to Hindsight.
+   - `tool.reflect(query="...", context="...")` -> Synthesizes answers from Hindsight mental models on the **session's default bank**.
+   - `tool.recall(query="...")` -> Performs semantic vector & keyword search over memory facts on the **session's default bank**.
+   - `tool.retain(items=[{"content": "...", "context": "..."}])` -> Persists durable facts to Hindsight on the **session's default bank**.
    - `tool.read(path)` / `tool.write(path, content)` -> High-speed in-process filesystem I/O.
    - `tool.search(query, glob)` -> Native in-process `ripgrep` search.
-3. **Strict Silence-on-Success Discipline:** Successful runs emit **zero stdout** (0 context tokens wasted). Output is generated only for user-facing responses or trapped error directives.
+3. **Dual Hindsight Memory Access Protocol:**
+   - **Session Default Bank:** Use in-process OMP loopback tools (`tool.reflect()`, `tool.recall()`, `tool.retain()`). These operate on the active profile's default memory bank (`mypai` for MyPai profile, `oh-my-pi` for Base OMP) with zero latency.
+   - **Cross-Bank / Non-Default Bank:** When querying or updating a bank other than the session default (e.g. accessing `mypai` from an ephemeral task worker or `project-bank` from `mypai-main`), use `from mypai_runtime import hindsight` (`HindsightClient.reflect()`, `HindsightClient.recall()`, `HindsightClient.retain()`).
+4. **Strict Silence-on-Success Discipline:** Successful runs emit **zero stdout** (0 context tokens wasted). Output is generated only for user-facing responses or trapped error directives.
+
 
 ### In-Kernel Helper Library (`mypai_runtime` & `amux.py`)
 
@@ -644,17 +648,21 @@ Custom slash commands live in `omp/agent/commands/*.md`:
 
 Every subagent, skill, and command is natively wired into the Hindsight memory architecture:
 
-1. **Pre-Execution Context Grounding:**
-   - Before executing code, agents query active mental models (`tool.reflect()` or automatic prompt injection):
+1. **Dual Access Protocol:**
+   - **Session Default Bank:** Use in-process OMP loopback tools (`tool.reflect()`, `tool.recall()`, `tool.retain()`). These operate on the active profile's default memory bank (`mypai` for MyPai profile, `oh-my-pi` for Base OMP) with microsecond latency.
+   - **Cross-Bank / Target Bank:** When querying or updating a bank other than the session default (e.g. accessing `mypai` from an ephemeral task worker or `project-bank` from `mypai-main`), use `from mypai_runtime import hindsight` (`HindsightClient.reflect()`, `HindsightClient.recall()`, `HindsightClient.retain()`).
+2. **Pre-Execution Context Grounding:**
+   - Before executing code, agents query active mental models (`tool.reflect()` on default bank or `hindsight.reflect()` for target banks):
      - `@orchestrator` / `@reviewer` check `project-conventions` and `project-decisions`.
      - `@designer` checks design token models and UI preferences.
      - `@pythonista` checks language conventions and formatting rules.
-2. **In-Flight Anti-Criteria Enforcement:**
+3. **In-Flight Anti-Criteria Enforcement:**
    - High-severity bugs discovered by `@debugger` and security violations found by `@security-reviewer` are matched against `lifeos-anti-criteria`.
-3. **Post-Task Distillation:**
-   - Completed milestones and architectural trade-offs are curated and persisted via `tool.retain()`, ensuring long-term mental models evolve continuously across sessions.
+4. **Post-Task Distillation:**
+   - Completed milestones and architectural trade-offs are curated and persisted via `tool.retain()` (or `hindsight.retain()`), ensuring long-term mental models evolve continuously across sessions.
 
 ---
+
 
 ## 13. OMP Advanced Capabilities Directives & `agent_inclusion`
 

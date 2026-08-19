@@ -173,7 +173,7 @@ The root `src/mypai_runtime` package provides the in-kernel Python runtime libra
 
 - **CLI Control Utilities (`bin/membank-ctl`)**: Management CLI tool for Hindsight memory bank updates, JSON/YAML parsing, and exports.
 - **Inter-Worker Client (`amux`)**: High-performance HTTP client for structured inter-agent turn messaging, synchronous response polling, and Kanban card operations.
-- **Memory Reflection Client (`hindsight`)**: Programmatic interface for vector memory recall, fact retention, and mental model reflection.
+- **Memory Reflection Client (`hindsight`)**: Programmatic REST interface for cross-bank vector memory recall, fact retention, and mental model reflection (for session default banks, in-process OMP loopback tools `tool.reflect()`, `tool.recall()`, `tool.retain()` are used).
 - **Trapped Error Diagnostics**: Automated error capture and diagnostic reporting across main, cron, and worker sessions.
 
 ---

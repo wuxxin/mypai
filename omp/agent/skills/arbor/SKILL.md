@@ -5,7 +5,7 @@ description: Graph-native code intelligence, dependency graph traversal, AST com
 
 # Arbor Agent Skill
 
-Provides deterministic code-graph intelligence and hypothesis verification paired with the `arbor mcp` tools (`mcp__arbor__*`).
+Provides deterministic code-graph intelligence and hypothesis verification paired with the `arbor` virtual device mounted under `xd://arbor` (`mcp__arbor__*`).
 
 ## When to Trigger
 
@@ -17,7 +17,9 @@ Use Arbor tools when:
 
 ## Workflow & Guidelines
 
-1. **Graph Exploration**: Use Arbor graph tools to identify incoming/outgoing dependencies for target symbols.
-2. **Hypothesis Formulating**: State the architectural or algorithmic hypothesis before making edits.
-3. **Targeted Verification**: Run hypothesis checks on isolated code blocks or worktrees before committing changes.
-4. **Scope Control**: Prefer lightweight graph checks (`Option A2`) over full multi-worktree runs to conserve token budget (~700 - 900 tokens).
+1. **OMP `xd://` Discovery & Invocation**: Discover arbor schemas via `read xd://arbor` and execute graph queries via `write xd://arbor` or `mcp__arbor__*`.
+2. **Graph Exploration**: Use Arbor graph tools to identify incoming/outgoing dependencies for target symbols.
+3. **Hypothesis Formulating**: State the architectural or algorithmic hypothesis before making edits.
+4. **Targeted Verification**: Run hypothesis checks on isolated code blocks or worktrees before committing changes.
+5. **Scope Control**: Prefer lightweight graph checks over full multi-worktree runs to conserve token budget.
+

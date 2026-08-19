@@ -1,4 +1,12 @@
-"""hindsight.py - Client for Hindsight vector memory and mental model reflection."""
+"""hindsight.py - Client for Hindsight vector memory and mental model reflection.
+
+Usage Guidelines:
+- Session Default Bank: For the active session's configured default bank, use OMP
+  in-process loopback tools (`tool.reflect()`, `tool.recall()`, `tool.retain()`).
+- Cross-Bank / Target Bank: When querying or updating a bank other than the session's
+  default bank (e.g. accessing 'mypai' from a task worker or 'project-bank' from main),
+  use this `HindsightClient` REST client.
+"""
 
 from __future__ import annotations
 
@@ -9,7 +17,10 @@ import httpx
 
 
 class HindsightClient:
-    """Client for Hindsight memory recall, retention, reflection, and consolidation."""
+    """Client for Hindsight memory recall, retention, reflection, and consolidation.
+
+    Use for cross-bank queries or non-default memory banks.
+    """
 
     def __init__(
         self,

@@ -30,5 +30,15 @@ Every plan generated using `ulw-plan` must follow this structure:
 - Break down execution into atomic phases (Phase 1, Phase 2, ...).
 - Each phase must conclude with an automated verification test before moving to the next.
 
-### 5. Review & Approval Gate
-- Submit the plan for user approval before making file mutations. In normal OMP plan mode, use `write xd://propose` to submit the plan proposal.
+### 5. Memory & Context Grounding Gate
+- Ground the plan against conventions:
+  - **Session Default Bank:** Use OMP loopback tools (`tool.reflect()`, `tool.recall()`) to query `project-conventions` and `project-decisions`.
+  - **Cross-Bank / Non-Default Bank:** Use `mypai_runtime.hindsight` (`HindsightClient.reflect()`).
+
+### 6. Review & Approval Gate
+- Submit the plan for user approval before making file mutations.
+- **OMP `xd://` Transport:**
+  - Submit proposal: `write xd://propose` with plan slug and summary.
+  - Review / apply diff previews: `write xd://resolve`.
+  - Reject / discard staged edits: `write xd://reject`.
+

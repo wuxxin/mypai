@@ -17,9 +17,15 @@ Use this skill when auditing uncommitted diffs, evaluating pull requests, or ver
    - **Safety & Security:** Are inputs validated? Are secrets protected? Are race conditions prevented?
    - **Cross-Boundary Dispatch:** If events, models, or endpoints were added, do consumers and producers stay in sync?
    - **Test Coverage:** Are unit/integration tests included for new logic?
-3. **Structured Finding Output:**
+   - **Memory & Convention Audit:**
+     - **Session Default Bank:** Use `tool.reflect()` to audit diffs against `project-conventions` and `lifeos-anti-criteria`.
+     - **Cross-Bank / Non-Default Bank:** Use `mypai_runtime.hindsight` (`HindsightClient.reflect()`).
+3. **AST & Loopback Tools:**
+   - Prefer AST tools (`ast_grep`) and loopback tools (`tool.read()`, `tool.search()`, `read xd://...`) over spawning subshell `cat`/`grep` pipelines.
+4. **Structured Finding Output:**
    Group all findings by severity:
    - **P0 (Critical / Blocker):** Crashes, data loss, security vulnerabilities.
    - **P1 (High):** Broken business logic, unhandled API error paths.
    - **P2 (Medium):** Missing test coverage, minor performance issues.
    - **P3 (Low):** Style nits, naming clarity.
+

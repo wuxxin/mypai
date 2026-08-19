@@ -46,14 +46,20 @@ All coordination, state queries, and amux operations must be executed directly v
 ```python
 from mypai_runtime import amux, hindsight
 
-# Inter-worker messaging
+# Inter-worker messaging via amux HTTP bus
 amux.send_message(target_worker="mypai-main", body="USER_REQUEST: Check project status")
 
-# Hindsight memory reflection
-prefs = hindsight.reflect(query="Coding preferences", bank_id="mypai")
+# Hindsight memory operations:
+# 1. Session Default Bank (mypai): Use OMP loopback tools directly (in-process zero latency)
+prefs = tool.reflect(query="Coding preferences")
+recalled = tool.recall(query="Recent architectural decisions")
+
+# 2. Cross-Bank / Target Bank (e.g. oh-my-pi or custom project bank): Use mypai_runtime client
+worker_prefs = hindsight.reflect(query="Coding preferences", bank_id="oh-my-pi")
 ```
 
 * **Silence Discipline:** Successful programmatic operations must complete silently without generating conversational filler. Emit user-visible text only for direct answers, synthesized reports, or confirmed alerts.
+
 
 ---
 

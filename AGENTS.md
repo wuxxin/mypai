@@ -13,6 +13,9 @@ Distributed mesh on **`amux-server` (:8824)**, **`cc-connect` (:9810)**, **`oh-m
 - **`amux-mypai-cron` (`mypai`):** Automation reactor triggered by `amux-server` (`CRON: <action>`). Silent in-kernel sweeps.
 - **`amux-task-worker-N` (`normal`):** Isolated on-demand coding workers in target repositories.
 - **In-Kernel Execution (`lang: "py"`):** Execute messaging, memory reflection, and bulk processing in Python kernel via `mypai_runtime`.
+- **Hindsight Tooling Strategy:**
+  - **Session Default Bank:** Use in-process OMP loopback tools (`tool.reflect()`, `tool.recall()`, `tool.retain()`).
+  - **Cross-Bank / Non-Default Bank:** Use `mypai_runtime.hindsight` REST client (`HindsightClient(bank_id=...)`).
 - **Loopback Tools:** Use `tool.read()`, `tool.write()`, `tool.search()`, `tool.reflect()`, `tool.recall()`, `tool.retain()`.
 - **Silence Discipline:** Successful automated sweeps/probes must emit **0 stdout** (no conversational filler).
 
@@ -39,7 +42,7 @@ mypai/
 2. **Managed Venv Only:** Execute in `~/.omp/python-env` or `~/.omp/profiles/mypai/python-env`. Never use bare system Python.
 3. **`amux` HTTP Bus Only:** Cross-session turns route via `POST /api/messages` with JSON payloads & correlation IDs. No raw keystroke injection.
 4. **Loopback First:** Use in-kernel `tool.*` and AST tools over subshell spawning (`cat`, `grep`, `sed`).
-5. **`xd://` Tools Only:** Discover tools and propose plans via `xd://` (`write xd://propose`, `read xd://`).
+5. **`xd://` Tools Only:** Discover tools and propose plans via `xd://` (`write xd://propose`, `write xd://resolve`, `write xd://reject`, `read xd://`).
 6. **Explicit Errors:** Never use empty `except: pass`. Capture stack traces in `_LAST_ERROR` and raise typed domain exceptions.
 
 ---

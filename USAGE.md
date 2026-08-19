@@ -144,10 +144,10 @@ In any interactive OMP session, you can invoke specialized workflows using slash
 
 ## 6. In-Kernel Python `eval` Execution (`lang: "py"`)
 
-All coordination across agents is executed in-process using Python `eval` with the unified `mypai_runtime`:
+All coordination across agents is executed in-process using Python `eval` with the unified `mypai_runtime` and OMP loopback tools:
 
 ```python
-from mypai_runtime import amux
+from mypai_runtime import amux, hindsight
 
 # 1. Send an inter-worker message
 amux.send_message(
@@ -162,7 +162,15 @@ card = amux.create_card(
     lane="Doing"
 )
 
-# 3. Synchronous in-cell waiting for response
+# 3. Hindsight Memory Operations:
+# - Session Default Bank: Use OMP loopback tools directly (zero latency)
+prefs = tool.reflect(query="Coding preferences")
+recalled = tool.recall(query="Authentication conventions")
+
+# - Cross-Bank / Target Bank: Use mypai_runtime REST client
+target_prefs = hindsight.reflect(query="Coding preferences", bank_id="target-bank")
+
+# 4. Synchronous in-cell waiting for response
 try:
     reply = amux.wait_for_response(
         target_worker="mypai-main",
@@ -172,6 +180,7 @@ try:
 except TimeoutError:
     print("Main did not respond within 30s")
 ```
+
 
 ---
 
