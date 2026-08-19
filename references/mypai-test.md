@@ -12,25 +12,45 @@ The **Next-Generation MyPAI Test Architecture** establishes a rigorous, automate
 flowchart TD
     subgraph Layers["Testing Pyramid"]
         E2E["End-to-End Multi-Session Simulation (tests/e2e)<br/>• Channel -> Main -> Worker -> Cron Pipeline<br/>• Full Turn Correlation & State Machines<br/>• Anomaly Detection & Recovery"]
-        Component["Component & Contract Tests (tests/unit)<br/>• amux.py (Full REST API Client, Kanban, Sessions, Schedules)<br/>• hindsight.py (Reflect, Recall, Retain, Models)<br/>• diagnostics.py (Traceback & Failure Context)<br/>• bin/membank-ctl (CLI Flags & YAML Parser)"]
+        Amux["Amux REST API Verification Suite (tests/unit)<br/>• test_amux_client.py (Core REST & HTTP Verbs)<br/>• test_amux_errors.py (404s, Timeouts & Error Paths)<br/>• test_amux_cards_crud.py (Kanban Lifecycle & Filtering)<br/>• test_amux_schedules_crud.py (Cron Schedules & Triggers)<br/>• test_amux_sessions_lifecycle.py (Session Spawning & Termination)"]
+        Components["Vector Memory & Diagnostics (tests/unit)<br/>• test_hindsight_client.py (Reflect, Recall, Retain)<br/>• test_diagnostics.py (Traceback & Failure Context)<br/>• test_membank_ctl.py (CLI Flags & YAML Parser)"]
         Static["Static Analysis & Type Verification<br/>• mypy --strict (Type Safety, Python 3.14)<br/>• ruff check & ruff format (PEP 8, Clean Code)"]
     end
     
-    Static --> Component
-    Component --> E2E
+    Static --> Components
+    Static --> Amux
+    Components --> E2E
+    Amux --> E2E
 ```
 
 1. **Unit & Component Testing:** Isolates each runtime component (`AmuxClient`, `HindsightClient`, `diagnostics`, `membank-ctl`) using mock HTTP transports (`httpx.MockTransport`), verifying status codes, payload serialization, and exception paths.
-2. **End-to-End (E2E) Multi-Session Simulation:** Tests complete multi-agent workflows across simulated `mypai-channel`, `mypai-main`, `amux-task-worker`, and `mypai-cron` sessions, verifying end-to-end turn routing and Kanban state transitions.
-3. **Strict Type Safety & Zero-Defect Linting:** Enforces full type annotations verified by `mypy` and code formatting verified by `ruff`.
+2. **Dedicated `amux` API Test Suites:** Comprehensive granular coverage across all 5 REST subsystems (Messages, Sessions, Kanban Cards, Schedules, Health & Metrics) plus error handling.
+3. **End-to-End (E2E) Multi-Session Simulation:** Tests complete multi-agent workflows across simulated `mypai-channel`, `mypai-main`, `amux-task-worker`, and `mypai-cron` sessions, verifying end-to-end turn routing and Kanban state transitions.
+4. **Strict Type Safety & Zero-Defect Linting:** Enforces full type annotations verified by `mypy` and code formatting verified by `ruff`.
 
 ---
 
-## 2. Component Test Matrix
+## 2. Comprehensive `amux-server` REST API Testing Matrix
+
+The `amux` client (`mypai_runtime.amux.AmuxClient`) is covered by a suite of dedicated unit tests validating every endpoint, query filter, mutation payload, and failure mode:
+
+### Detailed Subsystem Coverage & Test Map
+
+| REST Subsystem | API Endpoints Covered | Test Module | Verification Scope & Test Cases |
+| :--- | :--- | :--- | :--- |
+| **Messages API** | `GET /api/messages`<br/>`POST /api/messages`<br/>`GET /api/messages/{id}`<br/>`POST /api/messages/{id}/read`<br/>`DELETE /api/messages/{id}` | `tests/unit/test_amux_client.py`<br/>`tests/unit/test_amux_errors.py` | • Structured message dispatch with correlation IDs, `reply_to`, and metadata<br/>• Filtered querying by `worker`, `unread`, `limit`, and `offset`<br/>• Direct message inspection and deletion<br/>• Synchronous in-cell polling (`wait_for_response`) with instant match and `mark_read` flags<br/>• `TimeoutError` raising on deadline expiry<br/>• 404 handling on nonexistent message queries and deletions |
+| **Sessions API** | `GET /api/sessions`<br/>`POST /api/sessions`<br/>`GET /api/sessions/{name}`<br/>`POST /api/sessions/{name}/kill`<br/>`POST /api/sessions/{name}/restart` | `tests/unit/test_amux_sessions_lifecycle.py`<br/>`tests/unit/test_amux_errors.py` | • Listing active and registered agent sessions<br/>• Spawning sessions with custom `provider`, `profile`, `command`, and `env` dictionaries<br/>• High-level `spawn_task_worker()` helper delivering initial prompt turns<br/>• Lifecycle state transitions (`spawned` $\to$ `restarted` $\to$ `terminated`)<br/>• 404 handling on nonexistent session inspection, kill, and restart |
+| **Kanban Board & Cards** | `GET /api/board/lanes`<br/>`GET /api/board/cards`<br/>`POST /api/board/cards`<br/>`GET /api/board/cards/{id}`<br/>`POST /api/board/cards/{id}`<br/>`PATCH /api/board/cards/{id}`<br/>`DELETE /api/board/cards/{id}` | `tests/unit/test_amux_cards_crud.py`<br/>`tests/unit/test_amux_errors.py` | • Board lane enumeration (`Todo`, `Doing`, `Done`)<br/>• Card creation with tags, priority (`P0`–`P3`), assignee, and metadata<br/>• Filtered listing by `lane`, `tag`, and `assignee`<br/>• Lane progression and implementation notes updating<br/>• Card deletion and state verification<br/>• 404 handling on nonexistent card inspection, update, and deletion |
+| **Schedules API** | `GET /api/schedules`<br/>`POST /api/schedules`<br/>`GET /api/schedules/{id}`<br/>`POST /api/schedules/{id}`<br/>`POST /api/schedules/{id}/trigger`<br/>`DELETE /api/schedules/{id}` | `tests/unit/test_amux_schedules_crud.py`<br/>`tests/unit/test_amux_errors.py` | • Durable schedule registration with cron expressions (`schedule_expr`), session targets, and commands<br/>• Fetching schedule details and active status<br/>• Mutation of cron expressions and enable/disable toggling<br/>• Manual execution triggering (`/trigger`)<br/>• Schedule deletion and list verification<br/>• 404 handling on nonexistent schedule retrieval, mutation, triggering, and deletion |
+| **System Health & Metrics** | `GET /api/metrics`<br/>`GET /api/health`<br/>`GET /api/status` | `tests/unit/test_amux_client.py` | • Control plane telemetry metrics (`active_sessions`, `total_messages`, `total_cards`)<br/>• Service health check confirmation (`status: "healthy"`)<br/>• Daemon status, uptime reporting, and session counts |
+| **Core HTTP Primitives** | `get()`, `post()`, `patch()`, `delete()` | `tests/unit/test_amux_client.py` | • Direct execution of REST verbs with query parameters and JSON payloads<br/>• Pure `httpx` connection reuse and status code validation |
+
+---
+
+## 3. General Component Test Matrix
 
 | Component | Tested Module | Test File | Test Cases & Invariants Checked |
 | :--- | :--- | :--- | :--- |
-| **Inter-Worker & Control Plane Client** | `mypai_runtime.amux` | `tests/unit/test_amux_client.py` | • Structured message dispatch & deletion (`POST /api/messages`, `DELETE /api/messages/{id}`)<br/>• In-cell synchronous response polling (`wait_for_response`)<br/>• Timeout handling (`TimeoutError` on unread expiry)<br/>• Kanban card lifecycle (Create, Update, Lanes, Delete)<br/>• Worker session lifecycle (`list_sessions`, `create_session`, `kill_session`, `restart_session`)<br/>• Schedule automation (`create_schedule`, `update_schedule`, `trigger_schedule`, `delete_schedule`)<br/>• Control plane telemetry (`GET /api/metrics`, `GET /api/health`, `GET /api/status`) |
 | **Vector Memory Client** | `mypai_runtime.hindsight` | `tests/unit/test_hindsight_client.py` | • Mental model reflection (`POST /v1/banks/{id}/reflect`)<br/>• Semantic vector recall (`GET /v1/banks/{id}/recall`)<br/>• Durable fact retention (`POST /v1/banks/{id}/retain`)<br/>• Model schema enumeration (`GET /v1/banks/{id}/mental-models`)<br/>• Database consolidation (`POST /v1/banks/{id}/consolidate`) |
 | **Failure Diagnostics** | `mypai_runtime.diagnostics` | `tests/unit/test_diagnostics.py` | • Full exception context & traceback capture<br/>• Main failure formatting (`analyze_main_failure`)<br/>• Scheduled cron sweep diagnostics (`analyze_cron_failure`)<br/>• Chat gateway ingress diagnostics (`analyze_channel_failure`)<br/>• Task worker crash analysis (`analyze_worker_failure`) |
 | **Memory Bank CLI** | `bin/membank-ctl` | `tests/unit/test_membank_ctl.py` | • CLI help display (`--help`)<br/>• Graceful failure on missing arguments<br/>• Subcommand dispatch (`update`, `export`) |
@@ -38,7 +58,7 @@ flowchart TD
 
 ---
 
-## 3. Modern Makefile Automation Matrix
+## 4. Modern Makefile Automation Matrix
 
 The root `Makefile` provides an interactive, self-documenting build and test interface:
 
@@ -90,7 +110,7 @@ Active Runtime Configuration:
 
 ---
 
-## 4. End-to-End (E2E) Multi-Session Workflow Testing
+## 5. End-to-End (E2E) Multi-Session Workflow Testing
 
 ### The 5-Step E2E User Request Pipeline
 
@@ -133,13 +153,13 @@ The E2E suite tests fault tolerance and error recovery:
 
 ---
 
-## 5. Adding New Tests & Guidelines
+## 6. Guidelines for Authoring New Tests
 
 ### Unit Test Pattern
 When adding a new feature or API method to `mypai_runtime`:
 1. Add test case under `tests/unit/test_<feature>.py`.
 2. Use the `mock_amux_client` or `mock_hindsight_client` fixtures from `tests/conftest.py`.
-3. Assert both positive paths and explicit error paths (e.g. `pytest.raises(TimeoutError)`).
+3. Assert both positive paths and explicit error paths (e.g. `pytest.raises(httpx.HTTPStatusError)` or `pytest.raises(TimeoutError)`).
 
 ### E2E Test Pattern
 When adding a new inter-agent workflow or slash command:
