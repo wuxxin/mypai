@@ -3,27 +3,29 @@
 **mypai** is a local, private, and experimental **Personal Artificial Intelligence (PAI)** infrastructure powered by:
 
 - **Oh-my-PI** (`omp`) — High-performance agent execution harness with in-kernel `eval` and loopback tool bridge
+- **Hindsight** — Persistent vector memory, temporal observation tracking, and mental model reflection service
 - **amux** — Distributed control plane, process supervisor, durable scheduler, and inter-worker message bus
 - **cc-connect** — Multi-platform external chat gateway (Signal, Telegram, Discord)
 - **Agent of Empires** (`aoe`) — Visual TUI matrix, ACP inspector, and Web PWA cockpit
-- **Hindsight** — Persistent vector memory, temporal observation tracking, and mental model reflection service
 
-> [!TIP]
-> - For a complete user guide, agent roster, skills, and command catalog, see [USAGE.md](USAGE.md).
-> - For the exhaustive technical and architectural specification, see [references/mypai-spec.md](references/mypai-spec.md).
-> - For the testing architecture, component test matrix, and Makefile reference, see [references/mypai-test.md](references/mypai-test.md).
+## Documentation
 
-Core Architecture & Components:
+- User guide, agent roster, skills, and command catalog, see [USAGE.md](USAGE.md).
+- myPAI Overview , see [references/mypai-overview.md](references/mypai-overview.md)
+- Technical and architectural Specification, see [references/mypai-spec.md](references/mypai-spec.md).
+- Testing, component test matrix, and Makefile reference, see [references/mypai-test.md](references/mypai-test.md)
 
-- **`amux-server`**: High-performance control plane, session supervisor, durable scheduler, and inter-worker message bus.
+## Components
+
 - **`mypai_runtime`**: Unified in-kernel Python runtime library for inter-worker turn messaging, synchronous response polling, and Hindsight memory reflection.
 - **Local Inference (`local-router`)**: Unified OpenAI-compatible API routing for chat, vision, embeddings, reranking, STT, TTS, and image generation.
 - **Sandbox Containment (`sandbox-ctl`)**: Containerized sandbox isolation and automated sidecar process management.
 - **ROCm/HIP Hardware Acceleration**: Custom Arch Linux PKGBUILD stack optimized for low-latency AMD GPU local inference.
 
-Inspired by concepts from **LifeOS** and **OpenClaw** agent loops, `mypai` delivers a robust, autonomous, 24/7-capable multi-session agent mesh.
+
 
 ---
+
 
 ## Setup & Installation
 
@@ -208,3 +210,7 @@ Hindsight vector memory is natively integrated into OMP's orchestration engine:
 Personal credentials, private memory seeds, and custom prompt overrides can be stored in `submodules/private-seeds/`:
 
 *Note: All contents of `submodules/private-seeds/` (except `.gitkeep`) are git-ignored in the parent repository to prevent accidental credential leakage.*
+
+## About
+
+Inspired by concepts from **LifeOS** and **OpenClaw** like agent loops, `mypai` delivers a robust, autonomous, 24/7-capable multi-session agent mesh.
