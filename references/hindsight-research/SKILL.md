@@ -25,10 +25,10 @@ You can idempotently provision or export bank configurations and mental models u
 
 ```bash
 # Update bank configs and mental models from JSON or YAML definitions:
-./submodules/omp-mypai/bin/membank-ctl update http://localhost:8888 ./omp/agent/memorybanks --yes --prune
+./bin/membank-ctl update http://localhost:8888 ./omp/agent/memorybanks --yes --prune
 
 # Export server bank configuration and mental models to YAML or JSON:
-./submodules/omp-mypai/bin/membank-ctl export http://localhost:8888 oh-my-pi --yaml --out oh-my-pi.yaml
+./bin/membank-ctl export http://localhost:8888 oh-my-pi --yaml --out oh-my-pi.yaml
 ```
 
 #### Manual REST API Operations

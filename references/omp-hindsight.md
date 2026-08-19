@@ -169,17 +169,17 @@ During bootstrap in `omp.env`, memory banks are provisioned automatically:
 
 ```bash
 # Provision Base OMP Bank:
-${LAUNCHER_INSTALL_SOURCE:-.}/submodules/omp-mypai/bin/membank-ctl update "$HINDSIGHT_API_URL" ${LAUNCHER_INSTALL_SOURCE:-.}/omp/agent/memorybanks --yes
+${LAUNCHER_INSTALL_SOURCE:-.}/bin/membank-ctl update "$HINDSIGHT_API_URL" ${LAUNCHER_INSTALL_SOURCE:-.}/omp/agent/memorybanks --yes
 
 # Provision Profile Bank:
-${LAUNCHER_INSTALL_SOURCE:-.}/submodules/omp-mypai/bin/membank-ctl update "$HINDSIGHT_API_URL" ${LAUNCHER_INSTALL_SOURCE:-.}/omp/profiles/mypai/memorybanks --yes
+${LAUNCHER_INSTALL_SOURCE:-.}/bin/membank-ctl update "$HINDSIGHT_API_URL" ${LAUNCHER_INSTALL_SOURCE:-.}/omp/profiles/mypai/memorybanks --yes
 ```
 
 ---
 
 ## 4. `membank-ctl` Management CLI Tool
 
-`membank-ctl` is the management utility located at `bin/membank-ctl` (and `submodules/omp-mypai/bin/membank-ctl`).
+`membank-ctl` is the management utility located at `bin/membank-ctl`.
 
 ### Commands & Usage
 

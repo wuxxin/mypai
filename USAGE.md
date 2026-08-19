@@ -200,3 +200,36 @@ amux.post(
    - Checks server metrics via `amux.get("metrics")`.
 3. **If all clean:** Remains **100% silent (0 stdout)**.
 4. **If anomalies found:** Files an amux Kanban card (`Todo`) and alerts `mypai-workspace`.
+
+---
+
+## 8. Development, Testing & Quality Assurance (`Makefile`)
+
+The repository includes a modern GNU Makefile to run tests, type checking, and linting locally:
+
+```bash
+# View available Makefile targets
+make help
+
+# Run the complete test suite (unit + e2e)
+make test
+
+# Run unit or end-to-end integration tests separately
+make test-unit
+make test-e2e
+
+# Run test suite with code coverage
+make coverage
+
+# Auto-format and lint code
+make format
+make lint
+
+# Run static type checking with mypy
+make typecheck
+
+# Run full CI validation pipeline
+make all
+```
+
+For complete architectural details on testing, component contract coverage, and E2E simulation flows, see [references/mypai-test.md](references/mypai-test.md).

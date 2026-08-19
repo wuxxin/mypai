@@ -699,6 +699,21 @@ Next-Generation MyPAI explicitly rejects defensive silent fallbacks and degraded
 | **6. Tool Discovery** | Flood the model's top-level system prompt with raw JSON schemas if `xd://` is unconfigured. | **STRICT `xd://` VIRTUAL DEVICE INVARIANT.** `tools.xdev: true` is strictly enforced in `config.yml`. All MCP and custom tools mount under `xd://`. | Prevents wasting 40,000+ prompt tokens on tool definitions and prevents provider prompt cache invalidation. |
 | **7. Error Handling** | Catch-all `except Exception: pass` in polling and event loops. | **STRICT EXCEPTION VISIBILITY INVARIANT.** All runtime errors capture full stack traces into `_LAST_ERROR`, log diagnostic telemetry, and raise typed domain errors (e.g. `TimeoutError`, `WorkerExecutionError`). | Suppressing exceptions hides underlying infrastructure and timeout defects from operator inspection. |
 
+---
+
+## 15. Testing Architecture & Quality Automation
+
+The testing architecture ensures zero regressions, 97%+ code coverage, and deterministic verification across all multi-session components. For exhaustive details, component test matrices, and E2E simulation sequence diagrams, see the dedicated testing specification in [references/mypai-test.md](references/mypai-test.md).
+
+### Makefile Target Reference
+- `make help`: Interactive target overview and active configuration discovery.
+- `make buildenv`: UV-managed local virtual environment provisioning with test dependencies (`.[test]`).
+- `make test`: Executes all unit and E2E multi-session tests via `pytest`.
+- `make coverage`: Generates line-level test coverage reports and XML artifacts.
+- `make lint` & `make format`: Automated code styling, import sorting, and lint verification via `ruff`.
+- `make typecheck`: Strict static type validation via `mypy` for Python 3.14 compatibility.
+- `make all`: End-to-end CI pipeline validation.
+
 
 
 
