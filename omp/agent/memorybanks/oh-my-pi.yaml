@@ -36,3 +36,11 @@ mental_models:
   trigger:
     mode: delta
     refresh_after_consolidation: true
+- id: active-initiatives-and-commitments
+  name: Active Initiatives & Task Commitments
+  source_query: What are the active milestones, in-flight refactoring initiatives, and task
+    commitments for this codebase?
+  max_tokens: 800
+  trigger:
+    mode: delta
+    refresh_after_consolidation: true
