@@ -129,6 +129,10 @@ mypai/
 ├── Makefile                         # Modern GNU Makefile (buildenv, test, lint, coverage)
 ├── pyproject.toml                   # Root package and test dependency definition
 ├── omp.env                          # Sandbox launcher & amux supervisor config
+├── amux/                            # amux server env, starter templates & fleet hooks (~/.amux/)
+│   ├── server.env                   # Process-level environment configuration
+│   ├── templates/                   # Session starter templates (software-project, etc.)
+│   └── hooks/                       # git-shared-guard.py, hook-report.sh
 ├── bin/
 │   └── membank-ctl                  # Hindsight sync CLI utility
 ├── src/
@@ -148,12 +152,16 @@ mypai/
 │   │   ├── agents/                  # orchestrator, debugger, pythonista, writer, patcher, scout, ...
 │   │   ├── skills/                  # ulw-plan, systematic-debugging, git-master, review-work, tdd
 │   │   └── commands/                # plan, ulw-plan, debug, review, git, scout, security, ...
-│   └── profiles/
-│       └── mypai/                   # MyPai Profile (~/.omp/profiles/mypai/agent/)
-│           ├── config.yml, models.yml, mcp.json
-│           ├── memorybanks/         # mypai.yaml (8-model LifeOS bank)
-│           ├── agents/              # mypai.md (mypai-main, mypai-channel, mypai-cron)
-│           └── commands/            # learn.md, reflect.md
+│   ├── profiles/
+│   │   └── mypai/                   # MyPai Profile (~/.omp/profiles/mypai/agent/)
+│   │       ├── config.yml, models.yml, mcp.json
+│   │       ├── memorybanks/         # mypai.yaml (8-model LifeOS bank)
+│   │       ├── agents/              # mypai.md (mypai-main, mypai-channel, mypai-cron)
+│   │       └── commands/            # learn.md, reflect.md
+│   └── sessions/                    # Canonical session starter instructions
+│       ├── mypai-main/              # CLAUDE.md for central brain & orchestrator
+│       ├── mypai-channel/           # CLAUDE.md for chat ingress gateway
+│       └── mypai-cron/              # CLAUDE.md for automation reactor
 ├── submodules/
 │   ├── agents-shared                # Shared infrastructure, sandbox-ctl, model downloaders
 │   ├── aur-packages                 # Custom ROCm/HIP PKGBUILDs

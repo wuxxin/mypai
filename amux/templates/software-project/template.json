@@ -1,0 +1,9 @@
+{
+  "id": "software-project",
+  "label": "Software Project",
+  "icon": "💻",
+  "description": "Build features, fix bugs, and ship code. Claude works within your existing codebase, follows your conventions, and handles the full dev loop: read → plan → implement → test → commit.",
+  "tags": ["coding", "development", "engineering"],
+  "dirs": ["docs", "scripts"],
+  "initial_prompt": "Read CLAUDE.md and give me a one-paragraph orientation: what's the project, what's the stack, and what are you here to help with. Then ask what we're working on today."
+}

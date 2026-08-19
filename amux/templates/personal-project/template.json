@@ -1,0 +1,9 @@
+{
+  "id": "personal-project",
+  "label": "Personal / Life Admin",
+  "icon": "🏠",
+  "description": "Manage real-life projects: home purchases, renovations, major decisions, travel, legal matters, or any complex personal undertaking. Claude tracks tasks, contacts, docs, and decisions so nothing falls through the cracks.",
+  "tags": ["personal", "planning", "admin", "life"],
+  "dirs": ["docs", "research", "contacts", "decisions", "timeline"],
+  "initial_prompt": "Read CLAUDE.md and give me a status briefing: what's the project, what phase are we in, what are the open action items, and what's blocking us. Then ask what to work on."
+}

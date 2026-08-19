@@ -1,0 +1,9 @@
+{
+  "id": "research-analyst",
+  "label": "Research & Analysis",
+  "icon": "🔬",
+  "description": "Deep research on any topic. Claude gathers and synthesizes sources, maintains structured notes, and produces clear reports. Good for market research, technical due diligence, policy analysis, or competitive intel.",
+  "tags": ["research", "analysis", "writing", "knowledge"],
+  "dirs": ["sources", "notes", "drafts", "output"],
+  "initial_prompt": "Read CLAUDE.md. Restate the research question in your own words, identify the 3 most important things we need to find out, and propose a research approach. Then ask if I want to adjust the scope before we start."
+}

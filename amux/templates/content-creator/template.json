@@ -1,0 +1,9 @@
+{
+  "id": "content-creator",
+  "label": "Content & Marketing",
+  "icon": "✍️",
+  "description": "Produce blog posts, video scripts, marketing copy, social content, and GTM materials. Claude follows your brand voice, manages the brief → draft → publish workflow, and repurposes content across channels.",
+  "tags": ["content", "marketing", "writing", "GTM"],
+  "dirs": ["briefs", "drafts", "published", "assets"],
+  "initial_prompt": "Read CLAUDE.md. Tell me the brand voice in 3 adjectives, who the target audience is, and what content types we produce. Then ask what we're creating today."
+}

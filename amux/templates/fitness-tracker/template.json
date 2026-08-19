@@ -1,0 +1,9 @@
+{
+  "id": "fitness-tracker",
+  "label": "Fitness & Health Tracker",
+  "icon": "💪",
+  "description": "Track workouts, nutrition, and health goals with structured daily logs. Claude maintains your logs, spots trends, and holds you accountable to progressive overload and nutrition targets.",
+  "tags": ["health", "fitness", "tracking", "personal"],
+  "dirs": ["workout/logs", "diet", "reports"],
+  "initial_prompt": "Read CLAUDE.md and orient yourself: what are my current goals, where am I in the program, and when did I last log? Then ask what I want to log or work on today."
+}
