@@ -1,6 +1,6 @@
 ---
-name: hindsight-api
-description: Inspecting, reconfiguring, and managing Hindsight memory banks, retain/reflect/observations missions, mental models, and consolidation triggers via the Hindsight REST API (http://localhost:8888). Use when configuring memory bank missions, refreshing mental models, checking bank statistics, or provisioning bank JSON schemas.
+name: hindsight-bank-configuration
+description: Inspecting, reconfiguring, and managing Hindsight memory banks, retain/reflect/observations missions, mental models, and consolidation triggers via the Hindsight REST API. Use when configuring memory bank missions, refreshing mental models, checking bank statistics, or provisioning bank JSON schemas.
 ---
 
 # Hindsight Memory API & Bank Management Skill
