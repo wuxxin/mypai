@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
-from mypai_eval_runtime.diagnostics import (
+from mypai_runtime.diagnostics import (
     analyze_channel_failure,
     analyze_cron_failure,
+    analyze_main_failure,
     analyze_worker_failure,
     analyze_workspace_failure,
     capture_exception_context,
@@ -24,12 +25,16 @@ def test_capture_exception_context_explicit() -> None:
     assert len(ctx["traceback"]) > 0
 
 
-def test_analyze_workspace_failure() -> None:
-    """Verify formatting failure diagnostics for mypai-workspace."""
+def test_analyze_main_failure() -> None:
+    """Verify formatting failure diagnostics for mypai-main."""
     exc = KeyError("missing_session_id")
-    msg = analyze_workspace_failure(exc)
-    assert "WORKSPACE_FAILURE: Encountered KeyError." in msg
+    msg = analyze_main_failure(exc)
+    assert "MAIN_FAILURE: Encountered KeyError." in msg
     assert "missing_session_id" in msg
+
+    # Test backwards-compatible alias
+    alias_msg = analyze_workspace_failure(exc)
+    assert alias_msg == msg
 
 
 def test_analyze_cron_failure() -> None:

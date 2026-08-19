@@ -34,7 +34,7 @@ help: ## Show this help message and reconstruct all primary targets
 buildenv: ## Provision local virtual environment with uv and install test dependencies
 	@echo "==> Creating virtual environment in $(VENV)..."
 	@if [ ! -d "$(VENV)" ]; then uv venv $(VENV); fi
-	@echo "==> Installing mypai_eval_runtime in editable mode with test dependencies..."
+	@echo "==> Installing mypai_runtime in editable mode with test dependencies..."
 	@uv pip install --python $(VENV_BIN)/python -e ".[test]"
 	@echo "==> Environment ready: $(VENV_BIN)/python"
 
@@ -53,7 +53,7 @@ test-e2e: ## Run end-to-end multi-session and protocol integration tests
 
 coverage: ## Run test suite with line-level code coverage report
 	@echo "==> Running test suite with coverage..."
-	@PYTHONPATH="src:.:$${PYTHONPATH:-}" $(PYTEST) tests --cov=mypai_eval_runtime --cov-report=term-missing --cov-report=xml
+	@PYTHONPATH="src:.:$${PYTHONPATH:-}" $(PYTEST) tests --cov=mypai_runtime --cov-report=term-missing --cov-report=xml
 
 ## Linting & Formatting Targets
 lint: ## Run ruff linter and format checking across codebase

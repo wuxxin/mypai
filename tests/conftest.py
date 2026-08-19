@@ -8,8 +8,8 @@ from typing import Any, Dict, List
 import httpx
 import pytest
 
-from mypai_eval_runtime.amux import AmuxClient
-from mypai_eval_runtime.hindsight import HindsightClient
+from mypai_runtime.amux import AmuxClient
+from mypai_runtime.hindsight import HindsightClient
 
 
 class MockAmuxState:
@@ -19,12 +19,13 @@ class MockAmuxState:
         self.messages: List[Dict[str, Any]] = []
         self.cards: Dict[str, Dict[str, Any]] = {}
         self.sessions: Dict[str, Dict[str, Any]] = {
-            "mypai-workspace": {"name": "mypai-workspace", "profile": "mypai", "status": "active"},
+            "mypai-main": {"name": "mypai-main", "profile": "mypai", "status": "active"},
             "mypai-channel": {"name": "mypai-channel", "profile": "mypai", "status": "active"},
             "mypai-cron": {"name": "mypai-cron", "profile": "mypai", "status": "active"},
         }
-        self.schedules: List[Dict[str, Any]] = []
+        self.schedules: Dict[str, Dict[str, Any]] = {}
         self.next_card_id = 1
+        self.next_schedule_id = 1
 
 
 @pytest.fixture
@@ -41,6 +42,9 @@ def mock_amux_transport(amux_state: MockAmuxState) -> httpx.MockTransport:
         path = url.path.rstrip("/")
         method = request.method
 
+        # ---------------------------------------------------------------------
+        # Messages API
+        # ---------------------------------------------------------------------
         if path == "/api/messages":
             if method == "POST":
                 payload = json.loads(request.content.decode("utf-8"))
@@ -50,6 +54,8 @@ def mock_amux_transport(amux_state: MockAmuxState) -> httpx.MockTransport:
                     "target_worker": target,
                     "body": payload.get("body", ""),
                     "correlation_id": payload.get("correlation_id"),
+                    "reply_to": payload.get("reply_to"),
+                    "metadata": payload.get("metadata", {}),
                     "unread": True,
                 }
                 amux_state.messages.append(msg_entry)
@@ -66,6 +72,34 @@ def mock_amux_transport(amux_state: MockAmuxState) -> httpx.MockTransport:
                 ]
                 return httpx.Response(200, json={"messages": matched})
 
+        elif path.startswith("/api/messages/"):
+            sub = path.split("/")
+            if len(sub) == 4:
+                msg_id = sub[3]
+                found = next((m for m in amux_state.messages if m["id"] == msg_id), None)
+                if method == "GET":
+                    if found:
+                        return httpx.Response(200, json=found)
+                    return httpx.Response(404, json={"error": f"Message {msg_id} not found"})
+                elif method == "DELETE":
+                    if found:
+                        amux_state.messages.remove(found)
+                        return httpx.Response(200, json={"status": "deleted", "id": msg_id})
+                    return httpx.Response(404, json={"error": f"Message {msg_id} not found"})
+            elif len(sub) == 5 and sub[4] == "read":
+                msg_id = sub[3]
+                found = next((m for m in amux_state.messages if m["id"] == msg_id), None)
+                if found:
+                    found["unread"] = False
+                    return httpx.Response(200, json={"status": "marked_read", "id": msg_id})
+                return httpx.Response(404, json={"error": f"Message {msg_id} not found"})
+
+        # ---------------------------------------------------------------------
+        # Board & Cards API
+        # ---------------------------------------------------------------------
+        elif path == "/api/board/lanes":
+            return httpx.Response(200, json={"lanes": ["Todo", "Doing", "Done"]})
+
         elif path == "/api/board/cards":
             if method == "POST":
                 payload = json.loads(request.content.decode("utf-8"))
@@ -77,26 +111,41 @@ def mock_amux_transport(amux_state: MockAmuxState) -> httpx.MockTransport:
                     "description": payload.get("description", ""),
                     "lane": payload.get("lane", "Todo"),
                     "tags": payload.get("tags", []),
+                    "assignee": payload.get("assignee"),
+                    "priority": payload.get("priority"),
                 }
                 amux_state.cards[card_id] = card_entry
                 return httpx.Response(201, json=card_entry)
 
             elif method == "GET":
-                return httpx.Response(200, json={"cards": list(amux_state.cards.values())})
+                lane = url.params.get("lane")
+                tag = url.params.get("tag")
+                filtered = list(amux_state.cards.values())
+                if lane:
+                    filtered = [c for c in filtered if c.get("lane") == lane]
+                if tag:
+                    filtered = [c for c in filtered if tag in c.get("tags", [])]
+                return httpx.Response(200, json={"cards": filtered})
 
         elif path.startswith("/api/board/cards/"):
             card_id = path.split("/")[-1]
             if card_id not in amux_state.cards:
                 return httpx.Response(404, json={"error": f"Card {card_id} not found"})
-            if method == "POST":
+            if method in ("POST", "PATCH"):
                 payload = json.loads(request.content.decode("utf-8"))
                 card = amux_state.cards[card_id]
-                if "lane" in payload:
-                    card["lane"] = payload["lane"]
-                if "notes" in payload:
-                    card["notes"] = payload["notes"]
+                for key, val in payload.items():
+                    card[key] = val
                 return httpx.Response(200, json=card)
+            elif method == "GET":
+                return httpx.Response(200, json=amux_state.cards[card_id])
+            elif method == "DELETE":
+                deleted = amux_state.cards.pop(card_id)
+                return httpx.Response(200, json={"status": "deleted", "card": deleted})
 
+        # ---------------------------------------------------------------------
+        # Sessions API
+        # ---------------------------------------------------------------------
         elif path == "/api/sessions":
             if method == "POST":
                 payload = json.loads(request.content.decode("utf-8"))
@@ -109,7 +158,73 @@ def mock_amux_transport(amux_state: MockAmuxState) -> httpx.MockTransport:
                 }
                 amux_state.sessions[name] = sess_entry
                 return httpx.Response(201, json=sess_entry)
+            elif method == "GET":
+                return httpx.Response(200, json={"sessions": list(amux_state.sessions.values())})
 
+        elif path.startswith("/api/sessions/"):
+            sub = path.split("/")
+            name = sub[3]
+            if len(sub) == 4:
+                if name in amux_state.sessions:
+                    return httpx.Response(200, json=amux_state.sessions[name])
+                return httpx.Response(404, json={"error": f"Session {name} not found"})
+            elif len(sub) == 5 and sub[4] == "kill":
+                if name in amux_state.sessions:
+                    amux_state.sessions[name]["status"] = "terminated"
+                    return httpx.Response(200, json={"status": "terminated", "name": name})
+                return httpx.Response(404, json={"error": f"Session {name} not found"})
+            elif len(sub) == 5 and sub[4] == "restart":
+                if name in amux_state.sessions:
+                    amux_state.sessions[name]["status"] = "restarted"
+                    return httpx.Response(200, json={"status": "restarted", "name": name})
+                return httpx.Response(404, json={"error": f"Session {name} not found"})
+
+        # ---------------------------------------------------------------------
+        # Schedules API
+        # ---------------------------------------------------------------------
+        elif path == "/api/schedules":
+            if method == "POST":
+                payload = json.loads(request.content.decode("utf-8"))
+                sched_id = f"sched-{amux_state.next_schedule_id}"
+                amux_state.next_schedule_id += 1
+                sched_entry = {
+                    "id": sched_id,
+                    "title": payload.get("title", ""),
+                    "session": payload.get("session", "mypai-cron"),
+                    "schedule_expr": payload.get("schedule_expr", "0 * * * *"),
+                    "command": payload.get("command", ""),
+                    "enabled": payload.get("enabled", True),
+                }
+                amux_state.schedules[sched_id] = sched_entry
+                return httpx.Response(201, json=sched_entry)
+            elif method == "GET":
+                return httpx.Response(200, json={"schedules": list(amux_state.schedules.values())})
+
+        elif path.startswith("/api/schedules/"):
+            sub = path.split("/")
+            sched_id = sub[3]
+            if len(sub) == 4:
+                if sched_id not in amux_state.schedules:
+                    return httpx.Response(404, json={"error": f"Schedule {sched_id} not found"})
+                if method == "GET":
+                    return httpx.Response(200, json=amux_state.schedules[sched_id])
+                elif method in ("POST", "PATCH"):
+                    payload = json.loads(request.content.decode("utf-8"))
+                    sched = amux_state.schedules[sched_id]
+                    for k, v in payload.items():
+                        sched[k] = v
+                    return httpx.Response(200, json=sched)
+                elif method == "DELETE":
+                    deleted = amux_state.schedules.pop(sched_id)
+                    return httpx.Response(200, json={"status": "deleted", "schedule": deleted})
+            elif len(sub) == 5 and sub[4] == "trigger":
+                if sched_id in amux_state.schedules:
+                    return httpx.Response(200, json={"status": "triggered", "id": sched_id})
+                return httpx.Response(404, json={"error": f"Schedule {sched_id} not found"})
+
+        # ---------------------------------------------------------------------
+        # Metrics, Health & Status
+        # ---------------------------------------------------------------------
         elif path == "/api/metrics":
             return httpx.Response(
                 200,
@@ -117,6 +232,19 @@ def mock_amux_transport(amux_state: MockAmuxState) -> httpx.MockTransport:
                     "active_sessions": len(amux_state.sessions),
                     "total_messages": len(amux_state.messages),
                     "total_cards": len(amux_state.cards),
+                },
+            )
+
+        elif path == "/api/health":
+            return httpx.Response(200, json={"status": "healthy", "service": "amux-server"})
+
+        elif path == "/api/status":
+            return httpx.Response(
+                200,
+                json={
+                    "status": "online",
+                    "uptime_seconds": 12345,
+                    "sessions_count": len(amux_state.sessions),
                 },
             )
 

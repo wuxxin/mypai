@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from mypai_eval_runtime.hindsight import HindsightClient
+from mypai_runtime.hindsight import HindsightClient
 
 
 def test_hindsight_reflect(mock_hindsight_client: HindsightClient) -> None:

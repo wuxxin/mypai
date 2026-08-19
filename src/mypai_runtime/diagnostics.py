@@ -23,14 +23,19 @@ def capture_exception_context(exc: Optional[BaseException] = None) -> Dict[str, 
     }
 
 
-def analyze_workspace_failure(exc: Optional[BaseException] = None) -> str:
-    """Format failure diagnostics for mypai-workspace."""
+def analyze_main_failure(exc: Optional[BaseException] = None) -> str:
+    """Format failure diagnostics for mypai-main."""
     diag = capture_exception_context(exc)
     return (
-        f"WORKSPACE_FAILURE: Encountered {diag['error_type']}.\n"
+        f"MAIN_FAILURE: Encountered {diag['error_type']}.\n"
         f"Message: {diag['error_message']}\n"
         f"Traceback:\n{diag['traceback']}"
     )
+
+
+def analyze_workspace_failure(exc: Optional[BaseException] = None) -> str:
+    """Backwards-compatible alias for analyze_main_failure."""
+    return analyze_main_failure(exc)
 
 
 def analyze_cron_failure(action: str, exc: Optional[BaseException] = None) -> str:

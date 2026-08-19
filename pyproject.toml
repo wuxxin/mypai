@@ -3,9 +3,9 @@ requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "mypai_eval_runtime"
+name = "mypai_runtime"
 version = "0.2.0"
-description = "Next-Generation MyPAI in-kernel evaluation runtime and amux mesh client"
+description = "Next-Generation MyPAI in-kernel runtime and amux mesh client"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
@@ -25,7 +25,7 @@ test = [
 
 [tool.setuptools.packages.find]
 where = ["src"]
-include = ["mypai_eval_runtime*"]
+include = ["mypai_runtime*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
