@@ -1,0 +1,135 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 700" width="100%" height="100%">
+  <defs>
+    <style>
+      .bg { fill: #0b0f19; }
+      .card-bg { fill: #131b2e; stroke: #23314e; stroke-width: 1.5; rx: 8px; }
+      .card-highlight { fill: #182642; stroke: #3b82f6; stroke-width: 2; rx: 8px; }
+      .card-accent { fill: #1c2333; stroke: #f97316; stroke-width: 2; rx: 8px; }
+      .card-green { fill: #13271f; stroke: #10b981; stroke-width: 1.5; rx: 8px; }
+      .card-purple { fill: #201a35; stroke: #a855f7; stroke-width: 1.5; rx: 8px; }
+      .card-red { fill: #271418; stroke: #ef4444; stroke-width: 1.5; rx: 8px; }
+      .title-text { fill: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-weight: 700; font-size: 15px; }
+      .sub-text { fill: #94a3b8; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-size: 12px; }
+      .code-text { fill: #38bdf8; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 11px; }
+      .header-title { fill: #ffffff; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-weight: 800; font-size: 22px; }
+      .header-desc { fill: #64748b; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-size: 13px; }
+      .group-box { fill: #0f172a; stroke: #1e293b; stroke-width: 1.5; stroke-dasharray: 4 4; rx: 12px; }
+      .group-label { fill: #475569; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+      .conn-active { stroke: #3b82f6; stroke-width: 2; fill: none; }
+      .conn-green { stroke: #10b981; stroke-width: 2; fill: none; }
+      .conn-orange { stroke: #f97316; stroke-width: 2; fill: none; }
+      .conn-red { stroke: #ef4444; stroke-width: 2; fill: none; }
+    </style>
+    <marker id="arrow" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#3b82f6" />
+    </marker>
+    <marker id="arrow-green" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#10b981" />
+    </marker>
+    <marker id="arrow-orange" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#f97316" />
+    </marker>
+    <marker id="arrow-red" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#ef4444" />
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1100" height="700" class="bg" />
+
+  <!-- Diagram Title -->
+  <text x="40" y="45" class="header-title">05 · Automated Scheduler &amp; amux-mypai-cron Event Reactor</text>
+  <text x="40" y="68" class="header-desc">Durable SQLite cron schedule triggers, in-process Python execution, loopback inspection, and autonomous escalation</text>
+
+  <!-- Group 1: Scheduler Daemon -->
+  <rect x="40" y="95" width="310" height="570" class="group-box" />
+  <text x="55" y="120" class="group-label">1. amux-server Cron Engine</text>
+
+  <!-- Scheduler Box -->
+  <rect x="55" y="140" width="280" height="150" class="card-accent" />
+  <text x="75" y="165" class="title-text">Durable Schedule Registry</text>
+  <text x="75" y="185" class="sub-text">Stored in ~/.amux/amux.db (SQLite)</text>
+  <text x="75" y="210" class="code-text">table: schedules (cron exprs)</text>
+  <text x="75" y="230" class="code-text">table: schedule_runs (outcomes)</text>
+  <text x="75" y="250" class="code-text">POST /api/schedules</text>
+  <text x="75" y="270" class="code-text">target: session = "mypai-cron"</text>
+
+  <!-- Event Dispatcher -->
+  <rect x="55" y="310" width="280" height="150" class="card-highlight" />
+  <text x="75" y="335" class="title-text">Event Dispatcher &amp; Queue</text>
+  <text x="75" y="355" class="sub-text">Fires directly at turn boundary</text>
+  <text x="75" y="380" class="code-text">Payload: "CRON: health_sweep"</text>
+  <text x="75" y="400" class="code-text">Payload: "CRON: consolidate"</text>
+  <text x="75" y="420" class="code-text">Payload: "CRON: daily_standup"</text>
+  <text x="75" y="440" class="code-text">Injects into amux-mypai-cron pane</text>
+
+  <!-- Group 2: mypai-cron Agent Execution -->
+  <rect x="380" y="95" width="350" height="570" class="group-box" />
+  <text x="395" y="120" class="group-label">2. amux-mypai-cron Session (omp eval)</text>
+
+  <!-- System Instructions Trigger Box -->
+  <rect x="395" y="140" width="320" height="100" class="card-green" />
+  <text x="415" y="165" class="title-text">System Prompt Trigger</text>
+  <text x="415" y="185" class="sub-text">instructions.md enforces immediate eval</text>
+  <text x="415" y="210" class="code-text">CRON: &lt;action&gt; ➔ eval(lang="py")</text>
+  <text x="415" y="225" class="code-text">Zero manual shell / terminal commands</text>
+
+  <!-- In-Process Inspection Logic -->
+  <rect x="395" y="260" width="320" height="175" class="card-highlight" />
+  <text x="415" y="285" class="title-text">In-Kernel Inspection Loop</text>
+  <text x="415" y="305" class="sub-text">Runs inside $OMP_PYTHON_VENV</text>
+  <text x="415" y="330" class="code-text"># 1. Native host tool calls:</text>
+  <text x="415" y="350" class="code-text">tool.search(query="TODO", glob="*.py")</text>
+  <text x="415" y="370" class="code-text">tool.read("scratch/build-status.json")</text>
+  <text x="415" y="390" class="code-text"># 2. Control plane metrics check:</text>
+  <text x="415" y="410" class="code-text">metrics = amux.get("metrics")</text>
+
+  <!-- Decision / Evaluation Logic -->
+  <rect x="395" y="455" width="320" height="185" class="card-bg" />
+  <text x="415" y="480" class="title-text">Conditional Action Outcomes</text>
+  <text x="415" y="500" class="sub-text">Determined autonomously by script logic</text>
+  <text x="415" y="525" class="code-text">A. All Clean / Normal:</text>
+  <text x="415" y="545" class="code-text">   ➔ Stay 100% silent (0 stdout noise)</text>
+  <text x="415" y="570" class="code-text">B. Anomaly / Action Required:</text>
+  <text x="415" y="590" class="code-text">   ➔ File card &amp; message workspace</text>
+  <text x="415" y="615" class="code-text">C. Failure / Bug: Trap error &amp; report</text>
+
+  <!-- Group 3: Downstream Actions -->
+  <rect x="760" y="95" width="300" height="570" class="group-box" />
+  <text x="775" y="120" class="group-label">3. Autonomous Escalation</text>
+
+  <!-- Silent Success Box -->
+  <rect x="775" y="140" width="270" height="100" class="card-green" />
+  <text x="795" y="165" class="title-text">Outcome A: Silent Pass</text>
+  <text x="795" y="185" class="sub-text">Zero Context Window Impact</text>
+  <text x="795" y="210" class="code-text">No message sent. Turn concludes.</text>
+  <text x="795" y="225" class="code-text">amux registers successful run outcome.</text>
+
+  <!-- Board Card / Workspace Task -->
+  <rect x="775" y="260" width="270" height="175" class="card-highlight" />
+  <text x="795" y="285" class="title-text">Outcome B: Task Escalation</text>
+  <text x="795" y="305" class="sub-text">Routes issue to Main Orchestrator</text>
+  <text x="795" y="330" class="code-text">amux.post("board/cards",</text>
+  <text x="795" y="350" class="code-text">  title="Fix Broken Build",</text>
+  <text x="795" y="370" class="code-text">  lane="Todo")</text>
+  <text x="795" y="395" class="code-text">amux.post("messages",</text>
+  <text x="795" y="415" class="code-text">  target="mypai-workspace", ...)</text>
+
+  <!-- Diagnostic Alert -->
+  <rect x="775" y="455" width="270" height="185" class="card-red" />
+  <text x="795" y="480" class="title-text">Outcome C: Trapped Error</text>
+  <text x="795" y="500" class="sub-text">Clear Diagnostic Path for Agent</text>
+  <text x="795" y="525" class="code-text">_LAST_ERROR = err</text>
+  <text x="795" y="550" class="code-text">print("[ERROR] Cron failed...")</text>
+  <text x="795" y="575" class="code-text">Agent or Operator runs:</text>
+  <text x="795" y="600" class="code-text">analyze_failure() in eval</text>
+  <text x="795" y="620" class="code-text">Dumps stack trace &amp; health stats</text>
+
+  <!-- Connectors -->
+  <path d="M 335 215 L 395 180" class="conn-orange" marker-end="url(#arrow-orange)" />
+  <path d="M 335 385 L 395 350" class="conn-active" marker-end="url(#arrow)" />
+  <path d="M 715 540 L 775 190" class="conn-green" marker-end="url(#arrow-green)" />
+  <path d="M 715 590 L 775 350" class="conn-active" marker-end="url(#arrow)" />
+  <path d="M 715 620 L 775 545" class="conn-red" marker-end="url(#arrow-red)" />
+
+</svg>

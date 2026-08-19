@@ -1,0 +1,138 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 700" width="100%" height="100%">
+  <defs>
+    <style>
+      .bg { fill: #0b0f19; }
+      .lifeline { stroke: #1e293b; stroke-width: 1.5; stroke-dasharray: 4 4; }
+      .actor-box { fill: #131b2e; stroke: #23314e; stroke-width: 1.5; rx: 6px; }
+      .actor-highlight { fill: #182642; stroke: #3b82f6; stroke-width: 2; rx: 6px; }
+      .actor-green { fill: #13271f; stroke: #10b981; stroke-width: 1.5; rx: 6px; }
+      .actor-accent { fill: #1c2333; stroke: #f97316; stroke-width: 1.5; rx: 6px; }
+      .actor-title { fill: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-weight: 700; font-size: 13px; text-anchor: middle; }
+      .actor-sub { fill: #94a3b8; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-size: 11px; text-anchor: middle; }
+      .header-title { fill: #ffffff; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-weight: 800; font-size: 22px; }
+      .header-desc { fill: #64748b; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-size: 13px; }
+      .msg-line { stroke: #3b82f6; stroke-width: 1.5; fill: none; }
+      .msg-line-green { stroke: #10b981; stroke-width: 1.5; fill: none; }
+      .msg-line-orange { stroke: #f97316; stroke-width: 1.5; fill: none; }
+      .msg-line-return { stroke: #94a3b8; stroke-width: 1.5; stroke-dasharray: 4 4; fill: none; }
+      .msg-text { fill: #e2e8f0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-size: 12px; font-weight: 600; }
+      .msg-code { fill: #38bdf8; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 10.5px; }
+      .step-badge { fill: #1e293b; stroke: #3b82f6; stroke-width: 1; rx: 4px; }
+      .step-num { fill: #38bdf8; font-family: ui-monospace, monospace; font-size: 10px; font-weight: bold; text-anchor: middle; }
+      .note-box { fill: #172033; stroke: #334155; stroke-width: 1; rx: 4px; }
+      .note-text { fill: #cbd5e1; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-size: 11px; }
+    </style>
+    <marker id="arrow" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#3b82f6" />
+    </marker>
+    <marker id="arrow-green" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#10b981" />
+    </marker>
+    <marker id="arrow-orange" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#f97316" />
+    </marker>
+    <marker id="arrow-return" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#94a3b8" />
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1100" height="700" class="bg" />
+
+  <!-- Diagram Title -->
+  <text x="40" y="45" class="header-title">02 · Inter-Agent Orchestration &amp; Communication Sequence</text>
+  <text x="40" y="68" class="header-desc">End-to-end trace of a user request from Signal through channel parsing, amux messaging, worker task delegation, and return path</text>
+
+  <!-- Lifelines X positions: User: 90, Bridge/CC: 270, Channel: 460, amux: 650, Workspace: 840, Worker: 1010 -->
+
+  <!-- Lifelines -->
+  <line x1="90" y1="140" x2="90" y2="660" class="lifeline" />
+  <line x1="270" y1="140" x2="270" y2="660" class="lifeline" />
+  <line x1="460" y1="140" x2="460" y2="660" class="lifeline" />
+  <line x1="650" y1="140" x2="650" y2="660" class="lifeline" />
+  <line x1="840" y1="140" x2="840" y2="660" class="lifeline" />
+  <line x1="1010" y1="140" x2="1010" y2="660" class="lifeline" />
+
+  <!-- Actor Headers -->
+  <rect x="20" y="90" width="140" height="50" class="actor-box" />
+  <text x="90" y="112" class="actor-title">User (Signal)</text>
+  <text x="90" y="128" class="actor-sub">External Chat</text>
+
+  <rect x="200" y="90" width="140" height="50" class="actor-box" />
+  <text x="270" y="112" class="actor-title">cc-connect</text>
+  <text x="270" y="128" class="actor-sub">Bridge Gateway</text>
+
+  <rect x="385" y="90" width="150" height="50" class="actor-green" />
+  <text x="460" y="112" class="actor-title">mypai-channel</text>
+  <text x="460" y="128" class="actor-sub">Frontend Agent</text>
+
+  <rect x="580" y="90" width="140" height="50" class="actor-accent" />
+  <text x="650" y="112" class="actor-title">amux Control</text>
+  <text x="650" y="128" class="actor-sub">REST / CAS / Bus</text>
+
+  <rect x="765" y="90" width="150" height="50" class="actor-highlight" />
+  <text x="840" y="112" class="actor-title">mypai-workspace</text>
+  <text x="840" y="128" class="actor-sub">Main Orchestrator</text>
+
+  <rect x="940" y="90" width="140" height="50" class="actor-box" />
+  <text x="1010" y="112" class="actor-title">task-worker-N</text>
+  <text x="1010" y="128" class="actor-sub">Normal Profile</text>
+
+  <!-- Step 1: User sends message -->
+  <path d="M 90 170 L 270 170" class="msg-line-green" marker-end="url(#arrow-green)" />
+  <text x="105" y="163" class="msg-text">1. User sends prompt via Signal ("Fix auth bug in repo XYZ")</text>
+
+  <!-- Step 2: cc-connect writes to tmux pane -->
+  <path d="M 270 205 L 460 205" class="msg-line-green" marker-end="url(#arrow-green)" />
+  <text x="285" y="198" class="msg-text">2. tmux send-keys into amux-mypai-channel</text>
+
+  <!-- Step 3: mypai-channel in-kernel eval &amp; intent extraction -->
+  <rect x="440" y="225" width="220" height="40" class="note-box" />
+  <text x="450" y="242" class="note-text">In-kernel Python eval + tools:</text>
+  <text x="450" y="256" class="msg-code">Extracts target repo, intent, params</text>
+
+  <!-- Step 4: mypai-channel messages mypai-workspace via amux -->
+  <path d="M 460 290 L 650 290" class="msg-line" marker-end="url(#arrow)" />
+  <text x="475" y="283" class="msg-text">3. POST /api/messages (target: mypai-workspace)</text>
+
+  <!-- Step 5: amux routes turn to mypai-workspace -->
+  <path d="M 650 320 L 840 320" class="msg-line" marker-end="url(#arrow)" />
+  <text x="665" y="313" class="msg-text">4. Turn delivered to mypai-workspace queue</text>
+
+  <!-- Step 6: mypai-workspace creates Kanban card and claims -->
+  <path d="M 840 355 L 650 355" class="msg-line-orange" marker-end="url(#arrow-orange)" />
+  <text x="665" y="348" class="msg-text">5. POST /api/board/cards (Lane: Todo ➔ Doing)</text>
+
+  <!-- Step 7: mypai-workspace launches task worker -->
+  <path d="M 840 395 L 1010 395" class="msg-line" marker-end="url(#arrow)" />
+  <text x="855" y="388" class="msg-text">6. Spawn worker: omp --directory repos/XYZ</text>
+
+  <!-- Step 8: Worker executes code &amp; tools -->
+  <rect x="930" y="415" width="150" height="40" class="note-box" />
+  <text x="940" y="432" class="note-text">Worker executes edits,</text>
+  <text x="940" y="446" class="msg-code">runs lint &amp; pytest</text>
+
+  <!-- Step 9: Worker reports back to workspace -->
+  <path d="M 1010 480 L 840 480" class="msg-line-return" marker-end="url(#arrow-return)" />
+  <text x="855" y="473" class="msg-text">7. POST /api/messages ("Auth fix tested &amp; complete")</text>
+
+  <!-- Step 10: mypai-workspace marks card Done -->
+  <path d="M 840 515 L 650 515" class="msg-line-orange" marker-end="url(#arrow-orange)" />
+  <text x="665" y="508" class="msg-text">8. PATCH /api/board/cards/{id} (Lane: Done)</text>
+
+  <!-- Step 11: mypai-workspace replies to mypai-channel -->
+  <path d="M 840 550 L 650 550" class="msg-line" marker-end="url(#arrow)" />
+  <text x="665" y="543" class="msg-text">9. POST /api/messages (target: mypai-channel)</text>
+
+  <path d="M 650 575 L 460 575" class="msg-line" marker-end="url(#arrow)" />
+  <text x="475" y="568" class="msg-text">10. Deliver response turn to channel</text>
+
+  <!-- Step 12: mypai-channel renders output to terminal -->
+  <path d="M 460 610 L 270 610" class="msg-line-green" marker-end="url(#arrow-green)" />
+  <text x="285" y="603" class="msg-text">11. cc-connect captures output from tmux pane</text>
+
+  <!-- Step 13: cc-connect pushes reply to User via Signal -->
+  <path d="M 270 640 L 90 640" class="msg-line-green" marker-end="url(#arrow-green)" />
+  <text x="105" y="633" class="msg-text">12. Transmit formatted response back to Signal User</text>
+
+</svg>

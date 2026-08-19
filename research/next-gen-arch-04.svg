@@ -1,0 +1,108 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 700" width="100%" height="100%">
+  <defs>
+    <style>
+      .bg { fill: #0b0f19; }
+      .card-bg { fill: #131b2e; stroke: #23314e; stroke-width: 1.5; rx: 8px; }
+      .card-highlight { fill: #182642; stroke: #3b82f6; stroke-width: 2; rx: 8px; }
+      .card-accent { fill: #1c2333; stroke: #f97316; stroke-width: 1.5; rx: 8px; }
+      .card-green { fill: #13271f; stroke: #10b981; stroke-width: 1.5; rx: 8px; }
+      .card-purple { fill: #201a35; stroke: #a855f7; stroke-width: 2; rx: 8px; }
+      .title-text { fill: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-weight: 700; font-size: 15px; }
+      .sub-text { fill: #94a3b8; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-size: 12px; }
+      .code-text { fill: #38bdf8; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 11px; }
+      .header-title { fill: #ffffff; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-weight: 800; font-size: 22px; }
+      .header-desc { fill: #64748b; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-size: 13px; }
+      .group-box { fill: #0f172a; stroke: #1e293b; stroke-width: 1.5; stroke-dasharray: 4 4; rx: 12px; }
+      .group-label { fill: #475569; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+      .conn-active { stroke: #3b82f6; stroke-width: 2; fill: none; }
+      .conn-green { stroke: #10b981; stroke-width: 2; fill: none; }
+      .conn-purple { stroke: #a855f7; stroke-width: 2; fill: none; }
+      .conn-orange { stroke: #f97316; stroke-width: 2; fill: none; }
+    </style>
+    <marker id="arrow" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#3b82f6" />
+    </marker>
+    <marker id="arrow-green" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#10b981" />
+    </marker>
+    <marker id="arrow-purple" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#a855f7" />
+    </marker>
+    <marker id="arrow-orange" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#f97316" />
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1100" height="700" class="bg" />
+
+  <!-- Diagram Title -->
+  <text x="40" y="45" class="header-title">04 · Dual-Profile Hindsight Memory &amp; Mental Model Isolation</text>
+  <text x="40" y="68" class="header-desc">Separation of global strategic mental models (MyPai profile) from per-project task knowledge (normal profile)</text>
+
+  <!-- Group 1: MyPai Profile (Strategic Orchestration) -->
+  <rect x="40" y="95" width="460" height="270" class="group-box" />
+  <text x="55" y="120" class="group-label">A. MyPai Profile (workspace, channel, cron)</text>
+
+  <!-- MyPai Bank Box -->
+  <rect x="55" y="135" width="430" height="215" class="card-highlight" />
+  <text x="75" y="162" class="title-text">Bank: mypai (Global Scoping &amp; Strategic Models)</text>
+  <text x="75" y="185" class="sub-text">Scoping: global | autoRecall: false | autoRetain: false | retainMode: turn</text>
+  <text x="75" y="210" class="code-text">• Mental Models Enabled: true (Auto-seeded on boot)</text>
+  <text x="75" y="230" class="code-text">• Active Models: principal-telos, user-preferences, project-decisions</text>
+  <text x="75" y="250" class="code-text">• Ingestion: Curated turn-level facts &amp; explicit tool.retain() calls</text>
+  <text x="75" y="270" class="code-text">• Prevents noise: Transient compilation &amp; grep outputs NEVER pollute bank</text>
+  <text x="75" y="290" class="code-text">• Invocation: tool.reflect() / tool.recall() on-demand in Python eval</text>
+  <text x="75" y="325" class="tag-text">Sessions: amux-mypai-workspace, amux-mypai-channel, amux-mypai-cron</text>
+
+  <!-- Group 2: Normal Profile (Task Workers) -->
+  <rect x="40" y="385" width="460" height="280" class="group-box" />
+  <text x="55" y="410" class="group-label">B. Normal OMP Profile (Sandboxed Task Workers)</text>
+
+  <!-- Normal Bank Box -->
+  <rect x="55" y="425" width="430" height="225" class="card-green" />
+  <text x="75" y="452" class="title-text">Bank: oh-my-pi (Per-Project Tagged Scoping)</text>
+  <text x="75" y="475" class="sub-text">Scoping: per-project-tagged | autoRecall: true | autoRetain: true</text>
+  <text x="75" y="500" class="code-text">• Tagging: project:&lt;cwd&gt; strictly attached to all facts</text>
+  <text x="75" y="520" class="code-text">• Automatic Ingestion: Retains tool outputs, diffs, test logs on turn end</text>
+  <text x="75" y="540" class="code-text">• Automatic Injection: Context injected into agent prompt on turn start</text>
+  <text x="75" y="560" class="code-text">• Memory Isolation: Repo A context never leaks into Repo B</text>
+  <text x="75" y="580" class="code-text">• Ephemeral debugging: Rapid root-cause recall during refactoring</text>
+  <text x="75" y="620" class="tag-text">Sessions: amux-task-worker-1 ... amux-task-worker-N</text>
+
+  <!-- Group 3: Hindsight Core Server -->
+  <rect x="560" y="95" width="500" height="570" class="group-box" />
+  <text x="575" y="120" class="group-label">Hindsight Core Server Engine (:8888)</text>
+
+  <!-- Storage Tier -->
+  <rect x="580" y="140" width="460" height="130" class="card-purple" />
+  <text x="600" y="165" class="title-text">Dual-Namespace SQLite &amp; Vector Store</text>
+  <text x="600" y="185" class="sub-text">Managed via local REST API and membank-ctl</text>
+  <text x="600" y="210" class="code-text">/v1/default/banks/mypai        ➔ Strategic Knowledge Store</text>
+  <text x="600" y="230" class="code-text">/v1/default/banks/oh-my-pi     ➔ Project Fact &amp; Observation Chunks</text>
+  <text x="600" y="250" class="code-text">Embedding Model: Local Ollama / FastEmbed (Semantic + BM25 FTS5)</text>
+
+  <!-- Reflection &amp; Consolidation Engine -->
+  <rect x="580" y="290" width="460" height="170" class="card-bg" />
+  <text x="600" y="315" class="title-text">Continuous Reflection &amp; Synthesis Engine</text>
+  <text x="600" y="335" class="sub-text">Background worker synthesizing observations into mental models</text>
+  <text x="600" y="360" class="code-text">• POST /consolidate: Clusters un-consolidated observation nodes</text>
+  <text x="600" y="380" class="code-text">• POST /mental-models/{id}/refresh: Re-synthesizes curated summaries</text>
+  <text x="600" y="400" class="code-text">• Anti-Feedback Wrappers: Injects background context without LLM command bleed</text>
+  <text x="600" y="420" class="code-text">• Auto-learning: Detects user corrections &amp; generates anti-criteria rules</text>
+
+  <!-- Management CLI -->
+  <rect x="580" y="480" width="460" height="165" class="card-accent" />
+  <text x="600" y="505" class="title-text">membank-ctl Declarative Bank CLI</text>
+  <text x="600" y="525" class="sub-text">Idempotent schema and mission synchronization</text>
+  <text x="600" y="550" class="code-text">membank-ctl update http://localhost:8888 ./omp/profiles/mypai/memorybanks --yes</text>
+  <text x="600" y="575" class="code-text">membank-ctl export http://localhost:8888 mypai --yaml --out backup.yaml</text>
+  <text x="600" y="605" class="sub-text">Declarative YAML definitions: mypai.yaml, mypai-developer-profile.yaml</text>
+
+  <!-- Connectors -->
+  <path d="M 485 240 L 580 190" class="conn-active" marker-end="url(#arrow)" />
+  <path d="M 485 530 L 580 230" class="conn-green" marker-end="url(#arrow-green)" />
+  <path d="M 810 270 L 810 290" class="conn-purple" marker-end="url(#arrow-purple)" />
+  <path d="M 810 460 L 810 480" class="conn-orange" marker-end="url(#arrow-orange)" />
+
+</svg>
