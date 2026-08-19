@@ -592,16 +592,34 @@ The MyPAI ecosystem reconciles the built-in `oh-my-pi` subagents, the `oh-myopen
 
 ## 9. OMP Built-in `xd://` Virtual Tool Devices & Native Tooling
 
-`oh-my-pi` unifies tool presentation through virtual tool devices mounted under the `xd://` transport:
+`oh-my-pi` unifies tool presentation and execution through virtual tool devices mounted under the `xd://` transport and in-process loopback host tools. The system enforces strict tooling rules to eliminate process fork overhead, prevent prompt token bloat, and maintain deterministic execution.
 
 ### `xd://` Device Transport Interface
+
 - **Discovery:** `read xd://` lists all ambient and mounted tool devices (MCP servers, custom extensions, RPC host tools, image generator, TTS).
-- **Documentation & Schemas:** `read xd://<tool>` fetches the exact parameter schema and tool documentation.
+- **Documentation & Schemas:** `read xd://<tool>` fetches the exact parameter schema and tool documentation on demand.
 - **Execution:** `write xd://<tool>` passes JSON payloads to invoke the mounted device.
 - **Plan & Preview Resolution Devices:**
   - `write xd://propose`: Submits a plan slug and summary for interactive user approval.
   - `write xd://resolve`: Applies staged file edits and diff previews.
   - `write xd://reject`: Discards staged previews.
+- **Capability Devices:**
+  - `read/write xd://arbor` (`mcp__arbor__*`): Code-graph intelligence and AST dependency traversal.
+  - `read/write xd://openadapt` (`mcp__openadapt__*`): Headless browser inspection and DOM verification.
+  - `read/write xd://hindsight`: Vector memory operations.
+
+### Strict Tooling Governance & Prohibition Rules
+
+1. **Strict Loopback First Invariant:**
+   - Spawning subshells (`bash`: `cat`, `grep`, `sed`, `awk`, `find`) for file reading, searching, or editing is strictly prohibited when native in-process loopback tools (`tool.read()`, `tool.write()`, `tool.search()`) or AST tools (`ast_grep`) are available.
+   - Shell subshells incur a 10x process spawn penalty, introduce shell escaping risks, and inflate prompt context.
+2. **Programmatic In-Kernel Batching (`eval`, `lang: "py"`):**
+   - For multi-file operations, bulk searches, data processing (>50KB), or complex logic, agents MUST execute in a single roundtrip via Python `eval` using `tool.*` and `mypai_runtime` rather than issuing sequential individual tool calls.
+3. **Dual Hindsight Memory Access Protocol:**
+   - **Session Default Bank:** In-process OMP loopback tools (`tool.reflect()`, `tool.recall()`, `tool.retain()`). Zero HTTP latency, direct session memory integration.
+   - **Cross-Bank / Target Bank:** `mypai_runtime.hindsight` (`HindsightClient.reflect()`, `HindsightClient.recall()`, `HindsightClient.retain()`).
+4. **DAP Live Process Diagnostics:**
+   - When debugging crashes or test failures, agents must use DAP debug attachment and stack tracing before proposing speculative code edits.
 
 ---
 
@@ -617,11 +635,13 @@ The system provides dual planning modes alongside high-rigor engineering workflo
    - High-rigor engineering planning featuring testable **Ideal State Criteria (ISC)**, gap analysis, file-by-file delta listings (`[NEW]`, `[MODIFY]`, `[DELETE]`), and automated verification gates.
 
 ### B. Engineering Skills (`omp/agent/skills/`)
-1. **`ulw-plan` (`skills/ulw-plan/SKILL.md`):** Ultralight planning methodology with ISC and verification gates.
+1. **`ulw-plan` (`skills/ulw-plan/SKILL.md`):** Ultralight planning methodology with ISC, verification gates, and `xd://` plan devices.
 2. **`systematic-debugging` (`skills/systematic-debugging/SKILL.md`):** 4-phase root-cause investigation (Reproduce -> Isolate -> Form Hypothesis -> Verify & Fix).
 3. **`git-master` (`skills/git-master/SKILL.md`):** Safe worktree isolation (`~/.omp/wt`), uncommitted state protection, atomic conventional commits.
 4. **`review-work` (`skills/review-work/SKILL.md`):** Structured multi-pass review rubric and P0-P3 finding schemas.
 5. **`test-driven-development` (`skills/test-driven-development/SKILL.md`):** Red-Green-Refactor test cycle.
+6. **`arbor` (`skills/arbor/SKILL.md`):** Code-graph intelligence via `xd://arbor`.
+7. **`openadapt` (`skills/openadapt/SKILL.md`):** Headless browser verification via `xd://openadapt`.
 
 ---
 
@@ -644,6 +664,8 @@ Custom slash commands live in `omp/agent/commands/*.md`:
 | **`/learn`** (or `/reflect`) | `commands/learn.md` | Executes `tool.retain()` and `tool.reflect()` to distill session insights into Hindsight mental models. |
 | **`/escalate`** | `commands/escalate.md` | Calls `amux.send_message("mypai-main", ...)` to request user confirmation or strategic direction. |
 
+---
+
 ## 12. Hindsight Memory Integration
 
 Every subagent, skill, and command is natively wired into the Hindsight memory architecture:
@@ -663,7 +685,6 @@ Every subagent, skill, and command is natively wired into the Hindsight memory a
 
 ---
 
-
 ## 13. OMP Advanced Capabilities Directives & `agent_inclusion`
 
 To guarantee that all agents and skills leverage the unique high-performance capabilities of `oh-my-pi`, every agent system prompt embeds the standard **OMP Advanced Capabilities Directive (`agent_inclusion`)**:
@@ -674,6 +695,10 @@ To guarantee that all agents and skills leverage the unique high-performance cap
 - For tasks involving multi-file searches, data processing (>50KB), batch edits, or API interactions, you MUST use the persistent `eval` tool (`lang: "py"` or `lang: "js"`) rather than issuing sequential individual tool calls.
 - Loopback Host Tools: Call `tool.read()`, `tool.write()`, `tool.search()`, `tool.reflect()`, `tool.recall()`, and `tool.retain()` directly from within code over the high-speed loopback IPC bridge.
 - Persistent Session State: Variables, client connections, and state in `globals()` persist across turns in the kernel.
+
+## Hindsight Memory Operations
+- **Session Default Bank:** Use in-process OMP loopback tools (`tool.reflect()`, `tool.recall()`, `tool.retain()`).
+- **Cross-Bank / Target Bank:** When querying a non-default bank (e.g. querying 'mypai' from a task worker), import `hindsight` from `mypai_runtime` (`hindsight.recall(query, bank_id=...)`).
 
 ## DAP & Debug Attachment
 - When investigating runtime crashes, test failures, or state anomalies, use DAP (Debug Adapter Protocol) and debug attachment features to inspect live stack frames, evaluate variables in process memory, and trace execution before proposing code modifications.
@@ -706,11 +731,6 @@ MyPAI explicitly rejects defensive silent fallbacks and degraded modes. Silent f
 | **5. Memory Persistence** | Silently drop memories or write to loose scratch files if Hindsight is unreachable. | **STRICT HINDSIGHT SERVICE INVARIANT.** Hindsight (`:8888`) is a supervised core service. `HindsightClient` raises explicit HTTP exceptions if unreachable, signaling an infrastructure alert. | Silent fallback causes cognitive fragmentation and permanent loss of user mental models. |
 | **6. Tool Discovery** | Flood the model's top-level system prompt with raw JSON schemas if `xd://` is unconfigured. | **STRICT `xd://` VIRTUAL DEVICE INVARIANT.** `tools.xdev: true` is strictly enforced in `config.yml`. All MCP and custom tools mount under `xd://`. | Prevents wasting 40,000+ prompt tokens on tool definitions and prevents provider prompt cache invalidation. |
 | **7. Error Handling** | Catch-all `except Exception: pass` in polling and event loops. | **STRICT EXCEPTION VISIBILITY INVARIANT.** All runtime errors capture full stack traces into `_LAST_ERROR`, log diagnostic telemetry, and raise typed domain errors (e.g. `TimeoutError`, `WorkerExecutionError`). | Suppressing exceptions hides underlying infrastructure and timeout defects from operator inspection. |
-| **3. Inter-Worker Comms** | Fall back to typing keystrokes via `tmux send-keys` between agent sessions. | **STRICT `amux` HTTP BUS INVARIANT.** All cross-session turns and worker coordination must route through `amux-server` (`POST /api/messages`) with JSON payloads and correlation IDs. | Unstructured keystroke injection risks terminal race conditions, missing delivery confirmations, and corrupting active agent prompts. |
-| **4. Host Tool Calling** | Fall back to invoking subshells (`bash`: `cat`, `grep`, `sed`) instead of in-process tools. | **STRICT IN-KERNEL LOOPBACK INVARIANT.** Agents must use `tool.read()`, `tool.write()`, and `tool.search()` via the persistent Python kernel (`lang: "py"`). | Shell subshells introduce 10x process spawn overhead, shell escaping hazards, and massive context token bloat. |
-| **5. Memory Persistence** | Silently drop memories or write to loose scratch files if Hindsight is unreachable. | **STRICT HINDSIGHT SERVICE INVARIANT.** Hindsight (`:8888`) is a supervised core service. `HindsightClient` raises explicit HTTP exceptions if unreachable, signaling an infrastructure alert. | Silent fallback causes cognitive fragmentation and permanent loss of user mental models. |
-| **6. Tool Discovery** | Flood the model's top-level system prompt with raw JSON schemas if `xd://` is unconfigured. | **STRICT `xd://` VIRTUAL DEVICE INVARIANT.** `tools.xdev: true` is strictly enforced in `config.yml`. All MCP and custom tools mount under `xd://`. | Prevents wasting 40,000+ prompt tokens on tool definitions and prevents provider prompt cache invalidation. |
-| **7. Error Handling** | Catch-all `except Exception: pass` in polling and event loops. | **STRICT EXCEPTION VISIBILITY INVARIANT.** All runtime errors capture full stack traces into `_LAST_ERROR`, log diagnostic telemetry, and raise typed domain errors (e.g. `TimeoutError`, `WorkerExecutionError`). | Suppressing exceptions hides underlying infrastructure and timeout defects from operator inspection. |
 
 ---
 
@@ -726,6 +746,7 @@ The testing architecture ensures zero regressions, 97%+ code coverage, and deter
 - `make lint` & `make format`: Automated code styling, import sorting, and lint verification via `ruff`.
 - `make typecheck`: Strict static type validation via `mypy` for Python 3.14 compatibility.
 - `make all`: End-to-end CI pipeline validation.
+
 
 
 
