@@ -1,18 +1,26 @@
 # TODO
 
-.) refactor webui, keep current webui, make new modern webui as modern ts single page app,
-
-move app "/ui" to /api/v1/ui/classic-console
-make app "/" redirect to /api/v1/ui/classic-console
-make /api/v1/ui/console (a new modern ts alternative to the classic console.)
-discuss most modern frameworks to use for.
-add deps to makefile for building frontend as part of build process.
+interactively plan with me: read x and y and z , and write a references/mypai-spec.md , 
+research if a omp profile agent has a different venv than a normal profile, describe where the venv lives, 
+make the omp-mypai plugin add the python functions and packages available in the agent eval loop,
+for mypai-main mypai-cron and mypai-channel, 
 
 
-.) daemon/api/app.py: cron jobs import and export should support yaml too.
+make mypai.md agent instruct agents for there role (main,cron,channel), explain our eval usage, and for each agent what to inspect as input and how to react. make all python functions needed for this. also add some functions so mypai agents can and do recall on start, and can instruct or tool call each other. question is it possible to make a tool call in another agent ? or do we need msg for it. also: is there a possibility, for an agent to call a tool that waits for a specific time, if something arrives in input prompt it silently returns, if timeout, it writes an error prompt, or can we tool call eval with waits for async message answer from other agent.
 
-make @app.post("/api/v1/cron/import") take both json or yaml, make it like a typical rest endpoint would handle different but equal formats for definitions.
-@app.get("/api/v1/cron/export") make it configurable if you get an json or an yaml, make the webui choose yaml as default.
+mypai main should get messages from cron and channel, and should always spawn amux normal omp workers for code generation, or not mypai related stuff, and be ready to accept and coordinate any workers talking to it. 
+
+
+target is:
+
+mypai: omp.env : main service: sets up amux with three mypai sessions running, make cc-connect to channel
+installcmds: copy everything in place and rerun setup venv and therelike.
+  read and integrate references/memorybanks-research/assistant-test.yaml as our mypai bank config
+  
+normal omp profile:;
+  main agent: orchestrator
+  make a mixture of oh-my-code-slim, and others, teach in .md on how to communicate and coordinate with mypai main for reaching the user and strategic decisions, 
+  a modified but slim omp memory bank config, more suiteable with our hindsight 
 
 
 - reconsile and wright good memory banks, make the oh-my-pi bank good for sw-dev, the mypai bank good for lifeos personal assistant

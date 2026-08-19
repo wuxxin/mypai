@@ -71,8 +71,8 @@ mental_models:
     mode: full
     refresh_after_consolidation: true
     exclude_mental_models: false
-- id: adhd-routines-health
-  name: ADHD Routines & Wellness Stack
+- id: routines-health
+  name: Routines & Wellness Stack
   source_query: What is the user's daily sleep-wake schedule, routine, supplement
     intake timing/details, fasts, inline-skating activities, and wellness routines?
   tags: []

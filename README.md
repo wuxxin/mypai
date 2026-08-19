@@ -2,9 +2,15 @@
 
 **mypai** is a local, private, and experimental **Personal Artificial Intelligence (PAI)** infrastructure powered by:
 
-- **Oh-my-PI** (`omp`) — High-performance agent execution harness
-- **Hindsight** — Persistent vector memory and mental model reflection service
+- **Oh-my-PI** (`omp`) — High-performance agent execution harness with in-kernel `eval` and loopback tool bridge
+- **amux** — Distributed control plane, process supervisor, durable scheduler, and inter-worker message bus
+- **cc-connect** — Multi-platform external chat gateway (Signal, Telegram, Discord)
+- **Agent of Empires** (`aoe`) — Visual TUI matrix, ACP inspector, and Web PWA cockpit
+- **Hindsight** — Persistent vector memory, temporal observation tracking, and mental model reflection service
 
+> [!TIP]
+> - For a complete user guide, agent roster, skills, and command catalog, see [USAGE.md](USAGE.md).
+> - For the exhaustive technical and architectural specification, see [references/mypai-spec.md](references/mypai-spec.md).
 
 Core Architecture & Components:
 
@@ -65,15 +71,13 @@ Provision the sandbox environment and generate the `omp` binary launcher in `~/.
 ```
 
 `sandbox-ctl install` performs the following automated steps:
-1. Copies configuration files from `./omp/agent/*` into `$HOME/.omp/agent/` for Base OMP.
-2. Copies configuration files from `./omp/profiles/mypai/*` into `$HOME/.omp/profiles/mypai/agent/` for the MyPai profile.
-3. Installs `omp-mypai` plugin strictly inside the `mypai` profile (`omp --profile mypai plugin install`).
-4. Creates a managed Python virtual environment at `$HOME/.omp/python-env` (containing `openadapt` and `arbor`).
-5. Provisions the plugin virtual environment at `$HOME/agent-shared/code/mypai/submodules/omp-mypai/.venv` (containing `mypai_tools` and `omp-rpc`).
-6. Imports default scheduled cron jobs from `submodules/omp-mypai/config/default_jobs.yaml` into the project SQLite database.
-7. Executes `membank-ctl update` in separate steps for `oh-my-pi` (Base OMP) and `mypai` (MyPai Profile) memory banks.
+1. Copies configuration templates from `./omp/agent/*` into `$HOME/.omp/agent/` for Base OMP.
+2. Copies configuration templates from `./omp/profiles/mypai/*` into `$HOME/.omp/profiles/mypai/agent/` for the MyPai profile.
+3. Provisions the managed Base Python virtual environment at `$HOME/.omp/python-env` (containing `omp-rpc`, `mypai_eval_runtime`, `arbor`, and `openadapt`).
+4. Provisions the MyPai Profile Python virtual environment at `$HOME/.omp/profiles/mypai/python-env` (containing `omp-rpc`, `mypai_eval_runtime`, `httpx`, `pydantic`).
+5. Executes `membank-ctl update` to provision and seed Hindsight memory banks for `oh-my-pi` and `mypai`.
 
-### 5. Launch Oh-my-PI & MyPai Profile
+### 5. Launch Oh-my-PI & MyPai Mesh
 
 Launch interactive Base OMP session:
 
@@ -87,8 +91,13 @@ Launch MyPai Profile session:
 omp --profile mypai
 ```
 
----
+Launch full autonomous multi-session mesh via `amux`:
 
+```bash
+amux-server --port 8824
+```
+
+---
 
 ## Repository Structure
 
@@ -99,17 +108,18 @@ omp --profile mypai
     - `mcp.json` — Base Model Context Protocol servers
     - `models.yml` — Local model inference mapping
     - `memorybanks/` — `oh-my-pi.yaml`
-    - `skills/` — Base skill instruction packs
-      - **`arbor`**: [SKILL.md](omp/agent/skills/arbor/SKILL.md) — Graph-native AST code intelligence and workspace navigation.
-      - **`openadapt`**: [SKILL.md](omp/agent/skills/openadapt/SKILL.md) — Browser capture and UI automation.
+    - `agents/` — Reconciled subagent roster (`orchestrator`, `debugger`, `pythonista`, `writer`, `patcher`, `scout`, `task`, `reviewer`, `security-reviewer`, `designer`, `librarian`)
+    - `skills/` — Engineering skill instruction packs (`ulw-plan`, `systematic-debugging`, `git-master`, `review-work`, `test-driven-development`, `arbor`, `openadapt`)
+    - `commands/` — Custom slash command palette (`plan`, `ulw-plan`, `debug`, `review`, `git-master`, `scout`, `security`, `pythonista`, `writer`, `patch`, `learn`, `escalate`)
   - `profiles/`
     - `mypai/` — Target `~/.omp/profiles/mypai/agent/` configuration templates (MyPai Profile, bankId: `mypai`)
       - `config.yml` — MyPai Profile configuration (`bankId: mypai`)
       - `mcp.json` — Profile MCP servers
       - `models.yml` — Profile model mapping (`llama.cpp/qwen3`)
-      - `memorybanks/` — `mypai.yaml`, `mypai-developer-profile.yaml`, `mypai-knowledge.yaml`
+      - `memorybanks/` — `mypai.yaml` (LifeOS 8-model bank), `mypai-developer-profile.yaml`, `mypai-knowledge.yaml`
+      - `agents/` — `mypai.md` (instructions for `mypai-workspace`, `mypai-channel`, `mypai-cron`)
 - `submodules/`
-  - `omp-mypai` — Core Oh-my-PI plugin (`bin/membank-ctl`, `mypai_tools`, skills, MCP, rules)
+  - `omp-mypai` — Core Oh-my-PI plugin (`bin/membank-ctl`, `mypai_eval_runtime`, skills, rules)
   - `agents-shared` — Shared Infrastructure, `sandbox-ctl`, Inference and model downloaders
   - `aur-packages` — Custom hardware-accelerated ROCm/HIP Arch Linux PKGBUILDs
   - `private-seeds` — Git-ignored directory for private credentials and seeds
@@ -118,17 +128,14 @@ omp --profile mypai
 
 ## Modules
 
-### Oh-my-PI myPAI Plugin (`submodules/omp-mypai`)
+### In-Kernel Runtime Library (`mypai_eval_runtime`)
 
-The `omp-mypai` submodule serves as the core extension plugin for Oh-my-PI. It includes:
+The `submodules/omp-mypai` submodule provides the in-kernel Python runtime library `mypai_eval_runtime`:
 
 - **CLI Control Utilities (`bin/membank-ctl`)**: Management CLI tool for Hindsight memory bank updates, JSON/YAML parsing, and exports.
-- **Custom Python Tools (`mypai_tools`)**: Native tools installed directly into the plugin virtual environment (`$HOME/.omp/data/omp-mypai/venv`).
-- **Model Context Protocol (MCP) Servers**:
-  - `signal_chat`: Channel messaging MCP service (`mypai_tools.chat_mcp`).
-  - `cron`: Task & reminder background scheduling (`mypai_tools.cron_mcp`).
-  - `local-speech`: Local speech synthesis & audio output (`mypai_tools.speech_mcp`).
-- **Agent Definitions & System Prompts**: Specialized subagent profiles and operating procedures.
+- **Inter-Worker Client (`amux`)**: High-performance HTTP client for structured inter-agent turn messaging, synchronous response polling, and Kanban card operations.
+- **Memory Reflection Client (`hindsight`)**: Programmatic interface for vector memory recall, fact retention, and mental model reflection.
+- **Trapped Error Diagnostics**: Automated error capture and diagnostic reporting across workspace, cron, and worker sessions.
 
 ---
 
