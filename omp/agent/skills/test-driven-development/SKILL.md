@@ -12,11 +12,18 @@ Use this skill when implementing new business logic, API endpoints, or core libr
 ## Red-Green-Refactor Cycle
 
 1. **Red (Write Failing Test):**
-   - Write a unit test that captures the desired requirement or edge case.
+   - **Name the Break:** State what production defect or missing capability makes this test fail.
+   - **Independent Expectations:** Use hand-derived literals and fixtures. Never write mirror assertions where the test helpers compute expected values using the same logic as production code.
+   - **No Change Detectors:** Test observable behavior and contract boundaries, not internal constants or private implementation details.
    - Run the test suite and confirm the test fails for the expected reason.
+
 2. **Green (Minimal Implementation):**
    - Write the simplest code necessary to make the test pass.
+   - Mock at the right level: mock only slow/external boundaries (`httpx.MockTransport`), never mock internal component logic.
    - Run the test suite and confirm it turns green.
+
 3. **Refactor (Clean & Optimize):**
-   - Refactor the code for readability, type safety, and efficiency while ensuring tests stay green.
-   - Run the full test suite to guarantee zero regressions.
+   - Refactor for readability, type safety (`mypy --strict`), and performance.
+   - **The Mutation Check:** Mentally mutate production code (e.g. wrong branch, missing validation, wrong constant) and ensure at least one test fails.
+   - Run the full test suite (`make all`) to guarantee zero regressions.
+
