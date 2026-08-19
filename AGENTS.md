@@ -46,7 +46,7 @@ mypai/
 
 ## 4. Code Style & Verification Commands
 
-- **Comments:** Do not use long visual separator lines (e.g. avoid `# -----------`).
+- **Comments:** Do not use long visual separator lines (e.g. avoid `-----------` or "==========").
 - **Shell (`bin/*`):** `set -euo pipefail`, 4-space indent, quoted variables. Lint: `shellcheck bin/* && shfmt -i 4 -w bin/*`.
 - **Python (`src/`, `tests/`):** 4-space indent, type hints, `snake_case` functions/vars, `PascalCase` classes.
 - **CI Commands:**
