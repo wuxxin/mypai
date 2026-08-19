@@ -1,11 +1,11 @@
-# Next-Generation MyPAI System Specification (`references/mypai-spec.md`)
+# MyPAI System Specification (`references/mypai-spec.md`)
 
 ## Executive Summary
 
-The **Next-Generation MyPAI Architecture** unifies autonomous personal assistance, multi-channel chat routing, scheduled automation, and codebase engineering across a distributed multi-session mesh. Powered by **`amux`**, **`cc-connect`**, **`oh-my-pi` (`omp`)**, and **`Agent of Empires` (`aoe`)**, the system eliminates monolithic daemon bottlenecks and replaces conversational shell scripting with **in-kernel Python `eval` execution (`lang: "py"`)**, **native loopback host tools (`tool.*`)**, and **isolated dual-profile Hindsight memory banks**.
+The **MyPAI Architecture** unifies autonomous personal assistance, multi-channel chat routing, scheduled automation, and codebase engineering across a distributed multi-session mesh. Powered by **`amux`**, **`cc-connect`**, **`oh-my-pi` (`omp`)**, and **`Agent of Empires` (`aoe`)**, the system eliminates monolithic daemon bottlenecks and replaces conversational shell scripting with **in-kernel Python `eval` execution (`lang: "py"`)**, **native loopback host tools (`tool.*`)**, and **isolated dual-profile Hindsight memory banks**.
 
 ### Self-Contained Repository Architecture (No Plugin Required)
-Next-Generation MyPAI eliminates the legacy `omp-mypai` plugin and submodule entirely. Because the monolithic daemon and old MCP wrappers are retired, OMP profiles (`~/.omp/agent/` and `~/.omp/profiles/mypai/agent/`) load natively from filesystem templates, while the in-kernel runtime library (`mypai_runtime`) and management utilities (`bin/membank-ctl`) live directly inside the root `mypai` repository. This eliminates plugin loader latency, removes git submodule friction, and makes `mypai` a clean, standalone repository.
+MyPAI eliminates the legacy `omp-mypai` plugin and submodule entirely. Because the monolithic daemon and old MCP wrappers are retired, OMP profiles (`~/.omp/agent/` and `~/.omp/profiles/mypai/agent/`) load natively from filesystem templates, while the in-kernel runtime library (`mypai_runtime`) and management utilities (`bin/membank-ctl`) live directly inside the root `mypai` repository. This eliminates plugin loader latency, removes git submodule friction, and makes `mypai` a clean, standalone repository.
 
 ---
 
@@ -125,7 +125,7 @@ Normal profile agents (`omp --directory <repo>`) must be able to communicate wit
 
 ## 3. In-Kernel Python `eval` Runtime & Tool Bridge
 
-In the next-generation architecture, all internal coordination, automation, and decision-making is executed directly via in-process Python `eval` cells (`lang: "py"`).
+In the current architecture, all internal coordination, automation, and decision-making is executed directly via in-process Python `eval` cells (`lang: "py"`).
 
 ### Persistent Process State & Prelude Injection
 
@@ -566,7 +566,7 @@ LAUNCHER_SIDECAR_CC_CONNECT_ARGS="--config $HOME/.cc-connect/config.toml"
 
 ## 8. Reconciliation of Roles, Specialists & Agent Archetypes
 
-The Next-Generation MyPAI ecosystem reconciles the built-in `oh-my-pi` subagents, the `oh-myopencode-slim` profiles, the `obra/superpowers` workflows, and the `athola/claude-night-market` domain specialist archetypes into a unified, high-performance agent roster.
+The MyPAI ecosystem reconciles the built-in `oh-my-pi` subagents, the `oh-myopencode-slim` profiles, the `obra/superpowers` workflows, and the `athola/claude-night-market` domain specialist archetypes into a unified, high-performance agent roster.
 
 ### Reconciled Agent Roster Matrix
 
@@ -685,7 +685,7 @@ To guarantee that all agents and skills leverage the unique high-performance cap
 
 ## 14. Architectural Invariants & Anti-Fallback Principles
 
-Next-Generation MyPAI explicitly rejects defensive silent fallbacks and degraded modes. Silent fallbacks mask configuration errors, produce non-deterministic behavior, degrade performance by orders of magnitude, and violate architectural integrity. The system enforces **strict fail-fast invariant checks** with deterministic provisioning.
+MyPAI explicitly rejects defensive silent fallbacks and degraded modes. Silent fallbacks mask configuration errors, produce non-deterministic behavior, degrade performance by orders of magnitude, and violate architectural integrity. The system enforces **strict fail-fast invariant checks** with deterministic provisioning.
 
 ### Audited Architecture Fallbacks & Invariant Enforcement
 

@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "mypai_runtime"
 version = "0.2.0"
-description = "Next-Generation MyPAI in-kernel runtime and amux mesh client"
+description = "MyPAI in-kernel runtime and amux mesh client"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [

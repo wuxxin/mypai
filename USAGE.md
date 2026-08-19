@@ -1,6 +1,6 @@
-# MyPAI User Guide (`USAGE.md`)
+# MyPAI & Oh-My-Pi Usage Guide
 
-This guide explains how to use **Next-Generation MyPAI** and **Oh-My-Pi (OMP)** from an operator and developer perspective.
+This guide explains how to use **MyPAI** and **Oh-My-Pi (OMP)** from an operator and developer perspective.
 
 ---
 

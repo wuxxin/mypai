@@ -1,4 +1,4 @@
-"""conftest.py - Pytest fixtures and mock HTTP servers for Next-Gen MyPAI tests."""
+"""conftest.py - Pytest fixtures and mock HTTP servers for MyPAI tests."""
 
 from __future__ import annotations
 

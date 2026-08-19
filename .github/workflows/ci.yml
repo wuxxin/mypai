@@ -10,7 +10,7 @@ on:
 
 jobs:
   mypai-ci:
-    name: Next-Gen MyPAI Validation & Test Suite
+    name: MyPAI Validation & Test Suite
     runs-on: ubuntu-latest
 
     steps:

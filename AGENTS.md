@@ -1,6 +1,6 @@
 # AGENTS.md — System Realities & Agent Operating Guidelines
 
-Operational rules, repository realities, invariants, and specialist profiles for Next-Generation MyPAI.
+Operational rules, repository realities, invariants, and specialist profiles for MyPAI.
 
 ---
 

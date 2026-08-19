@@ -1,4 +1,4 @@
-# Modern Makefile for Next-Generation MyPAI
+# Modern Makefile for MyPAI
 
 SHELL := /usr/bin/env bash
 .SHELLFLAGS := -euo pipefail -c
@@ -17,7 +17,7 @@ MYPY = $(if $(wildcard $(VENV_BIN)/mypy),$(VENV_BIN)/mypy,mypy)
 ## Help & Target Reconstruction
 help: ## Show this help message and reconstruct all primary targets
 	@echo "========================================================================"
-	@echo "                   Next-Generation MyPAI Build & Test Matrix            "
+	@echo "                   MyPAI Build & Test Matrix            "
 	@echo "========================================================================"
 	@echo "Usage: make [target]"
 	@echo ""

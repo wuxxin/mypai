@@ -1,6 +1,6 @@
-# Next-Generation MyPAI Visual Architecture & Overview
+# MyPAI Visual Architecture & Overview
 
-This document provides a comprehensive visual and structural overview of the **Next-Generation MyPAI** ecosystem across 6 production perspectives.
+This document provides a comprehensive visual and structural overview of the **MyPAI** ecosystem across 6 production perspectives.
 
 ---
 

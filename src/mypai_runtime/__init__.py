@@ -1,4 +1,4 @@
-"""mypai_runtime - Unified in-kernel Python runtime library for Next-Gen MyPAI."""
+"""mypai_runtime - Unified in-kernel Python runtime library for MyPAI."""
 
 from mypai_runtime.amux import AmuxClient, amux
 from mypai_runtime.diagnostics import (

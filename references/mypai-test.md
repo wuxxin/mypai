@@ -1,8 +1,8 @@
-# Next-Generation MyPAI Testing & Quality Architecture (`references/mypai-test.md`)
+# MyPAI Testing & Quality Architecture (`references/mypai-test.md`)
 
 ## Executive Summary
 
-The **Next-Generation MyPAI Test Architecture** establishes a rigorous, automated verification matrix spanning in-kernel Python runtime packages, the `amux` inter-worker message bus, `Hindsight` vector memory integration, and end-to-end multi-session workflows. Driven by `pytest`, `pytest-cov`, `ruff`, `mypy`, and a modern GNU `Makefile`, the test suite guarantees **97%+ line coverage**, strict type safety, and zero regressions across distributed multi-agent sessions.
+The **MyPAI Test Architecture** establishes a rigorous, automated verification matrix spanning in-kernel Python runtime packages, the `amux` inter-worker message bus, `Hindsight` vector memory integration, and end-to-end multi-session workflows. Driven by `pytest`, `pytest-cov`, `ruff`, `mypy`, and a modern GNU `Makefile`, the test suite guarantees **97%+ line coverage**, strict type safety, and zero regressions across distributed multi-agent sessions.
 
 ---
 
@@ -68,7 +68,7 @@ make help
 
 ```
 ========================================================================
-                   Next-Generation MyPAI Build & Test Matrix            
+                   MyPAI Build & Test Matrix            
 ========================================================================
 Usage: make [target]
 
