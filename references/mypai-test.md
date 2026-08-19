@@ -127,7 +127,7 @@ sequenceDiagram
     participant Memory as Hindsight Bank
 
     User->>Channel: "Refactor DB connection pool"
-    Channel->>Memory: hindsight.reflect("Refactor DB connection pool")
+    Channel->>Memory: tool.reflect("Refactor DB connection pool")
     Memory-->>Channel: User preferences (asyncpg, pool_size=100)
     Channel->>Main: amux.send_message("mypai-main", correlation_id="req-1001")
     
@@ -138,7 +138,7 @@ sequenceDiagram
     Worker->>Worker: Executes refactoring & runs pytest
     Worker->>Main: amux.send_message("mypai-main", correlation_id="report-1001")
     
-    Main->>Memory: hindsight.retain("Increased asyncpg max_size to 100")
+    Main->>Memory: tool.retain("Increased asyncpg max_size to 100")
     Main->>Board: amux.update_card(lane="Done")
     Main->>Channel: amux.send_message("mypai-channel", correlation_id="req-1001")
     Channel->>User: "Completed DB pool upgrade with 0 test failures."

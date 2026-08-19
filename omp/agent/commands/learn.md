@@ -5,9 +5,8 @@ description: Distill session insights, decisions, and patterns into Hindsight me
 Extract and persist key facts, project conventions, and decisions from the current session into the active Hindsight memory bank:
 
 ```python
-from mypai_runtime import hindsight
-
-# Persist learnings
-# hindsight.retain(items=[{"content": "...", "context": "..."}], bank_id="oh-my-pi")
+# Use in-process OMP loopback tool on session default bank
+tool.retain(items=[{"content": "...", "context": "..."}])
 ```
 Report the retained facts concisely upon completion.
+

@@ -229,7 +229,7 @@ When you receive a message starting with `CRON: <action>`, you MUST NOT make seq
 The following standard helpers are available from `mypai_http`:
 - `amux.post("messages", target={"worker_name": "mypai-workspace"}, body="...")`: Sends inter-worker messages to `mypai-workspace` or `mypai-channel`.
 - `amux.post("board/cards", title="...", description="...", status="Todo")`: Creates Kanban cards on amux board.
-- `hindsight.get("memorybanks/mypai/recall", params={"q": "..."})`: Queries Hindsight memory.
+- `tool.recall("..."): Queries Hindsight memory on the session's default bank.`
 - `signal.post("send", number="+12345", recipients=["+12345"], message="...")`: Outbound Signal notification.
 
 ### Action Handlers
