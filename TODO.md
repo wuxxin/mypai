@@ -1,50 +1,5 @@
 # TODO
 
-interactively plan with me: read x and y and z , and write a references/mypai-spec.md , 
-research if a omp profile agent has a different venv than a normal profile, describe where the venv lives, 
-make the omp-mypai plugin add the python functions and packages available in the agent eval loop,
-for mypai-main mypai-cron and mypai-channel, 
-
-
-make mypai.md agent instruct agents for there role (main,cron,channel), explain our eval usage, and for each agent what to inspect as input and how to react. make all python functions needed for this. also add some functions so mypai agents can and do recall on start, and can instruct or tool call each other. question is it possible to make a tool call in another agent ? or do we need msg for it. also: is there a possibility, for an agent to call a tool that waits for a specific time, if something arrives in input prompt it silently returns, if timeout, it writes an error prompt, or can we tool call eval with waits for async message answer from other agent.
-
-mypai main should get messages from cron and channel, and should always spawn amux normal omp workers for code generation, or not mypai related stuff, and be ready to accept and coordinate any workers talking to it. 
-
-
-target is:
-
-mypai: omp.env : main service: sets up amux with three mypai sessions running, make cc-connect to channel
-installcmds: copy everything in place and rerun setup venv and therelike.
-  read and integrate references/memorybanks-research/assistant-test.yaml as our mypai bank config
-  
-normal omp profile:;
-  main agent: orchestrator
-  make a mixture of oh-my-code-slim, and others, teach in .md on how to communicate and coordinate with mypai main for reaching the user and strategic decisions, 
-  a modified but slim omp memory bank config, more suiteable with our hindsight 
-
-
-- reconsile and wright good memory banks, make the oh-my-pi bank good for sw-dev, the mypai bank good for lifeos personal assistant
-- get a grip what is auto retained recalled reflected, and how we can map this for mypai
-- mypai: make the daemon inject system message that session is running as daemon.
-- mypai: make the mypai agent the "default", research what that means, so on omp session in this dir, or daemon session it always reads mypai agent, and because daemon injects system message the mypai agent knows if its running as daemon main or as other session.
-- make some limits for the daemon to observe about how long a prompt or how much cron executors, or tool calls a prompt consumes.
-
-- reconsile skills,roles,and commands for my omp installation
-  + get all buildin omp skills, roles and commands
-  + reconsile with the oh-myopencode-slim-agents profiles
-  + reconsile roles and commands: eg. debugging, git-master, review-work, ulw-plan
-  + reconsile with: https://github.com/obra/superpowers
-/plugin marketplace add obra/superpowers
-/plugin install superpowers@superpowers-marketplace
-  + reconsile with:
-https://athola.github.io/claude-night-market/plugins/domain-specialists.html
-/plugin marketplace add athola/claude-night-market
-/plugin install archetypes@claude-night-market
-(archetypes parseltongue cartograph scribe tome scry pensive)
-
-we want debugging, git control, review, really good plan, and beside the orchestrator agent, which is our main agent, other good definition. and all work with our hingsight plugin.
-
-
 + research and add if fitting: plugins
 ```
 /plugin marketplace add anthropics/claude-plugins-official
