@@ -1,0 +1,167 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 740" width="100%" height="100%">
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&amp;family=Geist:wght@400;500;600&amp;family=Geist+Mono:wght@400;500;600&amp;display=swap');
+      .title { font-family: 'Instrument Serif', Georgia, serif; font-size: 28px; fill: #2d3142; }
+      .subtitle { font-family: 'Geist', sans-serif; font-size: 12px; fill: #4f5d75; }
+      .eyebrow { font-family: 'Geist Mono', monospace; font-size: 8px; fill: #eb6c36; letter-spacing: 0.18em; text-transform: uppercase; }
+      .col-title { font-family: 'Geist', sans-serif; font-size: 13px; font-weight: 600; fill: #2d3142; }
+      .col-sub { font-family: 'Geist Mono', monospace; font-size: 8px; fill: #4f5d75; }
+      .node-title { font-family: 'Geist', sans-serif; font-size: 11px; font-weight: 600; fill: #2d3142; text-anchor: middle; }
+      .node-sub { font-family: 'Geist Mono', monospace; font-size: 8px; fill: #4f5d75; text-anchor: middle; }
+      .node-tag { font-family: 'Geist Mono', monospace; font-size: 7px; fill: #4f5d75; letter-spacing: 0.08em; text-anchor: middle; }
+      .cmd-pill { font-family: 'Geist Mono', monospace; font-size: 8px; fill: #2d3142; }
+      .arrow-lbl { font-family: 'Geist Mono', monospace; font-size: 8px; fill: #7a8399; letter-spacing: 0.06em; text-anchor: middle; }
+      .legend-title { font-family: 'Geist Mono', monospace; font-size: 8px; fill: #4f5d75; letter-spacing: 0.14em; }
+      .legend-lbl { font-family: 'Geist', sans-serif; font-size: 11px; fill: #2d3142; }
+      .aside { font-family: 'Instrument Serif', Georgia, serif; font-style: italic; font-size: 14px; fill: #eb6c36; }
+    </style>
+
+    <marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#4f5d75"/>
+    </marker>
+    <marker id="arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#eb6c36"/>
+    </marker>
+    <marker id="arrow-link" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#2e5aa8"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="100%" height="100%" fill="#f5f5f5"/>
+
+  <!-- Header -->
+  <text x="48" y="44" class="eyebrow">VIEW 06 · OPERATOR WORKFLOW &amp; EXPERIENCE</text>
+  <text x="48" y="76" class="title">User-Centric Operating Workflow &amp; Multi-Channel Experience</text>
+  <text x="48" y="96" class="subtitle">Human operator touchpoints, interactive command palette, live ACP governance, and autonomous background sweeps</text>
+
+  <!-- Connectors between Columns -->
+  <!-- Col 1 to Col 2 -->
+  <line x1="300" y1="280" x2="336" y2="280" stroke="#2e5aa8" stroke-width="1.2" marker-end="url(#arrow-link)"/>
+  
+  <!-- Col 2 to Col 3 -->
+  <line x1="592" y1="360" x2="628" y2="360" stroke="#eb6c36" stroke-width="1.2" marker-end="url(#arrow-accent)"/>
+
+  <!-- Col 3 to Col 4 -->
+  <line x1="884" y1="360" x2="920" y2="360" stroke="#2e5aa8" stroke-width="1.2" marker-end="url(#arrow-link)"/>
+
+  <!-- Column 1: Operator Ingress Channels -->
+  <rect x="48" y="136" width="252" height="496" rx="8" fill="#ffffff" stroke="rgba(45,49,66,0.12)" stroke-width="1"/>
+  <text x="64" y="164" class="col-title">1. Ingress Channels</text>
+  <text x="64" y="178" class="col-sub">Multi-modal access from mobile to terminal</text>
+
+  <!-- Channel 1: Signal / Telegram -->
+  <rect x="64" y="192" width="220" height="96" rx="6" fill="#f5f5f5" stroke="#2d3142" stroke-width="1"/>
+  <rect x="72" y="198" width="40" height="12" rx="2" fill="transparent" stroke="#2d3142" stroke-width="0.8"/>
+  <text x="92" y="207" class="node-tag">MOBILE</text>
+  <text x="174" y="228" class="node-title">Signal / Telegram</text>
+  <text x="174" y="244" class="node-sub">via cc-connect (:9810)</text>
+  <text x="174" y="260" class="node-sub">Conversational requests &amp; updates</text>
+
+  <!-- Channel 2: aoe Web Cockpit -->
+  <rect x="64" y="300" width="220" height="96" rx="6" fill="#f5f5f5" stroke="#2d3142" stroke-width="1"/>
+  <rect x="72" y="306" width="44" height="12" rx="2" fill="transparent" stroke="#2d3142" stroke-width="0.8"/>
+  <text x="94" y="315" class="node-tag">COCKPIT</text>
+  <text x="174" y="336" class="node-title">Agent of Empires</text>
+  <text x="174" y="352" class="node-sub">Web PWA &amp; TUI (:8080)</text>
+  <text x="174" y="368" class="node-sub">Live ACP step streams &amp; diff audit</text>
+
+  <!-- Channel 3: Direct Tmux CLI -->
+  <rect x="64" y="408" width="220" height="96" rx="6" fill="#f5f5f5" stroke="#2d3142" stroke-width="1"/>
+  <rect x="72" y="414" width="36" height="12" rx="2" fill="transparent" stroke="#2d3142" stroke-width="0.8"/>
+  <text x="90" y="423" class="node-tag">SHELL</text>
+  <text x="174" y="444" class="node-title">tmux attach -t main</text>
+  <text x="174" y="460" class="node-sub">Direct pairing in terminal</text>
+  <text x="174" y="476" class="node-sub">Real-time kernel interaction</text>
+
+  <!-- Column 2: Interactive Slash Commands -->
+  <rect x="340" y="136" width="252" height="496" rx="8" fill="#ffffff" stroke="rgba(45,49,66,0.12)" stroke-width="1"/>
+  <text x="356" y="164" class="col-title">2. Interactive Commands</text>
+  <text x="356" y="178" class="col-sub">Dedicated slash command triggers</text>
+
+  <rect x="356" y="192" width="220" height="28" rx="4" fill="#f5f5f5" stroke="rgba(45,49,66,0.15)" stroke-width="0.8"/>
+  <text x="368" y="210" class="cmd-pill">/plan &amp; /ulw-plan (ISC Gates)</text>
+
+  <rect x="356" y="228" width="220" height="28" rx="4" fill="#f5f5f5" stroke="rgba(45,49,66,0.15)" stroke-width="0.8"/>
+  <text x="368" y="246" class="cmd-pill">/debug (Systematic Root Cause)</text>
+
+  <rect x="356" y="264" width="220" height="28" rx="4" fill="#f5f5f5" stroke="rgba(45,49,66,0.15)" stroke-width="0.8"/>
+  <text x="368" y="282" class="cmd-pill">/review (P0–P3 Code Critique)</text>
+
+  <rect x="356" y="300" width="220" height="28" rx="4" fill="#f5f5f5" stroke="rgba(45,49,66,0.15)" stroke-width="0.8"/>
+  <text x="368" y="318" class="cmd-pill">/git &amp; /git-master (Worktree)</text>
+
+  <rect x="356" y="336" width="220" height="28" rx="4" fill="#f5f5f5" stroke="rgba(45,49,66,0.15)" stroke-width="0.8"/>
+  <text x="368" y="354" class="cmd-pill">/scout &amp; /security (Scanning)</text>
+
+  <rect x="356" y="372" width="220" height="28" rx="4" fill="#f5f5f5" stroke="rgba(45,49,66,0.15)" stroke-width="0.8"/>
+  <text x="368" y="390" class="cmd-pill">/pythonista &amp; /patch (Editing)</text>
+
+  <rect x="356" y="408" width="220" height="28" rx="4" fill="#f5f5f5" stroke="rgba(45,49,66,0.15)" stroke-width="0.8"/>
+  <text x="368" y="426" class="cmd-pill">/learn &amp; /reflect (Memory)</text>
+
+  <rect x="356" y="444" width="220" height="28" rx="4" fill="#f5f5f5" stroke="rgba(45,49,66,0.15)" stroke-width="0.8"/>
+  <text x="368" y="462" class="cmd-pill">/escalate (Main Approval)</text>
+
+  <text x="356" y="520" class="aside">"Structured commands enforce rigorous engineering standards"</text>
+
+  <!-- Column 3: Autonomous Execution & Human Governance (Focal) -->
+  <rect x="632" y="136" width="252" height="496" rx="8" fill="#f5f5f5"/>
+  <rect x="632" y="136" width="252" height="496" rx="8" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="1.2"/>
+  <text x="648" y="164" class="col-title" fill="#eb6c36">3. Human Governance</text>
+  <text x="648" y="178" class="col-sub">Verification gates &amp; background execution</text>
+
+  <!-- Card A: Plan Propose & Resolve -->
+  <rect x="648" y="192" width="220" height="96" rx="6" fill="#ffffff" stroke="#eb6c36" stroke-width="1"/>
+  <text x="758" y="218" class="node-title">Plan Proposal Gate</text>
+  <text x="758" y="234" class="node-sub">write xd://propose</text>
+  <text x="758" y="250" class="node-sub">Interactive prompt before edit</text>
+  <text x="758" y="266" class="node-sub">Diff staging (write xd://resolve)</text>
+
+  <!-- Card B: Kanban Ownership -->
+  <rect x="648" y="300" width="220" height="96" rx="6" fill="#ffffff" stroke="#eb6c36" stroke-width="1"/>
+  <text x="758" y="326" class="node-title">amux Kanban Board</text>
+  <text x="758" y="342" class="node-sub">Todo ➔ Doing ➔ Done</text>
+  <text x="758" y="358" class="node-sub">Task worker claim tracking</text>
+  <text x="758" y="374" class="node-sub">Automated PR / branch status</text>
+
+  <!-- Card C: 24/7 Silent Sweeps -->
+  <rect x="648" y="408" width="220" height="96" rx="6" fill="#ffffff" stroke="#eb6c36" stroke-width="1"/>
+  <text x="758" y="434" class="node-title">Silent Cron Automation</text>
+  <text x="758" y="450" class="node-sub">0 stdout noise on success</text>
+  <text x="758" y="466" class="node-sub">Health &amp; git repository sweeps</text>
+  <text x="758" y="482" class="node-sub">Proactive alert card filing</text>
+
+  <!-- Column 4: Long-Term Alignment & Reflection -->
+  <rect x="924" y="136" width="228" height="496" rx="8" fill="#ffffff" stroke="rgba(45,49,66,0.12)" stroke-width="1"/>
+  <text x="940" y="164" class="col-title">4. Strategic LifeOS</text>
+  <text x="940" y="178" class="col-sub">Continuous cognitive alignment</text>
+
+  <rect x="940" y="192" width="196" height="136" rx="6" fill="#f5f5f5" stroke="#2d3142" stroke-width="1"/>
+  <text x="1038" y="218" class="node-title">Hindsight Memory</text>
+  <text x="1038" y="234" class="node-sub">:8888 Vector Store</text>
+  <text x="1038" y="254" class="node-sub">Principal TELOS alignment</text>
+  <text x="1038" y="270" class="node-sub">User communication prefs</text>
+  <text x="1038" y="286" class="node-sub">Anti-criteria enforcement</text>
+  <text x="1038" y="302" class="node-sub">Curated daily learnings</text>
+
+  <rect x="940" y="340" width="196" height="96" rx="6" fill="#f5f5f5" stroke="#2d3142" stroke-width="1"/>
+  <text x="1038" y="366" class="node-title">Daily Standup &amp; Reflect</text>
+  <text x="1038" y="382" class="node-sub">Evening /learn command</text>
+  <text x="1038" y="398" class="node-sub">Consolidation pass</text>
+  <text x="1038" y="414" class="node-sub">Model synthesis refresh</text>
+
+  <!-- Legend -->
+  <line x1="48" y1="664" x2="1152" y2="664" stroke="rgba(45,49,66,0.12)" stroke-width="0.8"/>
+  <text x="48" y="684" class="legend-title">LEGEND</text>
+
+  <rect x="144" y="676" width="16" height="12" rx="2" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="1"/>
+  <text x="168" y="686" class="legend-lbl">Core Human Governance &amp; Verification</text>
+
+  <rect x="420" y="676" width="16" height="12" rx="2" fill="#ffffff" stroke="rgba(45,49,66,0.12)" stroke-width="1"/>
+  <text x="444" y="686" class="legend-lbl">Operator Ingress &amp; Memory Channels</text>
+
+  <rect x="700" y="676" width="16" height="12" rx="2" fill="#f5f5f5" stroke="rgba(45,49,66,0.15)" stroke-width="0.8"/>
+  <text x="724" y="686" class="legend-lbl">Slash Command Palette</text>
+</svg>

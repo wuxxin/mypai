@@ -1,0 +1,126 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 720" width="100%" height="100%">
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&amp;family=Geist:wght@400;500;600&amp;family=Geist+Mono:wght@400;500;600&amp;display=swap');
+      .title { font-family: 'Instrument Serif', Georgia, serif; font-size: 28px; fill: #2d3142; }
+      .subtitle { font-family: 'Geist', sans-serif; font-size: 12px; fill: #4f5d75; }
+      .eyebrow { font-family: 'Geist Mono', monospace; font-size: 8px; fill: #eb6c36; letter-spacing: 0.18em; text-transform: uppercase; }
+      .layer-title { font-family: 'Geist', sans-serif; font-size: 13px; font-weight: 600; fill: #2d3142; }
+      .layer-sub { font-family: 'Geist Mono', monospace; font-size: 9px; fill: #4f5d75; }
+      .node-title { font-family: 'Geist', sans-serif; font-size: 11px; font-weight: 600; fill: #2d3142; text-anchor: middle; }
+      .node-sub { font-family: 'Geist Mono', monospace; font-size: 8px; fill: #4f5d75; text-anchor: middle; }
+      .arrow-lbl { font-family: 'Geist Mono', monospace; font-size: 8px; fill: #7a8399; letter-spacing: 0.06em; text-anchor: middle; }
+      .legend-title { font-family: 'Geist Mono', monospace; font-size: 8px; fill: #4f5d75; letter-spacing: 0.14em; }
+      .legend-lbl { font-family: 'Geist', sans-serif; font-size: 11px; fill: #2d3142; }
+      .aside { font-family: 'Instrument Serif', Georgia, serif; font-style: italic; font-size: 14px; fill: #eb6c36; }
+    </style>
+
+    <marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#4f5d75"/>
+    </marker>
+    <marker id="arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#eb6c36"/>
+    </marker>
+    <marker id="arrow-link" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#2e5aa8"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="100%" height="100%" fill="#f5f5f5"/>
+
+  <!-- Header -->
+  <text x="48" y="44" class="eyebrow">VIEW 03 · IN-KERNEL RUNTIME</text>
+  <text x="48" y="76" class="title">In-Kernel Python Runtime &amp; Tool Bridge (mypai_runtime)</text>
+  <text x="48" y="96" class="subtitle">Persistent Python kernel architecture combining pure httpx REST clients, trapped exception diagnostics, and host loopback IPC</text>
+
+  <!-- Layer 1: Cognitive Execution Layer -->
+  <rect x="48" y="128" width="1104" height="88" rx="8" fill="#ffffff" stroke="rgba(45,49,66,0.12)" stroke-width="1"/>
+  <text x="72" y="152" class="layer-title">Layer 1: Cognitive Turn &amp; Steering Plane (OMP Engine)</text>
+  <text x="72" y="168" class="layer-sub">Session Orchestrator · Turn Evaluation (`lang: "py"`) · Zero Stdout Discipline</text>
+  
+  <rect x="580" y="144" width="240" height="56" rx="6" fill="#f5f5f5" stroke="#2d3142" stroke-width="1"/>
+  <text x="700" y="168" class="node-title">Persistent eval Subprocess</text>
+  <text x="700" y="184" class="node-sub">runner.py · Python 3.14 venv</text>
+
+  <rect x="840" y="144" width="280" height="56" rx="6" fill="#f5f5f5" stroke="#2d3142" stroke-width="1"/>
+  <text x="980" y="168" class="node-title">Virtual Tool Transport (xd://)</text>
+  <text x="980" y="184" class="node-sub">write xd://propose · write xd://resolve</text>
+
+  <!-- Layer 2: Persistent State & Globals -->
+  <rect x="48" y="232" width="1104" height="88" rx="8" fill="#ffffff" stroke="rgba(45,49,66,0.12)" stroke-width="1"/>
+  <text x="72" y="256" class="layer-title">Layer 2: Persistent Process Memory (globals() State)</text>
+  <text x="72" y="272" class="layer-sub">Survives across agent turns · Eliminates repetitive imports &amp; bootstrapping overhead</text>
+
+  <rect x="480" y="248" width="180" height="56" rx="6" fill="#f5f5f5" stroke="#7a8399" stroke-width="1"/>
+  <text x="570" y="272" class="node-title">_SESSION_BOOTSTRAPPED</text>
+  <text x="570" y="288" class="node-sub">bool · 1st-turn init flag</text>
+
+  <rect x="680" y="248" width="180" height="56" rx="6" fill="#f5f5f5" stroke="#7a8399" stroke-width="1"/>
+  <text x="770" y="272" class="node-title">_STRATEGIC_MODELS</text>
+  <text x="770" y="288" class="node-sub">Cached TELOS reflections</text>
+
+  <rect x="880" y="248" width="180" height="56" rx="6" fill="#f5f5f5" stroke="#7a8399" stroke-width="1"/>
+  <text x="970" y="272" class="node-title">_LAST_ERROR</text>
+  <text x="970" y="288" class="node-sub">Captured exception context</text>
+
+  <!-- Layer 3: mypai_runtime In-Kernel Library (Focal) -->
+  <rect x="48" y="336" width="1104" height="112" rx="8" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="1.2"/>
+  <text x="72" y="360" class="layer-title" fill="#eb6c36">Layer 3: mypai_runtime Unified Client Library (Focal)</text>
+  <text x="72" y="376" class="layer-sub">Pure httpx HTTP Networking · Fail-fast Invariants · Structured DTOs · In-Kernel Singletons</text>
+
+  <rect x="72" y="388" width="320" height="48" rx="6" fill="#ffffff" stroke="#eb6c36" stroke-width="1"/>
+  <text x="232" y="408" class="node-title">AmuxClient (amux.py)</text>
+  <text x="232" y="422" class="node-sub">Messages · Sessions · Cards · Schedules · Metrics</text>
+
+  <rect x="412" y="388" width="320" height="48" rx="6" fill="#ffffff" stroke="#eb6c36" stroke-width="1"/>
+  <text x="572" y="408" class="node-title">HindsightClient (hindsight.py)</text>
+  <text x="572" y="422" class="node-sub">reflect() · recall() · retain() · consolidate()</text>
+
+  <rect x="752" y="388" width="320" height="48" rx="6" fill="#ffffff" stroke="#eb6c36" stroke-width="1"/>
+  <text x="912" y="408" class="node-title">Diagnostics (diagnostics.py)</text>
+  <text x="912" y="422" class="node-sub">analyze_main_failure() · Traceback capture</text>
+
+  <!-- Layer 4: Loopback Tool Bridge (IPC) -->
+  <rect x="48" y="464" width="1104" height="88" rx="8" fill="#ffffff" stroke="rgba(45,49,66,0.12)" stroke-width="1"/>
+  <text x="72" y="488" class="layer-title">Layer 4: Host Loopback Tool Proxy (tool.*)</text>
+  <text x="72" y="504" class="layer-sub">High-Speed In-Process IPC Bridge · Zero Process Fork Overhead · Native TypeScript/Rust Hooks</text>
+
+  <rect x="480" y="480" width="180" height="56" rx="6" fill="#f5f5f5" stroke="#2e5aa8" stroke-width="1"/>
+  <text x="570" y="504" class="node-title">Memory Primitives</text>
+  <text x="570" y="520" class="node-sub">tool.reflect · recall · retain</text>
+
+  <rect x="680" y="480" width="180" height="56" rx="6" fill="#f5f5f5" stroke="#2e5aa8" stroke-width="1"/>
+  <text x="770" y="504" class="node-title">Filesystem Primitives</text>
+  <text x="770" y="520" class="node-sub">tool.read · tool.write</text>
+
+  <rect x="880" y="480" width="180" height="56" rx="6" fill="#f5f5f5" stroke="#2e5aa8" stroke-width="1"/>
+  <text x="970" y="504" class="node-title">Search Primitives</text>
+  <text x="970" y="520" class="node-sub">tool.search · ripgrep</text>
+
+  <!-- Layer 5: Infrastructure & Daemon Layer -->
+  <rect x="48" y="568" width="1104" height="72" rx="8" fill="#f5f5f5" stroke="rgba(45,49,66,0.2)" stroke-width="1"/>
+  <text x="72" y="592" class="layer-title">Layer 5: Supervised Infrastructure Services</text>
+  <text x="72" y="608" class="layer-sub">amux-server (:8824) · Hindsight Server (:8888) · cc-connect (:9810)</text>
+
+  <rect x="640" y="580" width="200" height="48" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+  <text x="740" y="602" class="node-title">amux-server</text>
+  <text x="740" y="616" class="node-sub">:8824 · Axum + SQLite</text>
+
+  <rect x="860" y="580" width="200" height="48" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+  <text x="960" y="602" class="node-title">Hindsight Memory</text>
+  <text x="960" y="616" class="node-sub">:8888 · Vector Engine</text>
+
+  <!-- Legend -->
+  <line x1="48" y1="664" x2="1152" y2="664" stroke="rgba(45,49,66,0.12)" stroke-width="0.8"/>
+  <text x="48" y="684" class="legend-title">LEGEND</text>
+
+  <rect x="144" y="676" width="16" height="12" rx="2" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="1"/>
+  <text x="168" y="686" class="legend-lbl">mypai_runtime Core Layer</text>
+
+  <rect x="360" y="676" width="16" height="12" rx="2" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+  <text x="384" y="686" class="legend-lbl">Host / Kernel Service Layer</text>
+
+  <rect x="580" y="676" width="16" height="12" rx="2" fill="#f5f5f5" stroke="#7a8399" stroke-width="1"/>
+  <text x="604" y="686" class="legend-lbl">Persistent Process Memory</text>
+</svg>
