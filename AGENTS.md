@@ -1,128 +1,66 @@
 # AGENTS.md — System Realities & Agent Operating Guidelines
 
-This document establishes the operational rules, repository realities, architectural invariants, and specialist delegation profiles for all autonomous agents executing within the **Next-Generation MyPAI** ecosystem.
+Operational rules, repository realities, invariants, and specialist profiles for Next-Generation MyPAI.
 
 ---
 
 ## 1. System Reality & Multi-Session Mesh
 
-Next-Generation MyPAI operates as a distributed multi-session mesh governed by **`amux-server` (:8824)**, **`cc-connect` (:9810)**, **`oh-my-pi` (`omp`)**, **`Agent of Empires` (`aoe`)**, and **`Hindsight` (:8888)**. The legacy monolithic Python daemon (`mypai_daemon`) and old MCP wrappers are retired.
+Distributed mesh on **`amux-server` (:8824)**, **`cc-connect` (:9810)**, **`oh-my-pi` (`omp`)**, **`aoe` (:8080)**, and **`Hindsight` (:8888)**. Legacy daemon/MCP wrappers are retired.
 
-### Core Session Topology
-* **`amux-mypai-main` (profile: `mypai`):** Central cognitive brain, LifeOS mental model governor, amux Kanban board owner, and task worker coordinator.
-* **`amux-mypai-channel` (profile: `mypai`):** Dedicated chat ingress gateway connected to `cc-connect` via tmux driver. Forwards structured requests to main.
-* **`amux-mypai-cron` (profile: `mypai`):** Automation reactor triggered by `amux-server` (`CRON: <action>`). Runs in-kernel silent sweeps.
-* **`amux-task-worker-N` (profile: `normal`):** Isolated on-demand coding workers running in target repositories.
-
-### In-Kernel Execution (`eval`) & Silence Discipline
-* **In-Kernel Python (`lang: "py"`):** Execute inter-agent messaging, memory reflection, and bulk processing directly in the persistent Python kernel using `mypai_runtime`.
-* **Loopback Host Tools:** Use `tool.read()`, `tool.write()`, `tool.search()`, `tool.reflect()`, `tool.recall()`, and `tool.retain()` over the in-process IPC bridge.
-* **Silence Discipline:** Successful automated sweeps, probes, and coordination tasks must emit **0 stdout** (no conversational filler).
+- **`amux-mypai-main` (`mypai`):** Cognitive brain, TELOS governor, Kanban owner, task worker coordinator.
+- **`amux-mypai-channel` (`mypai`):** Chat ingress (`cc-connect` tmux bridge). Forwards structured turns to main.
+- **`amux-mypai-cron` (`mypai`):** Automation reactor triggered by `amux-server` (`CRON: <action>`). Silent in-kernel sweeps.
+- **`amux-task-worker-N` (`normal`):** Isolated on-demand coding workers in target repositories.
+- **In-Kernel Execution (`lang: "py"`):** Execute messaging, memory reflection, and bulk processing in Python kernel via `mypai_runtime`.
+- **Loopback Tools:** Use `tool.read()`, `tool.write()`, `tool.search()`, `tool.reflect()`, `tool.recall()`, `tool.retain()`.
+- **Silence Discipline:** Successful automated sweeps/probes must emit **0 stdout** (no conversational filler).
 
 ---
 
-## 2. Repository Structure
+## 2. Repository Layout
 
 ```
 mypai/
-├── Makefile                         # Modern GNU Makefile (buildenv, test, lint, typecheck, coverage)
-├── pyproject.toml                   # Root package and test dependency definition
-├── omp.env                          # Sandbox launcher & amux supervisor config
-├── bin/
-│   └── membank-ctl                  # Hindsight memory bank sync CLI
-├── src/
-│   └── mypai_runtime/               # In-Kernel Python runtime library
-│       ├── __init__.py              # Exports amux, hindsight, diagnostics
-│       ├── amux.py                  # Full REST API client & Kanban manager
-│       ├── hindsight.py             # Memory reflection & retention client
-│       └── diagnostics.py           # Trapped error analyzers
-├── tests/
-│   ├── conftest.py                  # Pytest fixtures and mock HTTP servers
-│   ├── unit/                        # Unit tests for amux, hindsight, diagnostics, membank-ctl
-│   └── e2e/                         # End-to-End multi-session workflow simulations
-├── omp/
-│   ├── agent/                       # Base OMP Profile (~/.omp/agent/)
-│   │   ├── config.yml, models.yml, mcp.json
-│   │   ├── memorybanks/             # oh-my-pi.yaml
-│   │   ├── agents/                  # orchestrator, debugger, pythonista, writer, patcher, scout, ...
-│   │   ├── skills/                  # ulw-plan, systematic-debugging, git-master, review-work, tdd
-│   │   └── commands/                # plan, ulw-plan, debug, review, git, scout, security, ...
-│   └── profiles/
-│       └── mypai/                   # MyPai Profile (~/.omp/profiles/mypai/agent/)
-│           ├── config.yml, models.yml, mcp.json
-│           ├── memorybanks/         # mypai.yaml (8-model LifeOS bank)
-│           ├── agents/              # mypai.md (mypai-main, mypai-channel, mypai-cron)
-│           └── commands/            # learn.md, reflect.md
-├── submodules/
-│   ├── agents-shared                # Shared infrastructure, sandbox-ctl, model downloaders
-│   ├── aur-packages                 # Custom ROCm/HIP PKGBUILDs
-│   └── private-seeds                # Private memory seeds and credentials
-├── references/                      # mypai-spec.md, mypai-test.md, etc.
-├── USAGE.md                         # Complete user & operator manual
-└── README.md                        # Project landing page
+├── Makefile / pyproject.toml / omp.env   # GNU buildenv, dependencies & supervisor config
+├── bin/membank-ctl                      # Hindsight memory bank sync CLI
+├── src/mypai_runtime/                   # In-Kernel Python runtime (amux, hindsight, diagnostics)
+├── tests/ (conftest.py, unit/, e2e/)    # Pytest suite (full amux REST, hindsight, diagnostics, E2E)
+├── omp/ (agent/, profiles/mypai/)       # Base & MyPai profiles, memorybanks, agents, skills, commands
+├── submodules/                          # agents-shared, aur-packages, private-seeds
+└── references/ / USAGE.md / README.md   # Specifications, test docs & user manual
 ```
 
 ---
 
-## 3. Strict Architectural Invariants & Anti-Fallback Rules
+## 3. Strict Fail-Fast Invariants
 
-Agents must strictly adhere to the following fail-fast invariants:
-
-1. **Strict `httpx` Invariant:** All HTTP operations in `mypai_runtime` use pure `httpx`. No defensive `urllib` fallbacks.
-2. **Strict Managed Venv Invariant:** Execute within managed virtualenvs (`~/.omp/python-env` or `~/.omp/profiles/mypai/python-env`). Do not silently fall back to unprovisioned system Python.
-3. **Strict `amux` HTTP Bus Invariant:** Inter-worker coordination must route through `amux-server` (`POST /api/messages`) with JSON payloads and correlation IDs. Never inject raw keystrokes across sessions.
-4. **Strict Loopback Invariant:** Avoid subshell spawning (`cat`, `grep`, `sed`) when in-process loopback tools (`tool.*`) or AST tools (`ast_grep`) are available.
-5. **Strict `xd://` Virtual Device Invariant:** Discover tools and propose plans via `xd://` (`write xd://propose`, `read xd://`).
-6. **Strict Exception Visibility:** Never use empty `except Exception: pass`. Capture stack traces and raise typed domain exceptions.
+1. **`httpx` Only:** Pure `httpx` in `mypai_runtime`. No defensive `urllib` fallbacks.
+2. **Managed Venv Only:** Execute in `~/.omp/python-env` or `~/.omp/profiles/mypai/python-env`. Never use bare system Python.
+3. **`amux` HTTP Bus Only:** Cross-session turns route via `POST /api/messages` with JSON payloads & correlation IDs. No raw keystroke injection.
+4. **Loopback First:** Use in-kernel `tool.*` and AST tools over subshell spawning (`cat`, `grep`, `sed`).
+5. **`xd://` Tools Only:** Discover tools and propose plans via `xd://` (`write xd://propose`, `read xd://`).
+6. **Explicit Errors:** Never use empty `except: pass`. Capture stack traces in `_LAST_ERROR` and raise typed domain exceptions.
 
 ---
 
-## 4. Code Style, Tooling & Testing Commands
+## 4. Code Style & Verification Commands
 
-- **Style:** Do not use long visual lines for comment sections (e.g. avoid `# -----------`).
-
-### Shell Scripts (`.sh`, `bin/*`)
-- **Style:** `#!/usr/bin/env bash`, 4-space indent, `set -euo pipefail`, quote `"$var"`, use `$(...)`, `lowercase_vars`, `UPPERCASE_CONSTANTS`.
-- **Lint & Format:**
-  ```bash
-  shellcheck bin/* && shfmt -i 4 -w bin/*
-  ```
-
-### Python Code (`src/`, `tests/`)
-- **Style:** `#!/usr/bin/env python3`, 4-space indent, type hints, `snake_case` (functions/vars), `PascalCase` (classes), triple-quote docstrings, explicit exception handling.
-- **Makefile & Testing Commands:**
-  ```bash
-  make help          # Show available targets and active configuration
-  make buildenv      # Provision local venv with test dependencies
-  make test          # Run full pytest suite (unit + e2e)
-  make test-unit     # Run unit tests only
-  make test-e2e      # Run end-to-end multi-session simulations
-  make coverage      # Run pytest with line-level code coverage
-  make lint          # Run ruff check and format verification
-  make format        # Auto-format and fix code with ruff
-  make typecheck     # Run mypy static type analysis
-  make all           # Run complete CI validation pipeline
-  ```
+- **Comments:** Do not use long visual separator lines (e.g. avoid `# -----------`).
+- **Shell (`bin/*`):** `set -euo pipefail`, 4-space indent, quoted variables. Lint: `shellcheck bin/* && shfmt -i 4 -w bin/*`.
+- **Python (`src/`, `tests/`):** 4-space indent, type hints, `snake_case` functions/vars, `PascalCase` classes.
+- **CI Commands:**
+  - `make help` (target overview) | `make buildenv` (provision venv) | `make all` (full CI gate)
+  - `make test` / `make test-unit` / `make test-e2e` | `make coverage` (97%+ line coverage)
+  - `make lint` / `make format` (ruff) | `make typecheck` (mypy) | `make clean`
 
 ---
 
-## 5. Operating & Sandboxing Guidelines
+## 5. Workspace & Sandboxing Discipline
 
-### Workspace Discipline
-* **Unified Workspace:** `mypai` and its `submodules/` (`agents-shared`, `aur-packages`) form a single workspace.
-* **Ephemeral Files:** Store build logs, temporary checkouts, and temp files in `scratch/`.
-* **File Resolution:** If a user-referenced file is missing, check the root repository and submodules before creating a new file.
-
-### Sandboxing & Bubblewrap (`bwrap`) Discipline
-Check if running inside a bwrap sandbox:
-```bash
-[ -S "${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/systemd/private" ] || echo "bwrapped"
-```
-
-**If bwrapped (systemd socket unavailable):**
-- **Restriction:** Do **NOT** execute systemd service management commands (`systemctl start/stop/restart/status`).
-- **Introspection:** You **can** inspect all active processes and logs using `journalctl` (`--user`), `ps`, `/proc`, and `pgrep`.
-- **Dummy Install:** You **can** use the scripts install function to create files in the bwrapped environment.
+- **Workspace:** `mypai` and `submodules/` form a single workspace. Temporary files go in `scratch/`. Check root and submodules before creating new files.
+- **Bubblewrap (`bwrap`) Check:** `[ -S "${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/systemd/private" ] || echo "bwrapped"`
+- **When bwrapped:** Do **NOT** run `systemctl`. Inspect processes via `journalctl --user`, `ps`, `/proc`, `pgrep`.
 
 ---
 
