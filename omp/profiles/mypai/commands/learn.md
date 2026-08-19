@@ -6,7 +6,7 @@ Please extract and persist the core facts, user preferences, and architectural d
 
 Execute via in-kernel Python:
 ```python
-from mypai_eval_runtime import hindsight
+from mypai_runtime import hindsight
 
 # Extract and retain learnings
 # hindsight.retain(items=[{"content": "...", "context": "..."}], bank_id="mypai")

@@ -5,7 +5,7 @@ description: Query active Hindsight mental models for user preferences, worldvie
 Query active mental models from Hindsight to ground the current discussion:
 
 ```python
-from mypai_eval_runtime import hindsight
+from mypai_runtime import hindsight
 
 # Reflect over active models
 # hindsight.reflect(query="$*", bank_id="mypai")

@@ -19,7 +19,7 @@ flowchart TD
     subgraph Mesh["amux Multi-Session Mesh"]
         direction TB
         Chan["amux-mypai-channel<br/>(Chat Gateway)"]
-        Brain["amux-mypai-workspace<br/>(Brain & Orchestrator)"]
+        Brain["amux-mypai-main<br/>(Brain & Orchestrator)"]
         Cron["amux-mypai-cron<br/>(Scheduled Sweeps)"]
         Sched["amux Scheduler"]
         
@@ -38,8 +38,8 @@ flowchart TD
     end
 ```
 
-1. **`amux-mypai-workspace` (`mypai-main`):** The primary brain. Maintains your long-term LifeOS memory, manages the `amux` Kanban board, spawns worker sessions for coding tasks, and coordinates replies.
-2. **`amux-mypai-channel`:** Dedicated chat ingress connected to `cc-connect`. Ingests incoming messages, parses intent, and forwards tasks to `mypai-workspace`.
+1. **`amux-mypai-main`:** The primary brain. Maintains your long-term LifeOS memory, manages the `amux` Kanban board, spawns worker sessions for coding tasks, and coordinates replies.
+2. **`amux-mypai-channel`:** Dedicated chat ingress connected to `cc-connect`. Ingests incoming messages, parses intent, and forwards tasks to `mypai-main`.
 3. **`amux-mypai-cron`:** Dedicated automation reactor. Receives scheduled triggers from `amux-server` and performs silent repository and metric health sweeps.
 4. **`amux-task-worker-N`:** On-demand coding workers running in project directories with normal OMP profiles.
 
@@ -60,8 +60,8 @@ aoe serve
 ### Attaching via `tmux`
 To directly inspect or interact with any active session pane:
 ```bash
-# Attach to the main orchestrator workspace
-tmux attach -t amux-mypai-workspace
+# Attach to the main orchestrator session
+tmux attach -t amux-mypai-main
 
 # Attach to the communication gateway
 tmux attach -t amux-mypai-channel
@@ -80,8 +80,8 @@ To spawn a new isolated task worker on a target repository:
 # Via amux CLI
 amux launch worker-auth repos/backend-core --provider omp
 
-# Or via Python eval inside mypai-workspace:
-from mypai_eval_runtime import amux
+# Or via Python eval inside mypai-main:
+from mypai_runtime import amux
 amux.spawn_task_worker(
     name="worker-auth",
     directory="repos/backend-core",
@@ -138,20 +138,20 @@ In any interactive OMP session, you can invoke specialized workflows using slash
 * **`/writer`**: Generates documentation or updates memory banks.
 * **`/patch`**: Spawns `@patcher` for quick mechanical edits.
 * **`/learn`** (or `/reflect`): Distills recent turn insights into Hindsight mental models.
-* **`/escalate`**: Forwards questions or confirmation requests directly to `mypai-workspace`.
+* **`/escalate`**: Forwards questions or confirmation requests directly to `mypai-main`.
 
 ---
 
 ## 6. In-Kernel Python `eval` Execution (`lang: "py"`)
 
-All coordination across agents is executed in-process using Python `eval` with the unified `mypai_eval_runtime`:
+All coordination across agents is executed in-process using Python `eval` with the unified `mypai_runtime`:
 
 ```python
-from mypai_eval_runtime import amux
+from mypai_runtime import amux
 
 # 1. Send an inter-worker message
 amux.send_message(
-    target_worker="mypai-workspace",
+    target_worker="mypai-main",
     body="WORKER_STATUS: Completed auth refactor. Unit tests passing."
 )
 
@@ -165,12 +165,12 @@ card = amux.create_card(
 # 3. Synchronous in-cell waiting for response
 try:
     reply = amux.wait_for_response(
-        target_worker="mypai-workspace",
+        target_worker="mypai-main",
         correlation_id="req-1234",
         timeout=30.0
     )
 except TimeoutError:
-    print("Workspace did not respond within 30s")
+    print("Main did not respond within 30s")
 ```
 
 ---
@@ -181,10 +181,9 @@ Schedules in `amux-server` fire durable triggers directly into `mypai-cron`:
 
 ### Registering a Schedule via Python `eval`
 ```python
-from mypai_eval_runtime import amux
+from mypai_runtime import amux
 
-amux.post(
-    "schedules",
+amux.create_schedule(
     title="Daily Codebase & Health Sweep",
     session="mypai-cron",
     schedule_expr="0 8 * * *",  # Every day at 08:00
@@ -197,9 +196,9 @@ amux.post(
 1. `amux-server` injects `CRON: health_sweep ...` into `amux-mypai-cron`.
 2. `mypai-cron` executes an in-kernel `eval` cell:
    - Probes git status and FIXME markers via native `tool.search()`.
-   - Checks server metrics via `amux.get("metrics")`.
+   - Checks server metrics via `amux.get_metrics()`.
 3. **If all clean:** Remains **100% silent (0 stdout)**.
-4. **If anomalies found:** Files an amux Kanban card (`Todo`) and alerts `mypai-workspace`.
+4. **If anomalies found:** Files an amux Kanban card (`Todo`) and alerts `mypai-main`.
 
 ---
 

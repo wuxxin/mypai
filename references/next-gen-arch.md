@@ -30,7 +30,7 @@ By strictly leveraging **in-kernel Python `eval` execution** paired with native 
 
 **Key Architectural Aspects:**
 1. **Single Entry Point (`cc-connect`):** Directs incoming Signal chat into `amux-mypai-channel` without spawning new child sessions.
-2. **Central Nervous System (`amux-mypai-workspace`):** Acts as `@orchestrator` (`mypai main`), coordinating all tasks and delegating work to ephemeral task workers (`amux-task-worker-N`).
+2. **Central Nervous System (`amux-mypai-main`):** Acts as `@orchestrator` (`mypai main`), coordinating all tasks and delegating work to ephemeral task workers (`amux-task-worker-N`).
 3. **Dedicated Automation Lane (`amux-mypai-cron`):** Receives scheduled cron triggers from `amux-server` without blocking interactive chat.
 4. **Unified Observability (`aoe`):** Connects to all sessions concurrently over tmux sockets and ACP protocol for live monitoring.
 
@@ -42,10 +42,10 @@ By strictly leveraging **in-kernel Python `eval` execution** paired with native 
 **Lifecycle of a User Request:**
 1. **User Signal Prompt ➔ `cc-connect`:** Delivered via WebSocket bridge into `amux-mypai-channel`.
 2. **Intent Parsing & Translation:** `mypai-channel` runs Python `eval` with loopback tools to extract repository names and intent.
-3. **Inter-Worker Dispatch:** Dispatches request to `mypai-workspace` (`mypai main`) via `httpx.post("https://localhost:8824/api/messages", ...)`.
-4. **Kanban Work Claim:** `mypai-workspace` moves task card to `Doing`, launches `amux-task-worker-1` with normal `omp` profile.
+3. **Inter-Worker Dispatch:** Dispatches request to `mypai-main` via `httpx.post("https://localhost:8824/api/messages", ...)`.
+4. **Kanban Work Claim:** `mypai-main` moves task card to `Doing`, launches `amux-task-worker-1` with normal `omp` profile.
 5. **Task Execution & Verification:** Worker edits files, runs lint/test suites, and reports back.
-6. **Return Path:** `mypai-workspace` transitions card to `Done` and messages `mypai-channel`, which writes the final formatted reply back to Signal.
+6. **Return Path:** `mypai-main` transitions card to `Done` and messages `mypai-channel`, which writes the final formatted reply back to Signal.
 
 ---
 
@@ -64,7 +64,7 @@ By strictly leveraging **in-kernel Python `eval` execution** paired with native 
 ![04 · Dual-Profile Hindsight Memory & Mental Model Isolation](next-gen-arch-04.svg)
 
 **Memory Tiering Strategy:**
-- **MyPai Profile (`workspace`, `channel`, `cron`):**
+- **MyPai Profile (`main`, `channel`, `cron`):**
   - Bank: `mypai` | Scoping: `global` | `retainMode: turn` | `autoRecall: false` | `autoRetain: false`.
   - Maintains permanent mental models: `principal-telos`, `user-preferences`, `project-decisions`.
   - Ingestion occurs only via curated, explicit `tool.retain()` calls.
@@ -82,10 +82,10 @@ By strictly leveraging **in-kernel Python `eval` execution** paired with native 
 **Autonomous Cron Execution Loop:**
 1. **Durable Trigger:** `amux-server` cron scheduler fires `CRON: <action>` directly into `amux-mypai-cron`.
 2. **Immediate Python `eval` Execution:** Agent system prompt directs `mypai-cron` to execute Python `eval` cells without sequential terminal commands.
-3. **Loopback Probing:** Inspects file trees, git status, and metrics via `tool.search()`, `tool.read()`, and `amux.get("metrics")`.
+3. **Loopback Probing:** Inspects file trees, git status, and metrics via `tool.search()`, `tool.read()`, and `amux.get_metrics()`.
 4. **Conditional Routing:**
    - **Clean:** Stays 100% silent (0 stdout).
-   - **Action Required:** Posts Kanban card (`Todo`) and messages `mypai-workspace`.
+   - **Action Required:** Posts Kanban card (`Todo`) and messages `mypai-main`.
    - **Error:** Traps exception in `_LAST_ERROR` and outputs diagnostic directive.
 
 ---

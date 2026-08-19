@@ -9,13 +9,13 @@ This document establishes the operational rules, repository realities, architect
 Next-Generation MyPAI operates as a distributed multi-session mesh governed by **`amux-server` (:8824)**, **`cc-connect` (:9810)**, **`oh-my-pi` (`omp`)**, **`Agent of Empires` (`aoe`)**, and **`Hindsight` (:8888)**. The legacy monolithic Python daemon (`mypai_daemon`) and old MCP wrappers are retired.
 
 ### Core Session Topology
-* **`amux-mypai-workspace` (`mypai-main`, profile: `mypai`):** Central cognitive brain, LifeOS mental model governor, amux Kanban board owner, and task worker coordinator.
-* **`amux-mypai-channel` (profile: `mypai`):** Dedicated chat ingress gateway connected to `cc-connect` via tmux driver. Forwards structured requests to workspace.
+* **`amux-mypai-main` (profile: `mypai`):** Central cognitive brain, LifeOS mental model governor, amux Kanban board owner, and task worker coordinator.
+* **`amux-mypai-channel` (profile: `mypai`):** Dedicated chat ingress gateway connected to `cc-connect` via tmux driver. Forwards structured requests to main.
 * **`amux-mypai-cron` (profile: `mypai`):** Automation reactor triggered by `amux-server` (`CRON: <action>`). Runs in-kernel silent sweeps.
 * **`amux-task-worker-N` (profile: `normal`):** Isolated on-demand coding workers running in target repositories.
 
 ### In-Kernel Execution (`eval`) & Silence Discipline
-* **In-Kernel Python (`lang: "py"`):** Execute inter-agent messaging, memory reflection, and bulk processing directly in the persistent Python kernel using `mypai_eval_runtime`.
+* **In-Kernel Python (`lang: "py"`):** Execute inter-agent messaging, memory reflection, and bulk processing directly in the persistent Python kernel using `mypai_runtime`.
 * **Loopback Host Tools:** Use `tool.read()`, `tool.write()`, `tool.search()`, `tool.reflect()`, `tool.recall()`, and `tool.retain()` over the in-process IPC bridge.
 * **Silence Discipline:** Successful automated sweeps, probes, and coordination tasks must emit **0 stdout** (no conversational filler).
 
@@ -31,9 +31,9 @@ mypai/
 ├── bin/
 │   └── membank-ctl                  # Hindsight memory bank sync CLI
 ├── src/
-│   └── mypai_eval_runtime/          # In-Kernel Python eval library
+│   └── mypai_runtime/               # In-Kernel Python runtime library
 │       ├── __init__.py              # Exports amux, hindsight, diagnostics
-│       ├── amux.py                  # httpx inter-worker client & Kanban manager
+│       ├── amux.py                  # Full REST API client & Kanban manager
 │       ├── hindsight.py             # Memory reflection & retention client
 │       └── diagnostics.py           # Trapped error analyzers
 ├── tests/
@@ -51,7 +51,7 @@ mypai/
 │       └── mypai/                   # MyPai Profile (~/.omp/profiles/mypai/agent/)
 │           ├── config.yml, models.yml, mcp.json
 │           ├── memorybanks/         # mypai.yaml (8-model LifeOS bank)
-│           ├── agents/              # mypai.md (mypai-workspace, mypai-channel, mypai-cron)
+│           ├── agents/              # mypai.md (mypai-main, mypai-channel, mypai-cron)
 │           └── commands/            # learn.md, reflect.md
 ├── submodules/
 │   ├── agents-shared                # Shared infrastructure, sandbox-ctl, model downloaders
@@ -68,7 +68,7 @@ mypai/
 
 Agents must strictly adhere to the following fail-fast invariants:
 
-1. **Strict `httpx` Invariant:** All HTTP operations in `mypai_eval_runtime` use pure `httpx`. No defensive `urllib` fallbacks.
+1. **Strict `httpx` Invariant:** All HTTP operations in `mypai_runtime` use pure `httpx`. No defensive `urllib` fallbacks.
 2. **Strict Managed Venv Invariant:** Execute within managed virtualenvs (`~/.omp/python-env` or `~/.omp/profiles/mypai/python-env`). Do not silently fall back to unprovisioned system Python.
 3. **Strict `amux` HTTP Bus Invariant:** Inter-worker coordination must route through `amux-server` (`POST /api/messages`) with JSON payloads and correlation IDs. Never inject raw keystrokes across sessions.
 4. **Strict Loopback Invariant:** Avoid subshell spawning (`cat`, `grep`, `sed`) when in-process loopback tools (`tool.*`) or AST tools (`ast_grep`) are available.

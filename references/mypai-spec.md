@@ -5,7 +5,7 @@
 The **Next-Generation MyPAI Architecture** unifies autonomous personal assistance, multi-channel chat routing, scheduled automation, and codebase engineering across a distributed multi-session mesh. Powered by **`amux`**, **`cc-connect`**, **`oh-my-pi` (`omp`)**, and **`Agent of Empires` (`aoe`)**, the system eliminates monolithic daemon bottlenecks and replaces conversational shell scripting with **in-kernel Python `eval` execution (`lang: "py"`)**, **native loopback host tools (`tool.*`)**, and **isolated dual-profile Hindsight memory banks**.
 
 ### Self-Contained Repository Architecture (No Plugin Required)
-Next-Generation MyPAI eliminates the legacy `omp-mypai` plugin and submodule entirely. Because the monolithic daemon and old MCP wrappers are retired, OMP profiles (`~/.omp/agent/` and `~/.omp/profiles/mypai/agent/`) load natively from filesystem templates, while the in-kernel runtime library (`mypai_eval_runtime`) and management utilities (`bin/membank-ctl`) live directly inside the root `mypai` repository. This eliminates plugin loader latency, removes git submodule friction, and makes `mypai` a clean, standalone repository.
+Next-Generation MyPAI eliminates the legacy `omp-mypai` plugin and submodule entirely. Because the monolithic daemon and old MCP wrappers are retired, OMP profiles (`~/.omp/agent/` and `~/.omp/profiles/mypai/agent/`) load natively from filesystem templates, while the in-kernel runtime library (`mypai_runtime`) and management utilities (`bin/membank-ctl`) live directly inside the root `mypai` repository. This eliminates plugin loader latency, removes git submodule friction, and makes `mypai` a clean, standalone repository.
 
 ---
 
@@ -22,11 +22,11 @@ flowchart TD
     subgraph AmuxPlane["amux-server Control Plane (:8824)"]
         direction TB
         
-        Chan["amux-mypai-channel (Profile: mypai)<br/>• Dedicated Chat Frontend & Ingress<br/>• In-Kernel eval: Intent parsing & tool.reflect()<br/>• Dispatches structured turns to mypai-workspace"]
+        Chan["amux-mypai-channel (Profile: mypai)<br/>• Dedicated Chat Frontend & Ingress<br/>• In-Kernel eval: Intent parsing & tool.reflect()<br/>• Dispatches structured turns to mypai-main"]
         
-        Work["amux-mypai-workspace (mypai-main) (Profile: mypai)<br/>• Central Brain & Strategic Orchestrator<br/>• Bootstraps LifeOS mental models<br/>• Manages amux Kanban Board (POST /api/board/cards)<br/>• Spawns task workers & formats user replies"]
+        Work["amux-mypai-main (mypai-main) (Profile: mypai)<br/>• Central Brain & Strategic Orchestrator<br/>• Bootstraps LifeOS mental models<br/>• Manages amux Kanban Board (POST /api/board/cards)<br/>• Spawns task workers & formats user replies"]
         
-        Cron["amux-mypai-cron (Profile: mypai)<br/>• Dedicated Automation & Scheduled Sweeps<br/>• Triggered by amux Scheduler (CRON: action)<br/>• In-Kernel eval: Probing, tool.search(), metrics<br/>• Alerts workspace & creates Kanban cards"]
+        Cron["amux-mypai-cron (Profile: mypai)<br/>• Dedicated Automation & Scheduled Sweeps<br/>• Triggered by amux Scheduler (CRON: action)<br/>• In-Kernel eval: Probing, tool.search(), metrics<br/>• Alerts main & creates Kanban cards"]
         
         Sched["amux Scheduler Engine"]
         Sched -->|"CRON: trigger"| Cron
@@ -57,10 +57,10 @@ flowchart TD
 
 | Session Name | Profile | Directory | Primary Role | Ingress Source | Egress Target |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| **`amux-mypai-channel`** | `mypai` | `mypai-channel` | Dedicated Chat Gateway & Intent Classifier | `cc-connect` tmux driver | `mypai-workspace` via `POST /api/messages` |
-| **`amux-mypai-workspace`** (`mypai-main`) | `mypai` | `mypai-workspace` | Central Brain, Strategic Governor & Task Coordinator | `mypai-channel`, `mypai-cron`, Task Workers | `mypai-channel` (replies), `amux` Kanban & Workers |
-| **`amux-mypai-cron`** | `mypai` | `mypai-cron` | Timed Probing, Maintenance & Health Sweeps | `amux-server` Scheduler (`CRON: ...`) | `mypai-workspace` (alerts & cards) |
-| **`amux-task-worker-N`** | `normal` (default) | `<target-repo>` | Sandboxed Code Generation, Testing & Refactoring | `mypai-workspace` task dispatch | `mypai-workspace` report & diff |
+| **`amux-mypai-channel`** | `mypai` | `mypai-channel` | Dedicated Chat Gateway & Intent Classifier | `cc-connect` tmux driver | `mypai-main` via `POST /api/messages` |
+| **`amux-mypai-main`** (`mypai-main`) | `mypai` | `mypai-main` | Central Brain, Strategic Governor & Task Coordinator | `mypai-channel`, `mypai-cron`, Task Workers | `mypai-channel` (replies), `amux` Kanban & Workers |
+| **`amux-mypai-cron`** | `mypai` | `mypai-cron` | Timed Probing, Maintenance & Health Sweeps | `amux-server` Scheduler (`CRON: ...`) | `mypai-main` (alerts & cards) |
+| **`amux-task-worker-N`** | `normal` (default) | `<target-repo>` | Sandboxed Code Generation, Testing & Refactoring | `mypai-main` task dispatch | `mypai-main` report & diff |
 
 ---
 
@@ -84,7 +84,7 @@ flowchart LR
         direction TB
         B_Py["bin/python (Python 3.14)"]
         B_Rpc["omp-rpc & arbor"]
-        B_Run["mypai_eval_runtime<br/>(amux.send_message, wait_for_response)"]
+        B_Run["mypai_runtime<br/>(amux.send_message, wait_for_response)"]
         B_Pkgs["openadapt, httpx, pydantic"]
     end
 
@@ -92,7 +92,7 @@ flowchart LR
         direction TB
         P_Py["bin/python (Python 3.14)"]
         P_Rpc["omp-rpc (Native RPC SDK)"]
-        P_Run["mypai_eval_runtime<br/>(amux, hindsight, diagnostics)"]
+        P_Run["mypai_runtime<br/>(amux, hindsight, diagnostics)"]
         P_Pkgs["httpx, pydantic, fastmcp"]
     end
 
@@ -104,7 +104,7 @@ flowchart LR
 
     subgraph CoreSessions["MyPAI Dedicated Sessions"]
         direction TB
-        CS1["mypai-workspace (Central Brain)"]
+        CS1["mypai-main (Central Brain)"]
         CS2["mypai-channel (Chat Gateway)"]
         CS3["mypai-cron (Scheduled Reactor)"]
     end
@@ -115,11 +115,11 @@ flowchart LR
 ```
 
 #### How Normal Profile Agents Access `amux.send_message`
-Normal profile agents (`omp --directory <repo>`) must be able to communicate with `mypai-workspace` seamlessly, regardless of whether they execute inside the managed base venv (`~/.omp/python-env`) or an active repo-local venv (`./.venv`).
+Normal profile agents (`omp --directory <repo>`) must be able to communicate with `mypai-main` seamlessly, regardless of whether they execute inside the managed base venv (`~/.omp/python-env`) or an active repo-local venv (`./.venv`).
 
-1. **Dual Venv Installation:** Both `~/.omp/python-env` and `~/.omp/profiles/mypai/python-env` have `mypai_eval_runtime` and `amux` installed during `LAUNCHER_INSTALL_CMDS`.
-2. **Global Fallback via `PYTHONPATH`:** `omp.env` exports `PYTHONPATH="$HOME/.omp/python-env/lib/python3.14/site-packages:$PYTHONPATH"`. Even if a task worker runs inside a target repository's `.venv`, Python will cleanly resolve `import amux` or `from mypai_eval_runtime import amux`.
-3. **Zero-Dependency Core Engine:** `amux.py` is engineered with standard library `urllib.request` + `json` + `ssl` with transparent upgrade to `httpx` when present. It has zero external dependencies, guaranteeing it can never fail due to missing third-party packages in stripped repo environments.
+1. **Dual Venv Installation:** Both `~/.omp/python-env` and `~/.omp/profiles/mypai/python-env` have `mypai_runtime` and `amux` installed during `LAUNCHER_INSTALL_CMDS`.
+2. **Global Fallback via `PYTHONPATH`:** `omp.env` exports `PYTHONPATH="$HOME/.omp/python-env/lib/python3.14/site-packages:$PYTHONPATH"`. Even if a task worker runs inside a target repository's `.venv`, Python will cleanly resolve `import amux` or `from mypai_runtime import amux`.
+3. **Strict Fail-Fast Engine:** `amux.py` is engineered with `httpx` for connection pooling, keep-alive, and clean typed JSON response validation.
 
 ---
 
@@ -138,7 +138,7 @@ In the next-generation architecture, all internal coordination, automation, and 
    - `tool.search(query, glob)` -> Native in-process `ripgrep` search.
 3. **Strict Silence-on-Success Discipline:** Successful runs emit **zero stdout** (0 context tokens wasted). Output is generated only for user-facing responses or trapped error directives.
 
-### In-Kernel Helper Library (`mypai_eval_runtime` & `amux.py`)
+### In-Kernel Helper Library (`mypai_runtime` & `amux.py`)
 
 The runtime provides the `amux` client using `httpx`:
 
@@ -230,12 +230,12 @@ amux = AmuxClient()
   - Checks if text contains multi-repo references, user preference updates, or direct commands.
 - **In-Kernel Execution Procedure:**
   1. **Bootstrap Check:** On first turn, evaluates `tool.reflect(query="What are the user's communication preferences and tone?")` to populate `_USER_PREFS`.
-  2. **Intent Parsing & Dispatch:** Formats a structured `USER_REQUEST` payload and dispatches it to `mypai-workspace` via `amux.send_message("mypai-workspace", ...)` with a unique `correlation_id`.
-  3. **Response Handling:** Concludes turn or waits for `mypai-workspace` response. When reply is received, outputs the final formatted text to stdout (which `cc-connect` captures and transmits back to the user).
+  2. **Intent Parsing & Dispatch:** Formats a structured `USER_REQUEST` payload and dispatches it to `mypai-main` via `amux.send_message("mypai-main", ...)` with a unique `correlation_id`.
+  3. **Response Handling:** Concludes turn or waits for `mypai-main` response. When reply is received, outputs the final formatted text to stdout (which `cc-connect` captures and transmits back to the user).
 
 ```python
 # Channel Turn Pattern (In-Kernel Python eval)
-from mypai_eval_runtime import amux
+from mypai_runtime import amux
 import uuid
 
 try:
@@ -244,7 +244,7 @@ try:
     
     correlation_id = str(uuid.uuid4())
     amux.send_message(
-        target_worker="mypai-workspace",
+        target_worker="mypai-main",
         body=f"USER_REQUEST: {user_input_text}\nUSER_PREFS: {_USER_PREFS[:200]}",
         correlation_id=correlation_id
     )
@@ -255,7 +255,7 @@ except Exception as err:
 
 ---
 
-### Role 2: `amux-mypai-workspace` (`mypai-main` / Central Orchestrator)
+### Role 2: `amux-mypai-main` (Central Orchestrator)
 
 - **System Context & Responsibility:** The primary cognitive brain of the system. Governs strategic alignment with the user's TELOS goals, manages the `amux` Kanban board, coordinates task workers, and formulates user-facing responses.
 - **Input Inspection:**
@@ -271,8 +271,8 @@ except Exception as err:
   4. **User Communication:** Dispatches final user-facing text back to `mypai-channel` via `amux.send_message("mypai-channel", ...)`.
 
 ```python
-# Workspace Turn Pattern (In-Kernel Python eval)
-from mypai_eval_runtime import amux
+# Main Turn Pattern (In-Kernel Python eval)
+from mypai_runtime import amux
 
 try:
     if "_STRATEGIC_MODELS" not in globals():
@@ -295,7 +295,7 @@ try:
     )
 except Exception as err:
     globals()["_LAST_ERROR"] = err
-    print(f"[ERROR] Workspace coordination failed: {err}")
+    print(f"[ERROR] Main coordination failed: {err}")
 ```
 
 ---
@@ -306,21 +306,21 @@ except Exception as err:
 - **Input Inspection:** Receives `CRON: <action> [params...]` prompts directly from the `amux` scheduler engine.
 - **In-Kernel Execution Procedure:**
   1. **Action Routing:**
-     - `CRON: health_sweep`: Scans git status, builds, and metrics via `tool.search()`, `tool.read()`, and `amux.get("metrics")`.
+     - `CRON: health_sweep`: Scans git status, builds, and metrics via `tool.search()`, `tool.read()`, and `amux.get_metrics()`.
      - `CRON: memory_consolidation`: Triggers Hindsight `/consolidate` and refreshes active mental models.
      - `CRON: daily_standup`: Collects completed cards and drafts daily summary.
   2. **Conditional Escalation:**
      - If all checks pass: Remains **100% silent (0 stdout)**.
-     - If anomalies or failures are detected: Files an amux Kanban card (`Todo`) and alerts `mypai-workspace` via `amux.send_message("mypai-workspace", ...)`.
+     - If anomalies or failures are detected: Files an amux Kanban card (`Todo`) and alerts `mypai-main` via `amux.send_message("mypai-main", ...)`.
 
 ```python
 # Cron Turn Pattern (In-Kernel Python eval)
-from mypai_eval_runtime import amux
+from mypai_runtime import amux
 
 try:
     # 1. Probing via loopback bridge
     todos = tool.search(query="FIXME", glob="*.py")
-    metrics = amux.get("metrics")
+    metrics = amux.get_metrics()
     
     if metrics.get("failed_runs", 0) > 0 or len(todos) > 20:
         amux.create_card(
@@ -329,8 +329,8 @@ try:
             lane="Todo"
         )
         amux.send_message(
-            target_worker="mypai-workspace",
-            body=f"CRON Alert: Health sweep detected issues. Card filed."
+            target_worker="mypai-main",
+            body="CRON Alert: Health sweep detected issues. Card filed."
         )
     # Success: silent (0 stdout)
 except Exception as err:
@@ -349,14 +349,14 @@ except Exception as err:
    - **Solution**: Cross-agent interaction uses the **`amux` Inter-Worker Message Bus (`POST /api/messages`)**. A message sent to a target worker is placed into that worker's turn queue / steering boundary, triggering the target agent to execute native tools in its own context.
 
 2. **Can an agent call a function that waits for a specific time and returns silently on message arrival or raises an error on timeout?**
-   - **Yes**: Implemented via `amux.wait_for_response(target_worker, correlation_id, timeout=30)` in `mypai_eval_runtime`.
+   - **Yes**: Implemented via `amux.wait_for_response(target_worker, correlation_id, timeout=30)` in `mypai_runtime`.
    - While running in an `eval` cell, the function polls the `amux` inbox:
      - **Arrival within timeout:** Returns the payload data silently (zero stdout).
      - **Timeout:** Raises `TimeoutError` or emits a diagnostic error prompt.
 
 3. **Synchronous In-Cell Wait vs. Asynchronous Turn Handoff:**
    - **Mode A (Synchronous In-Cell Wait):** Used for short round-trips (< 30s) where the calling agent needs the result before finalizing its turn.
-   - **Mode B (Asynchronous Turn Handoff):** Used for long-running worker tasks (e.g. 5-minute test suites). The calling agent sends the task with a `correlation_id` and finishes its turn silently. When the worker completes, it sends a response to `mypai-workspace`, which wakes up `mypai-workspace` as a new event-driven turn.
+   - **Mode B (Asynchronous Turn Handoff):** Used for long-running worker tasks (e.g. 5-minute test suites). The calling agent sends the task with a `correlation_id` and finishes its turn silently. When the worker completes, it sends a response to `mypai-main`, which wakes up `mypai-main` as a new event-driven turn.
 
 ---
 
@@ -540,7 +540,7 @@ In `omp.env`, the service setup is re-architected from the single `mypai_daemon`
 # Core Environment Exports
 OMP_PYTHON_VENV="$HOME/.omp/python-env"
 MYPAI_PYTHON_VENV="$HOME/.omp/profiles/mypai/python-env"
-MYPAI_WORKSPACE_DIR="$HOME/agent-shared/mypai-workspace"
+MYPAI_MAIN_DIR="$HOME/agent-shared/mypai-main"
 MYPAI_CHANNEL_DIR="$HOME/agent-shared/mypai-channel"
 MYPAI_CRON_DIR="$HOME/agent-shared/mypai-cron"
 
@@ -557,7 +557,7 @@ LAUNCHER_SIDECAR_CC_CONNECT_ARGS="--config $HOME/.cc-connect/config.toml"
 # Idempotent Install Routine
 # 1. Copies config.yml, mcp.json, models.yml, and agent instructions to ~/.omp/agent and ~/.omp/profiles/mypai/agent
 # 2. Provisions ~/.omp/python-env (base) and ~/.omp/profiles/mypai/python-env (mypai profile)
-# 3. Installs omp-rpc and mypai_eval_runtime into both environments
+# 3. Installs omp-rpc and mypai_runtime into both environments
 # 4. Imports initial amux schedules for mypai-cron
 # 5. Updates Hindsight memory banks using membank-ctl
 ```
@@ -572,7 +572,7 @@ The Next-Generation MyPAI ecosystem reconciles the built-in `oh-my-pi` subagents
 
 | Agent Name (`@name`) | Origin / Lineage | Role & Capabilities | Tool Access | Model Role | Thinking Effort | Hindsight Integration |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| **`@orchestrator`** | `omp` / `mypai` | Main project coordinator; breaks down epics, delegates to specialists, manages Kanban claims, verifies diffs, escalates strategic decisions to `mypai-workspace`. | `read`, `bash`, `edit`, `write`, `grep`, `glob`, `lsp`, `task`, `todo` | `@orchestrator` | `auto` / `medium` | Queries `user-preferences`, `project-conventions`, `project-decisions`; retains outcomes on task completion. |
+| **`@orchestrator`** | `omp` / `mypai` | Main project coordinator; breaks down epics, delegates to specialists, manages Kanban claims, verifies diffs, escalates strategic decisions to `mypai-main`. | `read`, `bash`, `edit`, `write`, `grep`, `glob`, `lsp`, `task`, `todo` | `@orchestrator` | `auto` / `medium` | Queries `user-preferences`, `project-conventions`, `project-decisions`; retains outcomes on task completion. |
 | **`@scout`** | `oh-myopencode-slim` + `cartograph` | Rapid codebase exploration, dependency graph mapping, symbol discovery, AST search. Fast read-only with structured `yield` output. | `read`, `grep`, `glob`, `lsp`, `ast_grep`, `web_search`, `yield` | `@smol` | `minimal` / `medium` | Injects codebase conventions into findings; stores mapped architecture in `project-conventions`. |
 | **`@debugger`** | `claude-night-market` (`scry`) + `superpowers` | Deep root-cause investigation, memory/leak profiler, execution log forensics, stack trace unwinding, hypothesis-driven debugging. | `read`, `grep`, `glob`, `bash`, `lsp`, `ast_grep`, `yield` | `@slow` | `high` / `xhigh` | Captures root cause mechanisms and bug patterns into Hindsight anti-criteria models. |
 | **`@pythonista`** | `claude-night-market` (`parseltongue`) + `task` | Idiomatic Python engineering specialist (typing, async, generator pipelines, ruff/mypy/pytest compliance, zero-cost abstractions) & multi-language editor. | `read`, `edit`, `write`, `grep`, `glob`, `bash`, `lsp`, `yield` | `@task` | `auto` | Enforces project coding style extracted from `user-preferences` and `project-conventions`. |
@@ -638,7 +638,7 @@ Custom slash commands live in `omp/agent/commands/*.md`:
 | **`/writer`** | `commands/writer.md` | Spawns `@writer` to write technical documentation, API specifications, or update memory banks. |
 | **`/patch`** | `commands/patch.md` | Spawns `@patcher` for rapid single-file mechanical edits. |
 | **`/learn`** (or `/reflect`) | `commands/learn.md` | Executes `tool.retain()` and `tool.reflect()` to distill session insights into Hindsight mental models. |
-| **`/escalate`** | `commands/escalate.md` | Calls `amux.send_message("mypai-workspace", ...)` to request user confirmation or strategic direction. |
+| **`/escalate`** | `commands/escalate.md` | Calls `amux.send_message("mypai-main", ...)` to request user confirmation or strategic direction. |
 
 ## 12. Hindsight Memory Integration
 
@@ -675,8 +675,8 @@ To guarantee that all agents and skills leverage the unique high-performance cap
 - Plan Mode: Use `write xd://propose` to submit proposed plan slugs for user approval.
 - Diff Previews: Use `write xd://resolve` to apply staged previews or `write xd://reject` to discard.
 
-## Inter-Worker Communication (`mypai_eval_runtime`)
-- To coordinate with other agents or escalate strategic decisions, import `amux` from `mypai_eval_runtime` and call `amux.send_message(target_worker="mypai-workspace", body="...")`.
+## Inter-Worker Communication (`mypai_runtime`)
+- To coordinate with other agents or escalate strategic decisions, import `amux` from `mypai_runtime` and call `amux.send_message(target_worker="mypai-main", body="...")`.
 - Use `amux.wait_for_response(target_worker, correlation_id, timeout=30)` for in-cell synchronous polling.
 </omp_advanced_capabilities>
 ```
@@ -692,7 +692,12 @@ Next-Generation MyPAI explicitly rejects defensive silent fallbacks and degraded
 | Subsystem | Potential / Deprecated Fallback | Anti-Fallback Policy & Invariant Enforcement | Rationale & Failure Mode Avoided |
 | :--- | :--- | :--- | :--- |
 | **1. HTTP Networking** | Fall back to standard library `urllib.request` if `httpx` is missing. | **STRICT `httpx` INVARIANT.** `httpx` is declared in `pyproject.toml` and pre-installed in both virtual environments (`~/.omp/python-env` and `~/.omp/profiles/mypai/python-env`). `AmuxClient` strictly imports `httpx`. | Avoids splitting client logic between two implementations; preserves connection pooling, HTTP/2, keep-alive, and clean typed response validation. |
-| **2. Python Environment** | Fall back to system `/usr/bin/python` if profile venv is missing. | **STRICT MANAGED VENV INVARIANT.** `LAUNCHER_INSTALL_CMDS` provisions both venvs idempotently with all required packages. Sessions verify the active virtualenv on startup; if unprovisioned, they fail fast with explicit repair instructions (`sandbox-ctl install omp`). | System Python lacks `httpx`, `pydantic`, `omp-rpc`, and `mypai_eval_runtime`; falling back causes mysterious runtime import errors inside agent turns. |
+| **2. Python Environment** | Fall back to system `/usr/bin/python` if profile venv is missing. | **STRICT MANAGED VENV INVARIANT.** `LAUNCHER_INSTALL_CMDS` provisions both venvs idempotently with all required packages. Sessions verify the active virtualenv on startup; if unprovisioned, they fail fast with explicit repair instructions (`sandbox-ctl install omp`). | System Python lacks `httpx`, `pydantic`, `omp-rpc`, and `mypai_runtime`; falling back causes mysterious runtime import errors inside agent turns. |
+| **3. Inter-Worker Comms** | Fall back to typing keystrokes via `tmux send-keys` between agent sessions. | **STRICT `amux` HTTP BUS INVARIANT.** All cross-session turns and worker coordination must route through `amux-server` (`POST /api/messages`) with JSON payloads and correlation IDs. | Unstructured keystroke injection risks terminal race conditions, missing delivery confirmations, and corrupting active agent prompts. |
+| **4. Host Tool Calling** | Fall back to invoking subshells (`bash`: `cat`, `grep`, `sed`) instead of in-process tools. | **STRICT IN-KERNEL LOOPBACK INVARIANT.** Agents must use `tool.read()`, `tool.write()`, and `tool.search()` via the persistent Python kernel (`lang: "py"`). | Shell subshells introduce 10x process spawn overhead, shell escaping hazards, and massive context token bloat. |
+| **5. Memory Persistence** | Silently drop memories or write to loose scratch files if Hindsight is unreachable. | **STRICT HINDSIGHT SERVICE INVARIANT.** Hindsight (`:8888`) is a supervised core service. `HindsightClient` raises explicit HTTP exceptions if unreachable, signaling an infrastructure alert. | Silent fallback causes cognitive fragmentation and permanent loss of user mental models. |
+| **6. Tool Discovery** | Flood the model's top-level system prompt with raw JSON schemas if `xd://` is unconfigured. | **STRICT `xd://` VIRTUAL DEVICE INVARIANT.** `tools.xdev: true` is strictly enforced in `config.yml`. All MCP and custom tools mount under `xd://`. | Prevents wasting 40,000+ prompt tokens on tool definitions and prevents provider prompt cache invalidation. |
+| **7. Error Handling** | Catch-all `except Exception: pass` in polling and event loops. | **STRICT EXCEPTION VISIBILITY INVARIANT.** All runtime errors capture full stack traces into `_LAST_ERROR`, log diagnostic telemetry, and raise typed domain errors (e.g. `TimeoutError`, `WorkerExecutionError`). | Suppressing exceptions hides underlying infrastructure and timeout defects from operator inspection. |
 | **3. Inter-Worker Comms** | Fall back to typing keystrokes via `tmux send-keys` between agent sessions. | **STRICT `amux` HTTP BUS INVARIANT.** All cross-session turns and worker coordination must route through `amux-server` (`POST /api/messages`) with JSON payloads and correlation IDs. | Unstructured keystroke injection risks terminal race conditions, missing delivery confirmations, and corrupting active agent prompts. |
 | **4. Host Tool Calling** | Fall back to invoking subshells (`bash`: `cat`, `grep`, `sed`) instead of in-process tools. | **STRICT IN-KERNEL LOOPBACK INVARIANT.** Agents must use `tool.read()`, `tool.write()`, and `tool.search()` via the persistent Python kernel (`lang: "py"`). | Shell subshells introduce 10x process spawn overhead, shell escaping hazards, and massive context token bloat. |
 | **5. Memory Persistence** | Silently drop memories or write to loose scratch files if Hindsight is unreachable. | **STRICT HINDSIGHT SERVICE INVARIANT.** Hindsight (`:8888`) is a supervised core service. `HindsightClient` raises explicit HTTP exceptions if unreachable, signaling an infrastructure alert. | Silent fallback causes cognitive fragmentation and permanent loss of user mental models. |

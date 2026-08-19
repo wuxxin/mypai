@@ -16,7 +16,7 @@
 Core Architecture & Components:
 
 - **`amux-server`**: High-performance control plane, session supervisor, durable scheduler, and inter-worker message bus.
-- **`mypai_eval_runtime`**: Unified in-kernel Python runtime library for inter-worker turn messaging, synchronous response polling, and Hindsight memory reflection.
+- **`mypai_runtime`**: Unified in-kernel Python runtime library for inter-worker turn messaging, synchronous response polling, and Hindsight memory reflection.
 - **Local Inference (`local-router`)**: Unified OpenAI-compatible API routing for chat, vision, embeddings, reranking, STT, TTS, and image generation.
 - **Sandbox Containment (`sandbox-ctl`)**: Containerized sandbox isolation and automated sidecar process management.
 - **ROCm/HIP Hardware Acceleration**: Custom Arch Linux PKGBUILD stack optimized for low-latency AMD GPU local inference.
@@ -67,8 +67,8 @@ Provision the sandbox environment and generate the `omp` binary launcher in `~/.
 `sandbox-ctl install` performs the following automated steps:
 1. Copies configuration templates from `./omp/agent/*` into `$HOME/.omp/agent/` for Base OMP.
 2. Copies configuration templates from `./omp/profiles/mypai/*` into `$HOME/.omp/profiles/mypai/agent/` for the MyPai profile.
-3. Provisions the managed Base Python virtual environment at `$HOME/.omp/python-env` (containing `omp-rpc`, `mypai_eval_runtime`, `arbor`, and `openadapt`).
-4. Provisions the MyPai Profile Python virtual environment at `$HOME/.omp/profiles/mypai/python-env` (containing `omp-rpc`, `mypai_eval_runtime`, `httpx`, `pydantic`).
+3. Provisions the managed Base Python virtual environment at `$HOME/.omp/python-env` (containing `omp-rpc`, `mypai_runtime`, `arbor`, and `openadapt`).
+4. Provisions the MyPai Profile Python virtual environment at `$HOME/.omp/profiles/mypai/python-env` (containing `omp-rpc`, `mypai_runtime`, `httpx`, `pydantic`).
 5. Executes `membank-ctl update` to provision and seed Hindsight memory banks for `oh-my-pi` and `mypai`.
 
 ### 5. Launch Oh-my-PI & MyPai Mesh
@@ -132,9 +132,9 @@ mypai/
 ├── bin/
 │   └── membank-ctl                  # Hindsight sync CLI utility
 ├── src/
-│   └── mypai_eval_runtime/          # In-Kernel Python eval library
+│   └── mypai_runtime/               # In-Kernel Python runtime library
 │       ├── __init__.py              # Exports amux, hindsight, diagnostics
-│       ├── amux.py                  # httpx inter-worker client & Kanban manager
+│       ├── amux.py                  # Full REST API client & Kanban manager
 │       ├── hindsight.py             # Memory reflection & retention client
 │       └── diagnostics.py           # Trapped error analyzers
 ├── tests/
@@ -152,7 +152,7 @@ mypai/
 │       └── mypai/                   # MyPai Profile (~/.omp/profiles/mypai/agent/)
 │           ├── config.yml, models.yml, mcp.json
 │           ├── memorybanks/         # mypai.yaml (8-model LifeOS bank)
-│           ├── agents/              # mypai.md (mypai-workspace, mypai-channel, mypai-cron)
+│           ├── agents/              # mypai.md (mypai-main, mypai-channel, mypai-cron)
 │           └── commands/            # learn.md, reflect.md
 ├── submodules/
 │   ├── agents-shared                # Shared infrastructure, sandbox-ctl, model downloaders
@@ -167,14 +167,14 @@ mypai/
 
 ## Modules
 
-### In-Kernel Runtime Library (`mypai_eval_runtime`)
+### In-Kernel Runtime Library (`mypai_runtime`)
 
-The root `src/mypai_eval_runtime` package provides the in-kernel Python runtime library:
+The root `src/mypai_runtime` package provides the in-kernel Python runtime library:
 
 - **CLI Control Utilities (`bin/membank-ctl`)**: Management CLI tool for Hindsight memory bank updates, JSON/YAML parsing, and exports.
 - **Inter-Worker Client (`amux`)**: High-performance HTTP client for structured inter-agent turn messaging, synchronous response polling, and Kanban card operations.
 - **Memory Reflection Client (`hindsight`)**: Programmatic interface for vector memory recall, fact retention, and mental model reflection.
-- **Trapped Error Diagnostics**: Automated error capture and diagnostic reporting across workspace, cron, and worker sessions.
+- **Trapped Error Diagnostics**: Automated error capture and diagnostic reporting across main, cron, and worker sessions.
 
 ---
 

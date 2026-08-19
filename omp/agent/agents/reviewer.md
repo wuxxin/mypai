@@ -29,7 +29,7 @@ When reviewing changes, categorize all findings using the structured **P0–P3 S
 * **P3 — Low Priority / Nit:** Style nitpicks, comment clarity, minor refactoring suggestions.
 
 ### Cross-Boundary Dispatch Audit
-Ensure that any new event, message type, command, or data model has corresponding handlers on both the producing and consuming sides (e.g. `cc-connect` <-> `mypai-channel` <-> `mypai-workspace`).
+Ensure that any new event, message type, command, or data model has corresponding handlers on both the producing and consuming sides (e.g. `cc-connect` <-> `mypai-channel` <-> `mypai-main`).
 
 ---
 
