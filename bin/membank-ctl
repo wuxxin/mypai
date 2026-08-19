@@ -1,0 +1,436 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# membank-ctl - Management CLI for Hindsight memory banks and mental models
+
+usage() {
+    cat <<'EOF'
+membank-ctl - Management CLI for Hindsight memory banks and mental models
+
+Usage:
+  membank-ctl update <API_URL> <BANKS_PATH> --yes [--prune]
+  membank-ctl export <API_URL> <bankname> [--json|--yaml] [--out filename]
+
+Subcommands:
+  update  Idempotently provisions and updates Hindsight memory banks and mental models
+          from JSON or YAML definitions in BANKS_PATH.
+  export  Exports memory bank configuration and mental models from Hindsight server to JSON or YAML.
+
+Global Options:
+  -h, --help  Show help information
+EOF
+}
+
+usage_update() {
+    cat <<'EOF'
+Usage: membank-ctl update <API_URL> <BANKS_PATH> --yes [--prune]
+
+Provisions and updates Hindsight memory bank configurations and Mental Models
+via the specified Hindsight REST API URL only if local definitions differ from server state.
+Supports both .json and .yaml / .yml bank files.
+
+Arguments & Flags:
+  API_URL     Hindsight API base URL (e.g., http://localhost:8888)
+  BANKS_PATH  Directory containing bank definition files or path to a bank file (.json / .yaml / .yml)
+  -y, --yes   Mandatory confirmation flag for execution
+  -p, --prune Prune leftover mental models on server not present in local definitions
+  -h, --help  Show this help message and exit
+
+Examples:
+  membank-ctl update http://localhost:8888 ./omp/agent/memorybanks --yes
+  membank-ctl update http://localhost:8888 ./omp/agent/memorybanks --yes --prune
+EOF
+}
+
+usage_export() {
+    cat <<'EOF'
+Usage: membank-ctl export <API_URL> <bankname> [--json|--yaml] [--out filename]
+
+Exports Hindsight memory bank configuration and mental models to stdout or a file in JSON or YAML format.
+
+Arguments & Flags:
+  API_URL          Hindsight API base URL (e.g., http://localhost:8888)
+  bankname         Name / ID of the memory bank to export
+  --json           Output format as JSON (default)
+  --yaml, --yml    Output format as YAML
+  -o, --out FILE   Output file path (default: stdout)
+  -h, --help       Show this help message and exit
+
+Examples:
+  membank-ctl export http://localhost:8888 oh-my-pi
+  membank-ctl export http://localhost:8888 oh-my-pi --yaml
+  membank-ctl export http://localhost:8888 oh-my-pi --yaml --out oh-my-pi.yaml
+EOF
+}
+
+cmd="${1:-}"
+if [ -z "${cmd}" ] || [ "${cmd}" = "-h" ] || [ "${cmd}" = "--help" ] || [ "${cmd}" = "help" ]; then
+    usage
+    exit 0
+fi
+
+shift
+
+case "${cmd}" in
+update)
+    confirmed="false"
+    prune="false"
+    pos_args=()
+
+    while [ "${#}" -gt 0 ]; do
+        case "${1}" in
+        -y | --yes)
+            confirmed="true"
+            shift
+            ;;
+        -p | --prune)
+            prune="true"
+            shift
+            ;;
+        -h | --help)
+            usage_update
+            exit 0
+            ;;
+        -*)
+            echo "Error: Unknown option '${1}' for update command" >&2
+            echo "" >&2
+            usage_update
+            exit 1
+            ;;
+        *)
+            pos_args+=("${1}")
+            shift
+            ;;
+        esac
+    done
+
+    if [ "${#pos_args[@]}" -lt 2 ]; then
+        echo "Error: Missing mandatory API_URL and/or BANKS_PATH parameters." >&2
+        echo "" >&2
+        usage_update
+        exit 1
+    fi
+
+    if [[ "${pos_args[0]}" =~ ^https?:// ]]; then
+        api_url="${pos_args[0]}"
+        banks_path="${pos_args[1]}"
+    elif [[ "${pos_args[1]}" =~ ^https?:// ]]; then
+        api_url="${pos_args[1]}"
+        banks_path="${pos_args[0]}"
+    else
+        api_url="${pos_args[0]}"
+        banks_path="${pos_args[1]}"
+    fi
+
+    if [ "${confirmed}" != "true" ]; then
+        echo "Error: Missing mandatory '--yes' / '-y' confirmation flag." >&2
+        echo "" >&2
+        usage_update
+        exit 1
+    fi
+
+    python3 - "${banks_path}" "${api_url}" "${prune}" <<'PYTHON_SCRIPT'
+import sys, os, glob, json, urllib.request, urllib.error
+
+banks_path = sys.argv[1]
+api_url = sys.argv[2].rstrip('/')
+do_prune = (sys.argv[3] == "true")
+
+def load_bank_file(filepath):
+    ext = os.path.splitext(filepath)[1].lower()
+    with open(filepath, 'r', encoding='utf-8') as f:
+        if ext in ('.yaml', '.yml'):
+            try:
+                import yaml
+                return yaml.safe_load(f) or {}
+            except ImportError:
+                sys.stderr.write(f"Error: PyYAML is required to parse YAML file '{filepath}'.\n")
+                sys.exit(1)
+        else:
+            return json.load(f)
+
+print(f"=== Provisioning Hindsight memory banks from: {banks_path} ===")
+print(f"=== Hindsight API URL: {api_url} ===")
+print(f"=== Prune leftover mental models: {do_prune} ===")
+
+if os.path.isfile(banks_path):
+    bank_files = [banks_path]
+elif os.path.isdir(banks_path):
+    bank_files = []
+    for ext in ('*.json', '*.yaml', '*.yml'):
+        bank_files.extend(glob.glob(os.path.join(banks_path, ext)))
+    bank_files.sort()
+else:
+    print(f"Memory banks path '{banks_path}' does not exist yet. Skipping bank updates.")
+    sys.exit(0)
+
+if not bank_files:
+    print(f"No .json or .yaml bank files found in '{banks_path}'. Skipping bank updates.")
+    sys.exit(0)
+
+for bank_file in bank_files:
+    filename = os.path.basename(bank_file)
+    stem = os.path.splitext(filename)[0]
+    
+    try:
+        data = load_bank_file(bank_file)
+    except Exception as e:
+        print(f"  Error loading {bank_file}: {e}")
+        sys.exit(1)
+
+    bank_id = data.get('bank', {}).get('id') or stem
+    print(f"=== Processing configuration for bank: {bank_id} ({filename}) ===")
+
+    local_bank_cfg = {k: v for k, v in data.get('bank', {}).items() if v is not None and k != 'id'}
+
+    # 1. Fetch current bank config to check if update is needed
+    config_url = f"{api_url}/v1/default/banks/{bank_id}/config"
+    needs_config_update = True
+
+    try:
+        get_req = urllib.request.Request(config_url)
+        with urllib.request.urlopen(get_req) as resp:
+            remote_cfg = json.load(resp)
+            differ = False
+            for k, v in local_bank_cfg.items():
+                if remote_cfg.get(k) != v:
+                    differ = True
+                    break
+            if not differ:
+                needs_config_update = False
+    except Exception:
+        needs_config_update = True
+
+    if needs_config_update and local_bank_cfg:
+        payload = json.dumps({'updates': local_bank_cfg}).encode('utf-8')
+        patch_req = urllib.request.Request(
+            config_url,
+            data=payload,
+            headers={'Content-Type': 'application/json'},
+            method='PATCH'
+        )
+        try:
+            with urllib.request.urlopen(patch_req) as resp:
+                print(f"  Config updated (status: {resp.status})")
+        except Exception as e:
+            print(f"  Config status error: {e}")
+    else:
+        print("  Config unchanged, skipping patch.")
+
+    # 2. Fetch current Mental Models to diff against local models
+    mm_list_url = f"{api_url}/v1/default/banks/{bank_id}/mental-models"
+    remote_mms = {}
+
+    try:
+        get_req = urllib.request.Request(mm_list_url)
+        with urllib.request.urlopen(get_req) as resp:
+            res_data = json.load(resp)
+            items = res_data.get('items', res_data) if isinstance(res_data, dict) else res_data
+            for item in items:
+                if isinstance(item, dict) and item.get('id'):
+                    remote_mms[item['id']] = item
+    except Exception:
+        pass
+
+    local_mms = data.get('mental_models', [])
+    expected_ids = set()
+
+    for mm in local_mms:
+        mm_id = mm.get('id')
+        if not mm_id:
+            continue
+        expected_ids.add(mm_id)
+        remote_mm = remote_mms.get(mm_id)
+
+        needs_mm_update = True
+        if remote_mm:
+            match = True
+            for key in ['name', 'source_query', 'max_tokens', 'trigger', 'tags']:
+                if key in mm and remote_mm.get(key) != mm[key]:
+                    match = False
+                    break
+            if match:
+                needs_mm_update = False
+
+        if needs_mm_update:
+            payload = json.dumps(mm).encode('utf-8')
+            if remote_mm:
+                req = urllib.request.Request(
+                    f"{mm_list_url}/{mm_id}",
+                    data=payload,
+                    headers={'Content-Type': 'application/json'},
+                    method='PATCH'
+                )
+                action = 'Updated'
+            else:
+                req = urllib.request.Request(
+                    mm_list_url,
+                    data=payload,
+                    headers={'Content-Type': 'application/json'},
+                    method='POST'
+                )
+                action = 'Registered'
+
+            try:
+                with urllib.request.urlopen(req) as resp:
+                    print(f"  {action} mental model ({mm_id}): {resp.status}")
+            except Exception as e:
+                print(f"  Mental model error ({mm_id}): {e}")
+        else:
+            print(f"  Mental model ({mm_id}) unchanged, skipping update.")
+
+    # 3. Prune leftover mental models not present in bank definition
+    if do_prune:
+        leftover_ids = set(remote_mms.keys()) - expected_ids
+        for leftover_id in leftover_ids:
+            del_req = urllib.request.Request(
+                f"{mm_list_url}/{leftover_id}",
+                method='DELETE'
+            )
+            try:
+                with urllib.request.urlopen(del_req) as del_resp:
+                    print(f"  Pruned leftover mental model ({leftover_id}): {del_resp.status}")
+            except Exception as del_e:
+                print(f"  Error pruning mental model ({leftover_id}): {del_e}")
+
+print("=== Hindsight memory bank update check complete ===")
+PYTHON_SCRIPT
+    ;;
+
+export)
+    fmt=""
+    out_filename=""
+    pos_args=()
+
+    while [ "${#}" -gt 0 ]; do
+        case "${1}" in
+        --json)
+            fmt="json"
+            shift
+            ;;
+        --yaml | --yml)
+            fmt="yaml"
+            shift
+            ;;
+        -o | --out)
+            if [ "${#}" -lt 2 ]; then
+                echo "Error: Option '${1}' requires a filename value." >&2
+                exit 1
+            fi
+            out_filename="${2}"
+            shift 2
+            ;;
+        --out=*)
+            out_filename="${1#*=}"
+            shift
+            ;;
+        -h | --help)
+            usage_export
+            exit 0
+            ;;
+        -*)
+            echo "Error: Unknown option '${1}' for export command" >&2
+            echo "" >&2
+            usage_export
+            exit 1
+            ;;
+        *)
+            pos_args+=("${1}")
+            shift
+            ;;
+        esac
+    done
+
+    if [ "${#pos_args[@]}" -lt 2 ]; then
+        echo "Error: Missing mandatory API_URL and/or bankname parameters." >&2
+        echo "" >&2
+        usage_export
+        exit 1
+    fi
+
+    if [[ "${pos_args[0]}" =~ ^https?:// ]]; then
+        api_url="${pos_args[0]}"
+        bankname="${pos_args[1]}"
+    elif [[ "${pos_args[1]}" =~ ^https?:// ]]; then
+        api_url="${pos_args[1]}"
+        bankname="${pos_args[0]}"
+    else
+        api_url="${pos_args[0]}"
+        bankname="${pos_args[1]}"
+    fi
+
+    if [ -z "${fmt}" ]; then
+        if [[ "${out_filename}" =~ \.(yaml|yml)$ ]]; then
+            fmt="yaml"
+        else
+            fmt="json"
+        fi
+    fi
+
+    python3 - "${api_url}" "${bankname}" "${fmt}" "${out_filename}" <<'PYTHON_SCRIPT'
+import sys, os, json, urllib.request, urllib.error
+
+api_url = sys.argv[1].rstrip('/')
+bankname = sys.argv[2]
+fmt = sys.argv[3]
+out_filename = sys.argv[4]
+
+config_url = f"{api_url}/v1/default/banks/{bankname}/config"
+mm_list_url = f"{api_url}/v1/default/banks/{bankname}/mental-models"
+
+try:
+    req = urllib.request.Request(config_url)
+    with urllib.request.urlopen(req) as resp:
+        bank_config = json.load(resp)
+except Exception as e:
+    sys.stderr.write(f"Error fetching bank config for '{bankname}' from {config_url}: {e}\n")
+    sys.exit(1)
+
+mental_models = []
+try:
+    req = urllib.request.Request(mm_list_url)
+    with urllib.request.urlopen(req) as resp:
+        res_data = json.load(resp)
+        items = res_data.get('items', res_data) if isinstance(res_data, dict) else res_data
+        for item in items:
+            if isinstance(item, dict):
+                cleaned = {k: v for k, v in item.items() if k not in ('created_at', 'updated_at', 'bank_id')}
+                mental_models.append(cleaned)
+except Exception as e:
+    sys.stderr.write(f"Warning: Could not fetch mental models for '{bankname}': {e}\n")
+
+exported = {
+    "version": "1",
+    "bank": bank_config,
+    "mental_models": mental_models
+}
+
+if fmt == "yaml":
+    try:
+        import yaml
+        content = yaml.dump(exported, sort_keys=False, default_flow_style=False)
+    except ImportError:
+        sys.stderr.write("Error: PyYAML is required for YAML export.\n")
+        sys.exit(1)
+else:
+    content = json.dumps(exported, indent=2) + "\n"
+
+if out_filename:
+    out_dir = os.path.dirname(out_filename)
+    if out_dir:
+        os.makedirs(out_dir, exist_ok=True)
+    with open(out_filename, 'w', encoding='utf-8') as f:
+        f.write(content)
+    print(f"Exported memory bank '{bankname}' to {out_filename}")
+else:
+    sys.stdout.write(content)
+PYTHON_SCRIPT
+    ;;
+
+*)
+    echo "Error: Unknown command '${cmd}'" >&2
+    echo "" >&2
+    usage
+    exit 1
+    ;;
+esac

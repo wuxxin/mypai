@@ -1,12 +1,19 @@
 .benchmarks
 .pytest_cache
 .ruff_cache
+.mypy_cache
 .coverage
-__pycache__
+coverage.xml
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+.venv/
 
 scratch/
 
 # Ignore private seeds contents except .gitkeep
 submodules/private-seeds/*
 !submodules/private-seeds/.gitkeep
-
