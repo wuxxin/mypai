@@ -328,9 +328,9 @@ def mock_hindsight_transport() -> httpx.MockTransport:
 @pytest.fixture
 def mock_hindsight_client(mock_hindsight_transport: httpx.MockTransport) -> HindsightClient:
     """HindsightClient configured with mock transport."""
-    client = HindsightClient(base_url="http://mock-hindsight:8888")
+    client = HindsightClient(base_url="http://mock-hindsight:28888")
     client.client = httpx.Client(
-        base_url="http://mock-hindsight:8888",
+        base_url="http://mock-hindsight:28888",
         transport=mock_hindsight_transport,
     )
     return client

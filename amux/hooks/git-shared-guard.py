@@ -75,7 +75,7 @@ def amux_base_url():
 
     This hook is a PreToolUse hook: it runs once per Bash tool call, as a child
     of the `claude` process, and so inherits that process's `AMUX_URL`. ~55 live
-    sessions predate the 8822 -> 8824 port cutover and carry
+    sessions predate the 8822 -> 28824 port cutover and carry
     `AMUX_URL=https://localhost:8822` in a process env that cannot be rotated
     without killing them, which made this file the single busiest caller of the
     retired port on the machine (~743 req/h). Editing the DEFAULT below could
@@ -105,7 +105,7 @@ def amux_base_url():
                 return canonical
     except Exception:
         pass
-    return url or "https://localhost:8824"
+    return url or "https://localhost:28824"
 
 
 def _strip_heredoc_bodies(cmd):

@@ -13,7 +13,7 @@ statusLine:
 stt:
   enabled: false
   provider: local
-  baseUrl: http://localhost:51080/v1
+  baseUrl: http://localhost:21080/v1
 compaction:
   strategy: snapcompact
   thresholdPercent: 85
@@ -23,7 +23,7 @@ memory:
 autolearn:
   enabled: true
 hindsight:
-  apiUrl: http://localhost:8888
+  apiUrl: http://localhost:28888
   bankId: oh-my-pi
   scoping: per-project-tagged
   retainMode: full-session

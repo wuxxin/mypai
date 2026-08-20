@@ -1,6 +1,6 @@
 providers:
   llama.cpp:
-    baseUrl: http://localhost:51080/v1
+    baseUrl: http://localhost:21080/v1
     auth: none
     api: openai-completions
     headers:

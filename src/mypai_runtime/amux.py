@@ -19,7 +19,7 @@ class AmuxClient:
         timeout: float = 30.0,
     ) -> None:
         self.base_url = (
-            base_url or os.environ.get("AMUX_API_URL", "https://localhost:8824/api")
+            base_url or os.environ.get("AMUX_API_URL", "https://localhost:28824/api")
         ).rstrip("/")
         self.client = httpx.Client(
             base_url=self.base_url,

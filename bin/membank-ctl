@@ -30,15 +30,15 @@ via the specified Hindsight REST API URL only if local definitions differ from s
 Supports both .json and .yaml / .yml bank files.
 
 Arguments & Flags:
-  API_URL     Hindsight API base URL (e.g., http://localhost:8888)
+  API_URL     Hindsight API base URL (e.g., http://localhost:28888)
   BANKS_PATH  Directory containing bank definition files or path to a bank file (.json / .yaml / .yml)
   -y, --yes   Mandatory confirmation flag for execution
   -p, --prune Prune leftover mental models on server not present in local definitions
   -h, --help  Show this help message and exit
 
 Examples:
-  membank-ctl update http://localhost:8888 ./omp/agent/memorybanks --yes
-  membank-ctl update http://localhost:8888 ./omp/agent/memorybanks --yes --prune
+  membank-ctl update http://localhost:28888 ./omp/agent/memorybanks --yes
+  membank-ctl update http://localhost:28888 ./omp/agent/memorybanks --yes --prune
 EOF
 }
 
@@ -49,7 +49,7 @@ Usage: membank-ctl export <API_URL> <bankname> [--json|--yaml] [--out filename]
 Exports Hindsight memory bank configuration and mental models to stdout or a file in JSON or YAML format.
 
 Arguments & Flags:
-  API_URL          Hindsight API base URL (e.g., http://localhost:8888)
+  API_URL          Hindsight API base URL (e.g., http://localhost:28888)
   bankname         Name / ID of the memory bank to export
   --json           Output format as JSON (default)
   --yaml, --yml    Output format as YAML
@@ -57,9 +57,9 @@ Arguments & Flags:
   -h, --help       Show this help message and exit
 
 Examples:
-  membank-ctl export http://localhost:8888 oh-my-pi
-  membank-ctl export http://localhost:8888 oh-my-pi --yaml
-  membank-ctl export http://localhost:8888 oh-my-pi --yaml --out oh-my-pi.yaml
+  membank-ctl export http://localhost:28888 oh-my-pi
+  membank-ctl export http://localhost:28888 oh-my-pi --yaml
+  membank-ctl export http://localhost:28888 oh-my-pi --yaml --out oh-my-pi.yaml
 EOF
 }
 
