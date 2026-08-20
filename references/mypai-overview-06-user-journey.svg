@@ -64,7 +64,7 @@
   <rect x="72" y="306" width="44" height="12" rx="2" fill="transparent" stroke="#2d3142" stroke-width="0.8"/>
   <text x="94" y="315" class="node-tag">COCKPIT</text>
   <text x="174" y="336" class="node-title">Agent of Empires</text>
-  <text x="174" y="352" class="node-sub">Web PWA &amp; TUI (:8080)</text>
+  <text x="174" y="352" class="node-sub">Web PWA &amp; TUI (:28080)</text>
   <text x="174" y="368" class="node-sub">Live ACP step streams &amp; diff audit</text>
 
   <!-- Channel 3: Direct Tmux CLI -->
@@ -140,7 +140,7 @@
 
   <rect x="940" y="192" width="196" height="136" rx="6" fill="#f5f5f5" stroke="#2d3142" stroke-width="1"/>
   <text x="1038" y="218" class="node-title">Hindsight Memory</text>
-  <text x="1038" y="234" class="node-sub">:8888 Vector Store</text>
+  <text x="1038" y="234" class="node-sub">:28888 Vector Store</text>
   <text x="1038" y="254" class="node-sub">Principal TELOS alignment</text>
   <text x="1038" y="270" class="node-sub">User communication prefs</text>
   <text x="1038" y="286" class="node-sub">Anti-criteria enforcement</text>

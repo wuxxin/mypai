@@ -2,11 +2,11 @@
 
 **mypai** is a local, private, and experimental **Personal Artificial Intelligence (PAI)** infrastructure powered by:
 
-- **Oh-my-PI** (`omp`) — High-performance agent execution harness with in-kernel `eval` and loopback tool bridge
-- **Hindsight** — Persistent vector memory, temporal observation tracking, and mental model reflection service
-- **amux** — Distributed control plane, process supervisor, durable scheduler, and inter-worker message bus
-- **cc-connect** — Multi-platform external chat gateway (Signal, Telegram, Discord)
-- **Agent of Empires** (`aoe`) — Visual TUI matrix, ACP inspector, and Web PWA cockpit
+- **Agent of Empires** (`aoe`) — Agent Client Protocol (ACP) session runner, TUI cockpit, git worktrees, and mobile Web PWA
+- **Oh-my-PI** (`omp`) — High-performance agent execution engine with in-kernel `eval` and loopback tool bridge
+- **amux** — Cognitive state plane, durable Kanban board (`/api/board/cards`), turn-boundary message bus, and cron scheduler
+- **Hindsight** — Persistent vector memory, temporal observation tracking, and LifeOS mental model reflection service
+- **cc-connect** — Multi-platform external chat gateway (Signal, Telegram, Matrix)
 
 ## Documentation
 
@@ -90,7 +90,7 @@ omp --profile mypai
 Launch full autonomous multi-session mesh via `amux`:
 
 ```bash
-amux-server --port 8824
+amux-server --port 28824
 ```
 
 ---
@@ -197,10 +197,10 @@ Hindsight vector memory is natively integrated into OMP's orchestration engine:
 - **Idempotent Updates**: `bin/membank-ctl update` inspects existing bank configurations via `GET /v1/default/banks/<bank_id>/config` and issues `PATCH`/`POST`/`DELETE` requests only when local definitions differ from server state. Supports JSON and YAML bank definitions.
   ```bash
   # Update memory banks and prune obsolete mental models on the server
-  ./bin/membank-ctl update "http://localhost:8888" ./omp/agent/memorybanks --yes --prune
+  ./bin/membank-ctl update "http://localhost:28888" ./omp/agent/memorybanks --yes --prune
 
   # Export a memory bank to JSON or YAML
-  ./bin/membank-ctl export "http://localhost:8888" oh-my-pi --yaml --out oh-my-pi.yaml
+  ./bin/membank-ctl export "http://localhost:28888" oh-my-pi --yaml --out oh-my-pi.yaml
   ```
 
 ---

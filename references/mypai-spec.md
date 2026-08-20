@@ -9,7 +9,7 @@ MyPAI eliminates the legacy `omp-mypai` plugin and submodule entirely. Because t
 
 ---
 
-## 1. System Topology & Multi-Session Control Plane
+## 1. System Topology: AoE Execution Cockpit & amux Cognitive Plane
 
 ```mermaid
 flowchart TD
@@ -19,48 +19,86 @@ flowchart TD
         User -->|"E2EE Messages / Webhooks"| CC
     end
 
-    subgraph AmuxPlane["amux-server Control Plane (:8824)"]
+    subgraph AoECockpit["Agent of Empires (AoE) Execution Cockpit (:28080)"]
         direction TB
         
-        Chan["amux-mypai-channel (Profile: mypai)<br/>• Dedicated Chat Frontend & Ingress<br/>• In-Kernel eval: Intent parsing & tool.reflect()<br/>• Dispatches structured turns to mypai-main"]
+        Chan["mypai-channel (Profile: mypai)<br/>• Dedicated Chat Gateway & Intent Classifier<br/>• Structured ACP JSON-RPC / PTY host"]
         
-        Work["amux-mypai-main (mypai-main) (Profile: mypai)<br/>• Central Brain & Strategic Orchestrator<br/>• Bootstraps LifeOS mental models<br/>• Manages amux Kanban Board (POST /api/board/cards)<br/>• Spawns task workers & formats user replies"]
+        Main["mypai-main (Profile: mypai)<br/>• Central Brain & Strategic Orchestrator<br/>• LifeOS Mental Models & Task Coordinator<br/>• Structured ACP JSON-RPC / PTY host"]
         
-        Cron["amux-mypai-cron (Profile: mypai)<br/>• Dedicated Automation & Scheduled Sweeps<br/>• Triggered by amux Scheduler (CRON: action)<br/>• In-Kernel eval: Probing, tool.search(), metrics<br/>• Alerts main & creates Kanban cards"]
+        Cron["mypai-cron (Profile: mypai)<br/>• Dedicated Automation & Scheduled Sweeps<br/>• Triggered via amux Message Bus<br/>• Structured ACP JSON-RPC / PTY host"]
         
-        Sched["amux Scheduler Engine"]
-        Sched -->|"CRON: trigger"| Cron
-        
-        Chan -->|"POST /api/messages (USER_REQUEST)"| Work
-        Work -->|"POST /api/messages (User Replies)"| Chan
-        Cron -->|"POST /api/messages (Alerts & Cards)"| Work
-        
-        subgraph Workers["Normal OMP Workers (Ephemeral)"]
-            TaskW["amux-task-worker-N (Profile: normal)<br/>• Sandboxed Project Execution (omp --directory repo)<br/>• @orchestrator + Specialist Agent Roster<br/>• Per-project tagged Hindsight memory"]
+        subgraph Workers["Task Workers (Ephemeral Worktrees)"]
+            TaskW["task-worker-N (Profile: normal)<br/>• Sandboxed Project Execution (omp acp / repo)<br/>• @orchestrator + Specialist Agent Roster<br/>• Git Worktrees & Diff Review Panels"]
         end
+
+        Main -->|"aoe session spawn / worktrees"| TaskW
+    end
+
+    subgraph AmuxPlane["amux Cognitive Plane & Message Bus (:28824)"]
+        direction TB
+        Board["Durable Kanban Board<br/>• /api/board/cards (Todo -> Doing -> Done)"]
+        Bus["Turn-Boundary Message Router<br/>• /api/messages (Cross-Worker Inbox & SSE)"]
+        Sched["Durable Scheduler Engine<br/>• /api/schedules (Cron Sweeps & Triggers)"]
+        Ledger["Token Ledger & Health Metrics<br/>• /api/metrics & Invariant Checks"]
         
-        Work -->|"amux launch / POST /api/sessions"| TaskW
-        TaskW -->|"POST /api/messages (Task Reports & Diffs)"| Work
+        Sched -->|"CRON: trigger"| Bus
+    end
+
+    subgraph MemoryPlane["Hindsight Vector Memory (:28888)"]
+        BankMypai["mypai Memory Bank<br/>(8 LifeOS Mental Models)"]
+        BankOmp["oh-my-pi Memory Bank<br/>(Project Conventions)"]
     end
 
     CC -->|"tmux send-keys"| Chan
     Chan -->|"tmux capture-pane"| CC
 
-    subgraph Observability["Unified Observability"]
-        AOE["Agent of Empires (aoe)<br/>• TUI Matrix & Web PWA (:8080)<br/>• Live ACP Tool Inspection & Git Diffs"]
+    Chan <-->|"POST/GET /api/messages"| Bus
+    Main <-->|"POST/GET /api/messages"| Bus
+    Cron <-->|"POST/GET /api/messages"| Bus
+    TaskW <-->|"POST/GET /api/messages"| Bus
+
+    Main <-->|"CRUD /api/board/cards"| Board
+    Cron <-->|"CRUD /api/board/cards"| Board
+    TaskW <-->|"Claim /api/board/cards"| Board
+
+    Main <-->|"tool.recall() / tool.reflect()"| BankMypai
+    TaskW <-->|"tool.recall() / tool.retain()"| BankOmp
+
+    subgraph Observability["Unified User Experience"]
+        PWA["AoE Structured PWA & Mobile Web (:28080)<br/>• ACP Tool Call Cards & Diff Viewer<br/>• Swipe-to-Approve Plan Gates<br/>• Instant Terminal TUI Matrix"]
     end
 
-    AmuxPlane -.->|"Breadcrumbs, ACP & Sockets"| AOE
+    AoECockpit -.->|"Live ACP Events & WebSockets"| PWA
 ```
 
-### Core Sessions Overview
+### Core Sessions & Responsibilities Overview
 
-| Session Name | Profile | Directory | Primary Role | Ingress Source | Egress Target |
+| Session / Worker | Host Engine | Profile | Primary Role | Ingress Source | Egress Target |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| **`amux-mypai-channel`** | `mypai` | `mypai-channel` | Dedicated Chat Gateway & Intent Classifier | `cc-connect` tmux driver | `mypai-main` via `POST /api/messages` |
-| **`amux-mypai-main`** (`mypai-main`) | `mypai` | `mypai-main` | Central Brain, Strategic Governor & Task Coordinator | `mypai-channel`, `mypai-cron`, Task Workers | `mypai-channel` (replies), `amux` Kanban & Workers |
-| **`amux-mypai-cron`** | `mypai` | `mypai-cron` | Timed Probing, Maintenance & Health Sweeps | `amux-server` Scheduler (`CRON: ...`) | `mypai-main` (alerts & cards) |
-| **`amux-task-worker-N`** | `normal` (default) | `<target-repo>` | Sandboxed Code Generation, Testing & Refactoring | `mypai-main` task dispatch | `mypai-main` report & diff |
+| **`mypai-channel`** | `aoe` (ACP/tmux) | `mypai` | Dedicated Chat Gateway & Intent Classifier | `cc-connect` bridge | `mypai-main` via `POST /api/messages` |
+| **`mypai-main`** | `aoe` (ACP/tmux) | `mypai` | Central Brain, Strategic Governor & Task Coordinator | `mypai-channel`, `mypai-cron`, Task Workers | `mypai-channel` (replies), `amux` Kanban & `aoe` Workers |
+| **`mypai-cron`** | `aoe` (ACP/tmux) | `mypai` | Automation Reactor, Silent Probing & Health Sweeps | `amux` Schedulers via `/api/messages` | `mypai-main` (alerts & Kanban cards) |
+| **`task-worker-N`** | `aoe` (ACP/tmux) | `normal` | Sandboxed Code Generation, Worktrees & Refactoring | `mypai-main` task dispatch | `mypai-main` report, diffs & Kanban completion |
+
+### Execution Backend & Protocol Architecture
+
+```
+┌─────────────────────────────────────────────────────────────────────────────────────────────┐
+│                            Backend & Protocol Comparison                                    │
+├──────────────────────┬───────────────────────────────┬──────────────────────────────────────┤
+│ Capability           │ herdr Backend                 │ aoe Backend (Current Architecture)   │
+├──────────────────────┼───────────────────────────────┼──────────────────────────────────────┤
+│ Transport            │ Subprocess CLI (herdr agent)  │ HTTP REST (:28080) & ACP JSON-RPC     │
+│ Turn Prompt Dispatch │ CLI prompt & send-keys        │ POST /api/sessions/{id}/send         │
+│ State Detection      │ PTY regex heuristics          │ Typed ACP events (tool, thought, plan│
+│ Overhead             │ Subprocess fork per check     │ Async REST connection pooling        │
+│ User Experience      │ Raw terminal stream           │ Mobile PWA, diff review & TUI matrix │
+└──────────────────────┴───────────────────────────────┴──────────────────────────────────────┘
+```
+
+- **Process Hosting:** Agents (`omp acp`) are hosted and supervised inside `aoe` (`:28080`), communicating via structured JSON-RPC stdio.
+- **Cognitive State:** `amux` (`:28824`) operates as the task and message plane, recording Kanban tickets, cron schedules, and inter-worker messages, and pushing turn-boundary prompts to `aoe`.
 
 ---
 
@@ -156,7 +194,7 @@ import httpx
 
 class AmuxClient:
     def __init__(self, base_url: Optional[str] = None, verify: bool = False, timeout: float = 30.0):
-        self.base_url = (base_url or os.environ.get("AMUX_API_URL", "https://localhost:8824/api")).rstrip("/")
+        self.base_url = (base_url or os.environ.get("AMUX_API_URL", "https://localhost:28824/api")).rstrip("/")
         self.client = httpx.Client(base_url=self.base_url, verify=verify, timeout=timeout)
 
     def get(self, path: str, params: Optional[Dict[str, Any]] = None) -> Any:
@@ -551,7 +589,7 @@ MYPAI_CRON_DIR="$HOME/agent-shared/mypai-cron"
 # Primary Service Execution (amux server)
 LAUNCHER_SERVICE_ENABLED="true"
 LAUNCHER_SERVICE_CMD="amux-server"
-LAUNCHER_SERVICE_ARGS="--port 8824 --data-dir $HOME/.amux"
+LAUNCHER_SERVICE_ARGS="--port 28824 --data-dir $HOME/.amux"
 
 # Persistent Sidecars: cc-connect bridge
 LAUNCHER_SIDECARS="cc_connect"
@@ -728,7 +766,7 @@ MyPAI explicitly rejects defensive silent fallbacks and degraded modes. Silent f
 | **2. Python Environment** | Fall back to system `/usr/bin/python` if profile venv is missing. | **STRICT MANAGED VENV INVARIANT.** `LAUNCHER_INSTALL_CMDS` provisions both venvs idempotently with all required packages. Sessions verify the active virtualenv on startup; if unprovisioned, they fail fast with explicit repair instructions (`sandbox-ctl install omp`). | System Python lacks `httpx`, `pydantic`, `omp-rpc`, and `mypai_runtime`; falling back causes mysterious runtime import errors inside agent turns. |
 | **3. Inter-Worker Comms** | Fall back to typing keystrokes via `tmux send-keys` between agent sessions. | **STRICT `amux` HTTP BUS INVARIANT.** All cross-session turns and worker coordination must route through `amux-server` (`POST /api/messages`) with JSON payloads and correlation IDs. | Unstructured keystroke injection risks terminal race conditions, missing delivery confirmations, and corrupting active agent prompts. |
 | **4. Host Tool Calling** | Fall back to invoking subshells (`bash`: `cat`, `grep`, `sed`) instead of in-process tools. | **STRICT IN-KERNEL LOOPBACK INVARIANT.** Agents must use `tool.read()`, `tool.write()`, and `tool.search()` via the persistent Python kernel (`lang: "py"`). | Shell subshells introduce 10x process spawn overhead, shell escaping hazards, and massive context token bloat. |
-| **5. Memory Persistence** | Silently drop memories or write to loose scratch files if Hindsight is unreachable. | **STRICT HINDSIGHT SERVICE INVARIANT.** Hindsight (`:8888`) is a supervised core service. `HindsightClient` raises explicit HTTP exceptions if unreachable, signaling an infrastructure alert. | Silent fallback causes cognitive fragmentation and permanent loss of user mental models. |
+| **5. Memory Persistence** | Silently drop memories or write to loose scratch files if Hindsight is unreachable. | **STRICT HINDSIGHT SERVICE INVARIANT.** Hindsight (`:28888`) is a supervised core service. `HindsightClient` raises explicit HTTP exceptions if unreachable, signaling an infrastructure alert. | Silent fallback causes cognitive fragmentation and permanent loss of user mental models. |
 | **6. Tool Discovery** | Flood the model's top-level system prompt with raw JSON schemas if `xd://` is unconfigured. | **STRICT `xd://` VIRTUAL DEVICE INVARIANT.** `tools.xdev: true` is strictly enforced in `config.yml`. All MCP and custom tools mount under `xd://`. | Prevents wasting 40,000+ prompt tokens on tool definitions and prevents provider prompt cache invalidation. |
 | **7. Error Handling** | Catch-all `except Exception: pass` in polling and event loops. | **STRICT EXCEPTION VISIBILITY INVARIANT.** All runtime errors capture full stack traces into `_LAST_ERROR`, log diagnostic telemetry, and raise typed domain errors (e.g. `TimeoutError`, `WorkerExecutionError`). | Suppressing exceptions hides underlying infrastructure and timeout defects from operator inspection. |
 

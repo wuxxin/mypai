@@ -26,7 +26,7 @@ The core transformation replaces custom, single-process Python daemon glue (`myp
 ┌────────────────────────────────────────────────────────────────────────────────────────────────────────┐
 │                                       NEXT-GEN ARCHITECTURE                                            │
 ├────────────────────────────────────────────────────────────────────────────────────────────────────────┤
-│ • Decentralized Rust Control Plane (`amux-server` on :8824) supervising native tmux agent sessions     │
+│ • Decentralized Rust Control Plane (`amux-server` on :28824) supervising native tmux agent sessions     │
 │ • 3 Dedicated Persistent `mypai` profile sessions (`workspace`, `channel`, `cron`) + Ephemeral Workers │
 │ • `cc-connect` WebSocket Bridge (:9810) attached directly to `amux-mypai-channel` tmux pane           │
 │ • `amux` Durable Scheduler Engine firing triggers directly into `amux-mypai-cron`                     │
@@ -42,7 +42,7 @@ The core transformation replaces custom, single-process Python daemon glue (`myp
 
 | Subsystem | Legacy Architecture (`omp-mypai`) | Next-Generation Architecture | Transformation Rationale |
 | :--- | :--- | :--- | :--- |
-| **Control Plane & Process Supervisor** | Custom `mypai_daemon` (FastAPI, Uvicorn, port `52080`). Manages one `omp_rpc` child via stdio pipes. | **`amux-server`** (Rust, Axum, port `8824`). Supervises multiple native `tmux` agent sessions (`amux-*`). | Eliminates stdio pipe locking, recovers automatically via tmux, provides atomic SQLite CAS state, native Kanban boards, and structured inter-worker message bus. |
+| **Control Plane & Process Supervisor** | Custom `mypai_daemon` (FastAPI, Uvicorn, port `52080`). Manages one `omp_rpc` child via stdio pipes. | **`amux-server`** (Rust, Axum, port `28824`). Supervises multiple native `tmux` agent sessions (`amux-*`). | Eliminates stdio pipe locking, recovers automatically via tmux, provides atomic SQLite CAS state, native Kanban boards, and structured inter-worker message bus. |
 | **Session Topography** | Single monolithic agent session trying to handle chat, cron, and task execution simultaneously. | **Partitioned multi-session topology**: `mypai-workspace` (Brain), `mypai-channel` (Frontend), `mypai-cron` (Automation), `task-worker-N` (Execution). | Prevents interactive chat lockup when heavy tasks or cron jobs are executing; guarantees dedicated lane concurrency. |
 | **Turn Serialization & Concurrency** | Custom in-memory `TurnQueue` with priority-flush state machine (Abort ➔ Steer ➔ Callback ➔ Prompt). | **`amux` Native Inter-Worker Bus (`POST /api/messages`)** & turn steering queue per tmux pane. | Replaces 2000+ lines of custom Python queue state-machine code with robust, persistent, SQLite-backed message routing. |
 | **External Ingress & Chat Gateway** | `signal_chat` FastMCP tool server (`read_message`, `send_message`) with polling and webhook router. | **`cc-connect`** Gateway (:9810) with native tmux driver (`agent = "tmux"`, `session = "amux-mypai-channel"`). | Multi-platform chat support (Signal, Telegram, Slack, Discord) out-of-the-box; zero custom MCP server maintenance. |

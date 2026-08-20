@@ -19,7 +19,7 @@ flowchart TD
         User --> SigAPI --> Bridge --> CC
     end
 
-    subgraph ControlPlane["amux Control Plane (:8824)"]
+    subgraph ControlPlane["amux Control Plane (:28824)"]
         AmuxAPI["Axum REST API"]
         AmuxSched["Cron Scheduler Engine"]
         AmuxBus["Inter-Worker Message Bus & Kanban DB"]
@@ -83,25 +83,25 @@ The following matrix defines the exact network protocol, socket, endpoint, and m
 
 | Origin / Client | Target Session or Service | Connection Mechanism & Protocol | Direction / Payload |
 | :--- | :--- | :--- | :--- |
-| **Signal User** | `signal-cli-rest-api` | Signal Protocol (E2EE) on port `8080` | Inbound / Outbound messages |
-| **`signal-cli-rest-api`** | `signal_bridge.py` | WebSocket stream (`ws://localhost:8080/v1/receive/...`) | JSON event stream of raw Signal envelopes |
+| **Signal User** | `signal-cli-rest-api` | Signal Protocol (E2EE) on port `28080` | Inbound / Outbound messages |
+| **`signal-cli-rest-api`** | `signal_bridge.py` | WebSocket stream (`ws://localhost:28080/v1/receive/...`) | JSON event stream of raw Signal envelopes |
 | **`signal_bridge.py`** | `cc-connect` | WebSocket Bridge Protocol (`ws://localhost:9810/bridge/ws`) | Standardized bridge message framing |
 | **`cc-connect`** | **`amux-mypai-channel`** | Native `tmux` driver (`session="amux-mypai-channel"`, `pane="0"`) | **Inbound:** `tmux send-keys`<br/>**Outbound:** `tmux capture-pane` polling |
-| **`amux-mypai-channel`** | **`amux-mypai-workspace`** (`mypai main`) | Axum REST API via in-process `httpx` (`https://localhost:8824/api/messages`) | POST JSON payload with target `mypai-workspace` |
+| **`amux-mypai-channel`** | **`amux-mypai-workspace`** (`mypai main`) | Axum REST API via in-process `httpx` (`https://localhost:28824/api/messages`) | POST JSON payload with target `mypai-workspace` |
 | **`amux Scheduler`** | **`amux-mypai-cron`** | `amux-server` Rust scheduler daemon / steering queue | Direct prompt delivery (`CRON: <action>`) into session pane |
-| **`amux-mypai-cron`** | **`amux-mypai-workspace`** (`mypai main`) | Axum REST API via in-process `httpx` (`https://localhost:8824/api/messages` & `/api/board/cards`) | Status notifications, task dispatches, and Kanban cards |
-| **`amux-mypai-workspace`** (`mypai main`) | **`amux-mypai-channel`** | Axum REST API via in-process `httpx` (`https://localhost:8824/api/messages`) | User-facing responses to be output on channel pane |
+| **`amux-mypai-cron`** | **`amux-mypai-workspace`** (`mypai main`) | Axum REST API via in-process `httpx` (`https://localhost:28824/api/messages` & `/api/board/cards`) | Status notifications, task dispatches, and Kanban cards |
+| **`amux-mypai-workspace`** (`mypai main`) | **`amux-mypai-channel`** | Axum REST API via in-process `httpx` (`https://localhost:28824/api/messages`) | User-facing responses to be output on channel pane |
 | **`amux-mypai-workspace`** (`mypai main`) | **`amux-task-worker-N`** | Axum REST API (`/api/sessions`, `/api/board/cards`, `/api/messages`) | Spawns normal-profile workers, claims cards, assigns sub-tasks |
 | **`amux-task-worker-N`** | **`amux-mypai-workspace`** (`mypai main`) | Axum REST API (`/api/messages`, `/api/board/cards/{id}`) | Task completion reports, diff confirmations, card status updates |
-| **All `omp` Sessions** | **Hindsight Service** | HTTP REST API on `http://localhost:8888` | Turn retention (`/retain`), recall (`/recall`), mental model reflection |
+| **All `omp` Sessions** | **Hindsight Service** | HTTP REST API on `http://localhost:28888` | Turn retention (`/retain`), recall (`/recall`), mental model reflection |
 | **`Agent of Empires` (`aoe`)** | **All `amux-*` Sessions** | **1. Tmux Introspection:** Terminal breadcrumbs (`session/capture/omp.rs`)<br/>**2. ACP Protocol:** stdio/IPC when `omp` runs in `omp acp` mode | Deep live inspection, TUI matrix navigation, Web PWA dashboard (`aoe serve`) |
 
 ### Connection Deep-Dive by Agent Session
 
 1. **`amux-mypai-channel` (Communication Gateway):**
    - **Connected FROM:** `cc-connect` via tmux PTY/pane injection (`tmux send-keys`).
-   - **Connects TO:** `amux-mypai-workspace` via HTTP POST to `https://localhost:8824/api/messages` executed from `omp eval` using `httpx` / `mypai_http`.
-   - **Connects TO:** `Hindsight` on `http://localhost:8888` for contextual user preference queries.
+   - **Connects TO:** `amux-mypai-workspace` via HTTP POST to `https://localhost:28824/api/messages` executed from `omp eval` using `httpx` / `mypai_http`.
+   - **Connects TO:** `Hindsight` on `http://localhost:28888` for contextual user preference queries.
 
 2. **`amux-mypai-cron` (Timed Automation Engine):**
    - **Connected FROM:** `amux-server` background scheduler loop via direct prompt injection.
@@ -134,7 +134,7 @@ The following matrix defines the exact network protocol, socket, endpoint, and m
    import httpx
 
    httpx.post(
-       "https://localhost:8824/api/messages",
+       "https://localhost:28824/api/messages",
        json={
            "target": {"worker_name": "mypai-workspace"},
            "body": "User requested refactoring of auth module in repo XYZ"
@@ -167,7 +167,7 @@ Periodic tasks are registered with standard cron syntax via Python `eval`:
 import httpx
 
 httpx.post(
-    "https://localhost:8824/api/schedules",
+    "https://localhost:28824/api/schedules",
     json={
         "title": "Hourly Health & Git Sweep",
         "session": "mypai-cron",
@@ -191,7 +191,7 @@ When the `amux` scheduler fires, it sends `CRON: <action> [params...]` to `mypai
 
 To replace raw terminal `curl` invocations with clean, in-process Python calls inside `omp eval`, **`httpx`** is selected as the primary HTTP client:
 - **Concise Ergonomics:** Automatic JSON serialization (`json={...}`) and response decoding (`.json()`).
-- **TLS Flexibility:** Clean self-signed SSL bypassing via `verify=False` (vital for `amux` HTTPS on port `8824`).
+- **TLS Flexibility:** Clean self-signed SSL bypassing via `verify=False` (vital for `amux` HTTPS on port `28824`).
 - **Persistent Sessions:** Supports `httpx.Client(base_url="...")` to avoid repeating root URLs across turns.
 
 #### Reusable Client Helper (`mypai_http.py`)
@@ -211,9 +211,9 @@ class APIClient:
         return self.client.post(path, json=data or kwargs).json()
 
 # Pre-configured global clients
-amux = APIClient("https://localhost:8824/api", verify=False)
-hindsight = APIClient("http://localhost:8888", verify=True)
-signal = APIClient("http://localhost:8080/v2", verify=True)
+amux = APIClient("https://localhost:28824/api", verify=False)
+hindsight = APIClient("http://localhost:28888", verify=True)
+signal = APIClient("http://localhost:28080/v2", verify=True)
 ```
 
 ### `mypai-cron` Instruction & Helper Prelude

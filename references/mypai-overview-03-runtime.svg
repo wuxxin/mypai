@@ -100,16 +100,24 @@
 
   <!-- Layer 5: Infrastructure & Daemon Layer -->
   <rect x="48" y="568" width="1104" height="72" rx="8" fill="#f5f5f5" stroke="rgba(45,49,66,0.2)" stroke-width="1"/>
-  <text x="72" y="592" class="layer-title">Layer 5: Supervised Infrastructure Services</text>
-  <text x="72" y="608" class="layer-sub">amux-server (:8824) · Hindsight Server (:8888) · cc-connect (:9810)</text>
+  <text x="72" y="592" class="layer-title">Layer 5: Supervised Infrastructure Services &amp; Execution Hosts</text>
+  <text x="72" y="608" class="layer-sub">aoe (:28080) · amux-server (:28824) · Hindsight Server (:28888) · cc-connect (:9810)</text>
 
-  <rect x="640" y="580" width="200" height="48" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
-  <text x="740" y="602" class="node-title">amux-server</text>
-  <text x="740" y="616" class="node-sub">:8824 · Axum + SQLite</text>
+  <rect x="472" y="580" width="160" height="48" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+  <text x="552" y="602" class="node-title">aoe (Host)</text>
+  <text x="552" y="616" class="node-sub">:28080 · ACP + PWA</text>
 
-  <rect x="860" y="580" width="200" height="48" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
-  <text x="960" y="602" class="node-title">Hindsight Memory</text>
-  <text x="960" y="616" class="node-sub">:8888 · Vector Engine</text>
+  <rect x="648" y="580" width="160" height="48" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+  <text x="728" y="602" class="node-title">amux-server</text>
+  <text x="728" y="616" class="node-sub">:28824 · SQLite Bus</text>
+
+  <rect x="824" y="580" width="160" height="48" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+  <text x="904" y="602" class="node-title">Hindsight Memory</text>
+  <text x="904" y="616" class="node-sub">:28888 · Vector Banks</text>
+
+  <rect x="1000" y="580" width="136" height="48" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+  <text x="1068" y="602" class="node-title">cc-connect</text>
+  <text x="1068" y="616" class="node-sub">:9810 · Bridge</text>
 
   <!-- Legend -->
   <line x1="48" y1="664" x2="1152" y2="664" stroke="rgba(45,49,66,0.12)" stroke-width="0.8"/>

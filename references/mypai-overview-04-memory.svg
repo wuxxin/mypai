@@ -101,7 +101,7 @@
   <rect x="520" y="336" width="288" height="104" rx="8" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="1.2"/>
   <rect x="528" y="342" width="48" height="12" rx="2" fill="transparent" stroke="#eb6c36" stroke-width="0.8"/>
   <text x="552" y="351" class="node-tag" fill="#eb6c36">ENGINE</text>
-  <text x="664" y="382" class="node-title">Hindsight Server (:8888)</text>
+  <text x="664" y="382" class="node-title">Hindsight Server (:28888)</text>
   <text x="664" y="398" class="node-sub">Vector (HNSW) + BM25 Hybrid Embeddings</text>
   <text x="664" y="416" class="node-sub">/reflect · /recall · /retain · /mental-models</text>
 

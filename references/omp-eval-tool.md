@@ -4,6 +4,9 @@
 
 While most AI coding harnesses handle execution by spawning isolated, stateless shell sub-processes (or isolated Docker sandboxes), `omp` features a dedicated **`eval` tool**. The `eval` tool provides a persistent, multi-language execution runtime (Python and JavaScript via Bun) that integrates directly into the agent’s internal tool system via a **loopback bridge**.
 
+
+v17.4.0: Backgroundable Python: eval cells can now execute asynchronously and auto-background like bash commands with customizable thresholds.
+
 ---
 
 ## 1. How the Python Interpreter Works

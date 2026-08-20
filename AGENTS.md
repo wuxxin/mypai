@@ -6,12 +6,14 @@ Operational rules, repository realities, invariants, and specialist profiles for
 
 ## 1. System Reality & Multi-Session Mesh
 
-Distributed mesh on **`amux-server` (:8824)**, **`cc-connect` (:9810)**, **`oh-my-pi` (`omp`)**, **`aoe` (:8080)**, and **`Hindsight` (:8888)**. Legacy daemon/MCP wrappers are retired.
+Distributed mesh on **`aoe` (:28080)**, **`amux-server` (:28824)**, **`cc-connect` (:9810)**, **`oh-my-pi` (`omp`)**, and **`Hindsight` (:28888)**.
 
-- **`amux-mypai-main` (`mypai`):** Cognitive brain, TELOS governor, Kanban owner, task worker coordinator.
-- **`amux-mypai-channel` (`mypai`):** Chat ingress (`cc-connect` tmux bridge). Forwards structured turns to main.
-- **`amux-mypai-cron` (`mypai`):** Automation reactor triggered by `amux-server` (`CRON: <action>`). Silent in-kernel sweeps.
-- **`amux-task-worker-N` (`normal`):** Isolated on-demand coding workers in target repositories.
+- **`aoe` (:28080):** Execution host, ACP (Agent Client Protocol) runner, TUI cockpit, git worktrees, diff review, and mobile Web PWA.
+- **`amux-server` (:28824):** Cognitive state store, durable Kanban board (`/api/board/cards`), turn-boundary message router (`/api/messages`), and cron scheduler (`/api/schedules`).
+- **`mypai-main` (`mypai`):** Cognitive brain, TELOS governor, LifeOS mental models, Kanban owner, and task worker coordinator.
+- **`mypai-channel` (`mypai`):** Chat ingress (`cc-connect` bridge). Ingests user turns and forwards structured requests to main.
+- **`mypai-cron` (`mypai`):** Automation reactor triggered via `amux` message bus (`CRON: <action>`). Executes silent in-kernel sweeps.
+- **`task-worker-N` (`normal`):** Isolated on-demand coding workers running in target repositories/worktrees via ACP.
 - **In-Kernel Execution (`lang: "py"`):** Execute messaging, memory reflection, and bulk processing in Python kernel via `mypai_runtime`.
 - **Hindsight Tooling Strategy:**
   - **Session Default Bank:** Use in-process OMP loopback tools (`tool.reflect()`, `tool.recall()`, `tool.retain()`).

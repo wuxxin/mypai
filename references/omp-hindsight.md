@@ -2,7 +2,7 @@
 
 ## Executive Summary
 
-**Hindsight** is the native long-term vector memory, temporal observation tracking, and mental model reflection engine for **Oh-My-Pi (OMP)** and **MyPAI**. Operative via a local REST API (default `http://localhost:8888`), Hindsight intercepts conversation turns to autonomously retain facts, consolidate raw observations, synthesize mental models, and recall context for prompt injection.
+**Hindsight** is the native long-term vector memory, temporal observation tracking, and mental model reflection engine for **Oh-My-Pi (OMP)** and **MyPAI**. Operative via a local REST API (default `http://localhost:28888`), Hindsight intercepts conversation turns to autonomously retain facts, consolidate raw observations, synthesize mental models, and recall context for prompt injection.
 
 This document serves as an exhaustive reference for all up-to-date Hindsight configuration parameters across `config.yml`, bank definition files (`.yaml`/`.json`), environment variables, `membank-ctl` CLI tooling, and REST endpoints.
 
@@ -20,7 +20,7 @@ autolearn:
   enabled: true                  # Enable dynamic knowledge extraction
 
 hindsight:
-  apiUrl: http://localhost:8888  # Base URL for Hindsight REST server (or $HINDSIGHT_API_URL)
+  apiUrl: http://localhost:28888  # Base URL for Hindsight REST server (or $HINDSIGHT_API_URL)
   bankId: oh-my-pi               # Target memory bank identifier (or $HINDSIGHT_BANK_ID)
   scoping: per-project-tagged     # Memory scoping strategy ('per-project-tagged' | 'per-project' | 'global')
   retainMode: full-session        # Ingestion mode ('full-session' | 'concise' | 'turn' | 'manual')
@@ -36,7 +36,7 @@ hindsight:
 | :--- | :--- | :--- | :--- |
 | **`memory.backend`** | `string` | `"hindsight"` | Selects the active memory provider backend. |
 | **`autolearn.enabled`** | `boolean` | `true` | Enables background learning, error self-correction, preference distillation, and mental model refinement. |
-| **`hindsight.apiUrl`** | `string` | `"http://localhost:8888"` | Base URL of the Hindsight REST API server. Overridden by environment variable `HINDSIGHT_API_URL`. |
+| **`hindsight.apiUrl`** | `string` | `"http://localhost:28888"` | Base URL of the Hindsight REST API server. Overridden by environment variable `HINDSIGHT_API_URL`. |
 | **`hindsight.bankId`** | `string` | `"oh-my-pi"` | Memory bank namespace ID (e.g. `oh-my-pi` or `mypai`). Overridden by `HINDSIGHT_BANK_ID`. |
 | **`hindsight.scoping`** | `enum` | `"per-project-tagged"` | Controls how memory queries are filtered. Options: `per-project-tagged` (filters by project tags), `per-project` (filters by workspace root), `global` (unfiltered across projects). |
 | **`hindsight.retainMode`** | `enum` | `"full-session"` | Ingestion strategy for raw turn content. Options: `full-session` (summarizes complete session context), `concise` (extracts short key facts), `turn` (retains raw turn text), `manual` (requires explicit tool call). |
@@ -159,7 +159,7 @@ Environment variables override file configurations during sandbox launcher initi
 
 ```bash
 # Hindsight Server Base URL
-export HINDSIGHT_API_URL="http://localhost:8888"
+export HINDSIGHT_API_URL="http://localhost:28888"
 
 # Target Memory Bank Identifier
 export HINDSIGHT_BANK_ID="mypai"
@@ -188,19 +188,19 @@ ${LAUNCHER_INSTALL_SOURCE:-.}/bin/membank-ctl update "$HINDSIGHT_API_URL" ${LAUN
 membank-ctl update <API_URL> <BANKS_PATH> --yes [--prune]
 
 # Examples:
-./bin/membank-ctl update http://localhost:8888 ./omp/agent/memorybanks --yes
-./bin/membank-ctl update http://localhost:8888 ./omp/profiles/mypai/memorybanks --yes --prune
+./bin/membank-ctl update http://localhost:28888 ./omp/agent/memorybanks --yes
+./bin/membank-ctl update http://localhost:28888 ./omp/profiles/mypai/memorybanks --yes --prune
 
 # 2. Export server memory bank configuration and mental models to YAML or JSON:
 membank-ctl export <API_URL> <bankname> [--json|--yaml] [--out filename]
 
 # Examples:
-./bin/membank-ctl export http://localhost:8888 mypai --yaml --out mypai-exported.yaml
+./bin/membank-ctl export http://localhost:28888 mypai --yaml --out mypai-exported.yaml
 ```
 
 ---
 
-## 5. Hindsight REST API Endpoint Sitemap (`http://localhost:8888`)
+## 5. Hindsight REST API Endpoint Sitemap (`http://localhost:28888`)
 
 All REST API endpoints operate under `/v1/default/banks/{bank_id}`:
 

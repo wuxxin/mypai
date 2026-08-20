@@ -4,9 +4,9 @@ This document provides a comprehensive visual and structural overview of the **M
 
 ---
 
-## 1. System Topology & Multi-Session Control Plane
+## 1. System Topology: AoE Execution Cockpit & amux Cognitive Plane
 
-The high-level distributed infrastructure layout connecting chat ingress, the central `amux-server` control plane, the core agent sessions (`mypai-main`, `mypai-channel`, `mypai-cron`), ephemeral task workers, Hindsight vector memory, and the Agent of Empires (`aoe`) observability cockpit.
+The high-level distributed infrastructure layout connecting chat ingress (`cc-connect`), the **Agent of Empires (`aoe`)** ACP execution cockpit & Web PWA, the core agent sessions (`mypai-main`, `mypai-channel`, `mypai-cron`), ephemeral task worktrees, the **`amux`** cognitive message & Kanban bus (:28824), and **Hindsight** vector memory (:28888).
 
 ![01 · System Topology & Multi-Session Control Plane](mypai-overview-01-topology.svg)
 
@@ -30,7 +30,7 @@ The in-kernel execution architecture (`lang: "py"`): persistent process memory (
 
 ## 4. Dual-Profile Hindsight Memory & Mental Model Architecture
 
-The tiered cognitive memory model: partitioning global LifeOS strategic governance (8 persistent mental models in the `mypai` memory bank) from tactical per-project coding conventions in the `oh-my-pi` memory bank, backed by continuous background consolidation in Hindsight (:8888).
+The tiered cognitive memory model: partitioning global LifeOS strategic governance (8 persistent mental models in the `mypai` memory bank) from tactical per-project coding conventions in the `oh-my-pi` memory bank, backed by continuous background consolidation in Hindsight (:28888).
 
 ![04 · Dual-Profile Hindsight Memory & Mental Model Architecture](mypai-overview-04-memory.svg)
 

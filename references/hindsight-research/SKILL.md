@@ -5,9 +5,9 @@ description: Inspecting, reconfiguring, and managing Hindsight memory banks, ret
 
 # Hindsight Memory API & Bank Management Skill
 
-Teaches the agent how to inspect, query, reconfigure, and manage Hindsight memory banks programmatically via the local Hindsight REST API served on `http://localhost:8888`.
+Teaches the agent how to inspect, query, reconfigure, and manage Hindsight memory banks programmatically via the local Hindsight REST API served on `http://localhost:28888`.
 
-## Hindsight REST API Reference (`http://localhost:8888`)
+## Hindsight REST API Reference (`http://localhost:28888`)
 
 All REST endpoints operate under the default namespace `/v1/default/banks/{bank_id}`.
 
@@ -25,10 +25,10 @@ You can idempotently provision or export bank configurations and mental models u
 
 ```bash
 # Update bank configs and mental models from JSON or YAML definitions:
-./bin/membank-ctl update http://localhost:8888 ./omp/agent/memorybanks --yes --prune
+./bin/membank-ctl update http://localhost:28888 ./omp/agent/memorybanks --yes --prune
 
 # Export server bank configuration and mental models to YAML or JSON:
-./bin/membank-ctl export http://localhost:8888 oh-my-pi --yaml --out oh-my-pi.yaml
+./bin/membank-ctl export http://localhost:28888 oh-my-pi --yaml --out oh-my-pi.yaml
 ```
 
 #### Manual REST API Operations
@@ -37,7 +37,7 @@ To apply a bank configuration file via `curl`:
 
 ```bash
 # 1. Update Retain, Observations, and Reflect missions:
-curl -sS -X PATCH "http://localhost:8888/v1/default/banks/{bank_id}/config" \
+curl -sS -X PATCH "http://localhost:28888/v1/default/banks/{bank_id}/config" \
   -H "Content-Type: application/json" \
   -d "$(python3 -c '
 import json, sys
@@ -72,7 +72,7 @@ bank_id = "opencode-oracle"
 data = json.load(open(f"sandbox-templates/opencode/hindsight-banks/{bank_id}.json"))
 for mm in data.get("mental_models", []):
     req = urllib.request.Request(
-        f"http://localhost:8888/v1/default/banks/{bank_id}/mental-models",
+        f"http://localhost:28888/v1/default/banks/{bank_id}/mental-models",
         data=json.dumps(mm).encode("utf-8"),
         headers={"Content-Type": "application/json"},
         method="POST"
@@ -100,7 +100,7 @@ for mm in data.get("mental_models", []):
 
 ```bash
 # Force background consolidation for an agent bank:
-curl -sS -X POST "http://localhost:8888/v1/default/banks/opencode-oracle/consolidate"
+curl -sS -X POST "http://localhost:28888/v1/default/banks/opencode-oracle/consolidate"
 ```
 
 ---

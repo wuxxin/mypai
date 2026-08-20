@@ -4,44 +4,53 @@ This guide explains how to use **MyPAI** and **Oh-My-Pi (OMP)** from an operator
 
 ---
 
-## 1. System Overview & Core Sessions
+## 1. System Overview & Core Topology
 
-MyPAI runs on a distributed multi-session control plane supervised by `amux-server`:
+MyPAI runs on a clean separation of concerns between the **`aoe` ACP Execution Cockpit** (:28080) and the **`amux` Cognitive & State Mesh** (:28824):
 
 ```mermaid
 flowchart TD
     subgraph Chat["External Chat Ingress"]
-        ExtUser["External User (Signal / Telegram)"]
-        CC["cc-connect Gateway"]
+        ExtUser["External User (Signal / Telegram / Matrix)"]
+        CC["cc-connect Gateway (:9810)"]
         ExtUser -->|"E2EE Messages"| CC
     end
 
-    subgraph Mesh["amux Multi-Session Mesh"]
+    subgraph Cockpit["AoE Execution Cockpit (:28080)"]
         direction TB
-        Chan["amux-mypai-channel<br/>(Chat Gateway)"]
-        Brain["amux-mypai-main<br/>(Brain & Orchestrator)"]
-        Cron["amux-mypai-cron<br/>(Scheduled Sweeps)"]
-        Sched["amux Scheduler"]
+        Chan["mypai-channel<br/>(Chat Ingress)"]
+        Brain["mypai-main<br/>(Brain & Orchestrator)"]
+        Cron["mypai-cron<br/>(Scheduled Sweeps)"]
+        Workers["task-worker-N<br/>(@orchestrator + Specialists)"]
         
-        Workers["amux-task-worker-N<br/>(@orchestrator + Specialists)"]
-
-        CC -->|"tmux send-keys"| Chan
-        Chan -->|"POST /api/messages"| Brain
-        Brain -->|"POST /api/messages"| Chan
-        Chan -->|"tmux capture-pane"| CC
-        
-        Sched -->|"CRON: <action>"| Cron
-        Cron -->|"POST /api/messages"| Brain
-        
-        Brain -->|"amux launch / sessions"| Workers
-        Workers -->|"Task Reports & Diffs"| Brain
+        Brain -->|"aoe session / worktrees"| Workers
     end
+
+    subgraph AmuxMesh["amux Cognitive Plane (:28824)"]
+        direction TB
+        Board["Durable Kanban Board<br/>(/api/board/cards)"]
+        Bus["Turn Message Bus<br/>(/api/messages)"]
+        Sched["Durable Scheduler Engine<br/>(/api/schedules)"]
+        
+        Sched -->|"CRON: <action>"| Bus
+    end
+
+    CC -->|"tmux send-keys"| Chan
+    Chan -->|"tmux capture-pane"| CC
+
+    Chan <-->|"POST/GET /api/messages"| Bus
+    Brain <-->|"POST/GET /api/messages"| Bus
+    Cron <-->|"POST/GET /api/messages"| Bus
+    Workers <-->|"POST/GET /api/messages"| Bus
+
+    Brain <-->|"Claim/Update Cards"| Board
+    Workers <-->|"Claim/Update Cards"| Board
 ```
 
-1. **`amux-mypai-main`:** The primary brain. Maintains your long-term LifeOS memory, manages the `amux` Kanban board, spawns worker sessions for coding tasks, and coordinates replies.
-2. **`amux-mypai-channel`:** Dedicated chat ingress connected to `cc-connect`. Ingests incoming messages, parses intent, and forwards tasks to `mypai-main`.
-3. **`amux-mypai-cron`:** Dedicated automation reactor. Receives scheduled triggers from `amux-server` and performs silent repository and metric health sweeps.
-4. **`amux-task-worker-N`:** On-demand coding workers running in project directories with normal OMP profiles.
+1. **`mypai-main`:** The primary cognitive brain (running in `aoe` via ACP). Maintains long-term LifeOS memory, manages the `amux` Kanban board, coordinates subagent worktrees, and formulates user replies.
+2. **`mypai-channel`:** Dedicated chat ingress gateway (running in `aoe` via ACP). Connected to `cc-connect`, ingests incoming mobile messages, classifies intent, and routes structured turns to `mypai-main`.
+3. **`mypai-cron`:** Dedicated automation reactor (running in `aoe` via ACP). Triggered by `amux` schedulers via `/api/messages` to perform silent sweeps and post health metrics.
+4. **`task-worker-N`:** Ephemeral coding workers running in target repositories/worktrees with normal OMP profiles.
 
 ---
 
@@ -53,7 +62,7 @@ The easiest way to monitor all running sessions, diffs, and tool steps is using 
 # Terminal TUI Matrix
 aoe
 
-# Web PWA Dashboard (browser access on localhost:8080 or Tailscale)
+# Web PWA Dashboard (browser access on localhost:28080 or Tailscale)
 aoe serve
 ```
 

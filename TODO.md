@@ -1,5 +1,27 @@
 # TODO
 
+i installed [vllm.cpp-git-hip](directory;file:///home/wuxxin/agent-shared/code/mypai/submodules/aur-packages/vllm.cpp-git-hip) , i want to test it as future second engine in [local-chat.sh](file;file:///home/wuxxin/agent-shared/code/mypai/submodules/agents-shared/assistants/local-chat.sh) . dont modify local-chat.sh for now, we want a speed test of the new engine. read the chat entries of [local-benchmark.md](file;file:///home/wuxxin/agent-shared/code/mypai/submodules/agents-shared/assistants/local-benchmark.md) , to get our baseline, and its json for the running parameter. 
+
+
+consolidate all omp related prompt into a selection of prompt modules to be inserted in the specific locations when they are well defined.
+
+research omp: where can we add ts, whats the eval ts runner doing, do we have tools available in any of them,
+
+research oh-my-pi in scratch for answers: right now, we wan to begin adding first cronjobs and eval executions, 
+ when a cron fires:
+
+```txt
+CRON: eval(type="py", """
+
+# now we want eg. to inspect running session, is there a way?" eg.
+if (100 * session.ctx / session.max_ctx) > 80:
+    tools.retain()
+    tools.snapcompact()
+    session.new()
+
+""")
+```
+
 + research and add if fitting
 
 + look into

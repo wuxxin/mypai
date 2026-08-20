@@ -12,7 +12,7 @@ By strictly leveraging **in-kernel Python `eval` execution** paired with native 
 
 | Architectural Dimension | Legacy Architecture | Next-Gen Architecture | Key Advantage |
 | :--- | :--- | :--- | :--- |
-| **Control Plane & Process Management** | Ad-hoc background `nohup` scripts / single tmux sessions | `amux` centralized Rust daemon (`amux-server` on port `8824`) | Persistent SQLite state, atomic CAS claims, structured inter-worker message bus (`/api/messages`). |
+| **Control Plane & Process Management** | Ad-hoc background `nohup` scripts / single tmux sessions | `amux` centralized Rust daemon (`amux-server` on port `28824`) | Persistent SQLite state, atomic CAS claims, structured inter-worker message bus (`/api/messages`). |
 | **External Ingress & Chat Gateway** | Custom webhooks & manual polling scripts | `cc-connect` WebSocket Bridge (`:9810`) attached to persistent tmux pane | Seamless Signal, Telegram, Discord integration; no sub-agent spawning for frontend chat. |
 | **Tool Execution Paradigm** | Subprocess shell calls (`curl`, `bash`, `sed`, `git`) | **In-Kernel Python `eval` (`lang: "py"`) via `_ToolProxy`** | Direct in-process loopback (`tool.read()`, `tool.search()`, `tool.reflect()`), preserving memory state across turns. |
 | **HTTP / API Calling Mechanism** | Repetitive bash `curl` commands with string escaping | **High-level `httpx` and `mypai_http` client wrapper** | Automatic JSON serialization, `verify=False` for self-signed certs, persistent base URLs. |
@@ -42,7 +42,7 @@ By strictly leveraging **in-kernel Python `eval` execution** paired with native 
 **Lifecycle of a User Request:**
 1. **User Signal Prompt ➔ `cc-connect`:** Delivered via WebSocket bridge into `amux-mypai-channel`.
 2. **Intent Parsing & Translation:** `mypai-channel` runs Python `eval` with loopback tools to extract repository names and intent.
-3. **Inter-Worker Dispatch:** Dispatches request to `mypai-main` via `httpx.post("https://localhost:8824/api/messages", ...)`.
+3. **Inter-Worker Dispatch:** Dispatches request to `mypai-main` via `httpx.post("https://localhost:28824/api/messages", ...)`.
 4. **Kanban Work Claim:** `mypai-main` moves task card to `Doing`, launches `amux-task-worker-1` with normal `omp` profile.
 5. **Task Execution & Verification:** Worker edits files, runs lint/test suites, and reports back.
 6. **Return Path:** `mypai-main` transitions card to `Done` and messages `mypai-channel`, which writes the final formatted reply back to Signal.
@@ -71,7 +71,7 @@ By strictly leveraging **in-kernel Python `eval` execution** paired with native 
 - **Normal Profile (Task Workers):**
   - Bank: `oh-my-pi` | Scoping: `per-project-tagged` | `autoRecall: true` | `autoRetain: true`.
   - Captures tactical codebase details, error logs, and intermediate diffs tagged with `project:<cwd>`.
-- **Hindsight Server (:8888):**
+- **Hindsight Server (:28888):**
   - Handles continuous background consolidation (`/consolidate`) and mental model synthesis (`/mental-models/{id}/refresh`).
 
 ---
