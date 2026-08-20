@@ -1,0 +1,25 @@
+# Agent of Empires (AoE) Configuration for MyPAI Mesh
+
+default_profile = "default"
+
+[acp]
+# Default ACP agent provider to Oh-My-Pi
+default_agent = "omp"
+offer_structured_in_new_session = true
+max_concurrent_workers = 8
+
+[session]
+# Default agent launch command
+default_agent = "omp"
+
+[web]
+# Web PWA and REST API port
+port = 28080
+
+[worktree]
+# Enable dedicated git worktrees for isolated task execution
+enable_worktrees = true
+
+[logging]
+sink = "file"
+level = "info"

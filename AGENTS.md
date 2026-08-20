@@ -28,6 +28,7 @@ Distributed mesh on **`aoe` (:28080)**, **`amux-server` (:28824)**, **`cc-connec
 ```
 mypai/
 ├── Makefile / pyproject.toml / omp.env   # GNU buildenv, dependencies & supervisor config
+├── aoe/ (config.toml, README.md)         # Agent of Empires daemon & ACP settings
 ├── amux/ (server.env, templates, hooks)  # amux server env, templates & shared git/report hooks
 ├── bin/membank-ctl                      # Hindsight memory bank sync CLI
 ├── src/mypai_runtime/                   # In-Kernel Python runtime (amux, hindsight, diagnostics)

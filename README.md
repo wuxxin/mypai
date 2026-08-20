@@ -67,29 +67,33 @@ Provision the sandbox environment and generate the `omp` binary launcher in `~/.
 ```
 
 `sandbox-ctl install` performs the following automated steps:
-1. Copies configuration templates from `./omp/agent/*` into `$HOME/.omp/agent/` for Base OMP.
-2. Copies configuration templates from `./omp/profiles/mypai/*` into `$HOME/.omp/profiles/mypai/agent/` for the MyPai profile.
-3. Provisions the managed Base Python virtual environment at `$HOME/.omp/python-env` (containing `omp-rpc`, `mypai_runtime`, `arbor`, and `openadapt`).
-4. Provisions the MyPai Profile Python virtual environment at `$HOME/.omp/profiles/mypai/python-env` (containing `omp-rpc`, `mypai_runtime`, `httpx`, `pydantic`).
-5. Executes `membank-ctl update` to provision and seed Hindsight memory banks for `oh-my-pi` and `mypai`.
+1. Copies configuration templates from `./aoe/*` into `$HOME/.agent-of-empires/` for the AoE execution host.
+2. Copies configuration templates from `./omp/agent/*` into `$HOME/.omp/agent/` for Base OMP.
+3. Copies configuration templates from `./omp/profiles/mypai/*` into `$HOME/.omp/profiles/mypai/agent/` for the MyPai profile.
+4. Copies amux templates and hooks from `./amux/*` into `$HOME/.amux/`.
+5. Provisions the managed Base Python virtual environment at `$HOME/.omp/python-env` (containing `omp-rpc`, `mypai_runtime`, `arbor`, and `openadapt`).
+6. Provisions the MyPai Profile Python virtual environment at `$HOME/.omp/profiles/mypai/python-env` (containing `omp-rpc`, `mypai_runtime`, `httpx`, `pydantic`).
+7. Executes `membank-ctl update` to provision and seed Hindsight memory banks for `oh-my-pi` and `mypai`.
 
 ### 5. Launch Oh-my-PI & MyPai Mesh
 
-Launch interactive Base OMP session:
+Launch the full mesh via **Agent of Empires (`aoe`)** (which boots AoE on `:28080` as the main service with `amux-server` on `:28824` and `cc-connect` on `:9810` as supervised sidecars):
 
 ```bash
+# Launch AoE Cockpit (TUI & Web PWA on http://localhost:28080)
+aoe serve --port 28080
+```
+
+Or launch individual components directly:
+
+```bash
+# Interactive Base OMP session:
 omp
-```
 
-Launch MyPai Profile session:
-
-```bash
+# MyPai Profile session:
 omp --profile mypai
-```
 
-Launch full autonomous multi-session mesh via `amux`:
-
-```bash
+# amux-server cognitive plane standalone:
 amux-server --port 28824
 ```
 
