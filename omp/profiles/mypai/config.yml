@@ -65,3 +65,5 @@ secrets:
   enabled: false
 composer:
   shape: box
+tools:
+  intentTracing: false
