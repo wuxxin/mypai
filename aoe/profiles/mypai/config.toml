@@ -1,0 +1,12 @@
+[acp]
+default_agent = "omp"
+
+[acp.acp_defaults.omp]
+model = "llama.cpp/qwen3"
+
+[session]
+default_tool = "omp"
+yolo_mode_default = true
+
+[worktree]
+enabled = false

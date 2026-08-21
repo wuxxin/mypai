@@ -1,0 +1,53 @@
+default_profile = "default"
+
+[acp]
+default_agent = "omp"
+max_concurrent_workers = 8
+offer_structured_in_new_session = true
+
+[acp.acp_defaults.omp]
+model = "llama.cpp/qwen3"
+
+[logging]
+default_level = "info"
+output = "stdout"
+
+[sandbox]
+enabled_by_default = false
+container_runtime = "podman"
+
+[session]
+agent_status_hooks = true
+auto_resume_on_restart = true
+click_action = "live_send"
+confirm_before_quit = true
+confirm_delete = false
+default_attach_mode = "live_send"
+default_tool = "omp"
+delete_to_trash = true
+yolo_mode_default = false
+
+
+[theme]
+color_mode = "truecolor"
+idle_decay_minutes = 0
+name = "zinc"
+
+[tmux]
+status_bar = "enabled"
+
+[updates]
+auto_update_plugins = true
+update_check_mode = "notify"
+
+[web]
+notifications_enabled = true
+notify_on_error = true
+notify_on_idle = true
+notify_on_waiting = true
+notify_on_wake_fire = true
+
+[worktree]
+auto_cleanup = true
+enabled = true
+init_submodules = true
