@@ -6,7 +6,7 @@ modelRoles:
 symbolPreset: unicode
 theme:
   dark: titanium
-setupVersion: 1
+setupVersion: 2
 statusLine:
   preset: default
   separator: powerline-thin
@@ -15,9 +15,12 @@ stt:
   provider: local
   baseUrl: http://localhost:21080/v1
 compaction:
-  strategy: snapcompact
   thresholdPercent: 85
   handoffSaveToDisk: false
+  methodOrder:
+    - snapcompact
+    - remote
+    - soft
 memory:
   backend: hindsight
 autolearn:
@@ -60,3 +63,5 @@ task:
   prewalk: false
 secrets:
   enabled: false
+composer:
+  shape: box
