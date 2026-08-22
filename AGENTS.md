@@ -4,9 +4,9 @@ Operational rules, invariants, and specialist profiles for MyPAI.
 
 ---
 
-## 1. Multi-Session System 
+## 1. System Architecture
 
-Agent Hosting using **`agent of empires` (:28080)**, **`amux-server` (:28824)**, **`cc-connect` (:9810)**, **`oh-my-pi` (`omp`)**, and **`Hindsight` (:28888)**.
+Agents Hosting using **`agent of empires` (:28080)**, **`amux-server` (:28824)**, **`cc-connect` (:9810)**, **`oh-my-pi` (`omp`)**, and **`Hindsight` (:28888)**.
 
 - **`aoe` (:28080):** Execution host, ACP (Agent Client Protocol) runner, TUI cockpit, git worktrees, diff review, and mobile Web PWA.
 - **`amux-server` (:28824):** Cognitive state store, durable Kanban board (`/api/board/cards`), turn-boundary message router (`/api/messages`), and cron scheduler (`/api/schedules`).
@@ -27,12 +27,13 @@ Agent Hosting using **`agent of empires` (:28080)**, **`amux-server` (:28824)**,
 
 ```
 mypai/
-├── Makefile / pyproject.toml / omp.env  # GNU buildenv, dependencies & supervisor config
+├── omp.env                              # `sandbox-ctl` Service config
+├── omp/agent/                           # Base profile Config, Memorybanks, Agents, Commands, Skills
 ├── aoe/ (config.toml, README.md)        # Agent of Empires daemon & ACP settings
+├── Makefile / pyproject.toml            # mypai_runtime Makefile, VENV dependencies
+├── src/mypai_runtime/                   # In-Kernel Python mypai_runtime (amux, hindsight, diagnostics)
 ├── bin/membank-ctl                      # Hindsight memory bank sync CLI
-├── src/mypai_runtime/                   # In-Kernel Python runtime (amux, hindsight, diagnostics)
 ├── tests/ (conftest.py, unit/, e2e/)    # Pytest suite (full amux REST, hindsight, diagnostics, E2E)
-├── omp/ (agent/                         # Base profile, memorybanks, agents, skills, sessions
 ├── submodules/                          # agents-shared, aur-packages, private-seeds
 └── references/ / USAGE.md / README.md   # Specifications, test docs & user manual
 ```
@@ -42,7 +43,6 @@ mypai/
 ## 3. Strict Fail-Fast Invariants
 
 1. **`httpx` Only:** Pure `httpx` in `mypai_runtime`. No defensive `urllib` fallbacks.
-2. **Managed Venv:** Use `~/.omp/python-env` as omp default venv,   executing from shell.
 4. **Loopback First:** Use in-kernel `tool.*` and AST tools over subshell spawning (`cat`, `grep`, `sed`).
 5. **`xd://` Tools Only:** Discover tools and propose plans via `xd://` (`write xd://propose`, `write xd://resolve`, `write xd://reject`, `read xd://`).
 6. **Explicit Errors:** Never use empty `except: pass`. Capture stack traces in `_LAST_ERROR` and raise typed domain exceptions.
@@ -71,20 +71,5 @@ mypai/
 
 ## 6. Agent Delegation Rules & Specialist Roster
 
-Map `@rolename` references to your harness's available subagents according to these specialization profiles:
-
-| Subagent | Specialization Profile | Key Responsibilities |
-| :--- | :--- | :--- |
-| **`@orchestrator`** | **Primary Project Coordinator** | Epic workflow planning, delegation, diff verification, final review, and strategic escalation. Default user-facing agent. |
-| **`@scout`** | **Codebase Discovery & Symbol Grapher** | Read-only AST symbol grapher, dependency call-tree mapper, and rapid architecture discovery. Emits structured findings via `yield`. |
-| **`@debugger`** | **Forensic Root-Cause Investigator** | 4-phase systematic debugging (Reproduce -> Isolate -> Hypothesize -> Fix & Verify), DAP live stack tracing, memory leak profiling. |
-| **`@pythonista`** | **Idiomatic Python Specialist** | Strict typing (mypy), async/await architectures, ruff/pytest compliance, and high-performance Python engineering. |
-| **`@task`** | **General Implementation Worker** | Multi-language feature implementation, refactoring, and multi-file code editing across project boundaries. |
-| **`@reviewer`** | **Code Quality & Safety Reviewer** | Multi-perspective code review, cross-boundary dispatch consistency, and P0–P3 structured severity findings. |
-| **`@security-reviewer`** | **Vulnerability Scanner** | Invariant validation, tainted data flow tracing, authorization checks, and CWE vulnerability detection. |
-| **`@designer`** | **UI/UX & Design System Specialist** | Token-first CSS/HTML, responsive layouts, accessibility (a11y), and visual design system integrity. |
-| **`@librarian`** | **External API & Source Researcher** | Source-grounded documentation analysis, cloning and inspecting upstream library sources to verify exact API contracts. |
-| **`@writer`** | **Technical Documentation Craftsman** | Technical guides, OpenAPI schemas, changelogs, and Hindsight memory bank distillation. |
-| **`@patcher`** | **Ultra-Fast Mechanical Patcher** | Rapid mechanical single-file fixes, typos, syntax patches, and near-zero latency data edits. |
-
 **Operating Role:** As a user-facing agent, assume the **`@orchestrator`** role.
+
