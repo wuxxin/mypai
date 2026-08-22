@@ -28,9 +28,13 @@ class HindsightClient:
         timeout: float = 15.0,
     ) -> None:
         self.base_url = (
-            base_url or os.environ.get("HINDSIGHT_API_URL", "http://localhost:28888")
+            os.path.expanduser(
+                os.path.expandvars(
+                    base_url or os.environ.get("HINDSIGHT_API_URL", "http://localhost:28888")
+                )
+            )
         ).rstrip("/")
-        self.client = httpx.Client(base_url=self.base_url, timeout=timeout)
+        self.client: httpx.Client = httpx.Client(base_url=self.base_url, timeout=timeout)
 
     def reflect(
         self,

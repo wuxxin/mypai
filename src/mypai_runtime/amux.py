@@ -19,9 +19,13 @@ class AmuxClient:
         timeout: float = 30.0,
     ) -> None:
         self.base_url = (
-            base_url or os.environ.get("AMUX_API_URL", "https://localhost:28824/api")
+            os.path.expanduser(
+                os.path.expandvars(
+                    base_url or os.environ.get("AMUX_API_URL", "https://localhost:28824/api")
+                )
+            )
         ).rstrip("/")
-        self.client = httpx.Client(
+        self.client: httpx.Client = httpx.Client(
             base_url=self.base_url,
             verify=verify,
             timeout=timeout,
@@ -32,7 +36,6 @@ class AmuxClient:
     # -------------------------------------------------------------------------
 
     def get(self, path: str, params: Optional[Dict[str, Any]] = None) -> Any:
-        """Execute a GET request against the amux REST API."""
         resp = self.client.get(path.lstrip("/"), params=params)
         resp.raise_for_status()
         return resp.json()
