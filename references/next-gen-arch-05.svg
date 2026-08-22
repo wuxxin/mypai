@@ -38,7 +38,7 @@
   <rect width="1100" height="700" class="bg" />
 
   <!-- Diagram Title -->
-  <text x="40" y="45" class="header-title">05 · Automated Scheduler &amp; amux-mypai-cron Event Reactor</text>
+  <text x="40" y="45" class="header-title">05 · Automated Scheduler &amp; mypai-cron Event Reactor</text>
   <text x="40" y="68" class="header-desc">Durable SQLite cron schedule triggers, in-process Python execution, loopback inspection, and autonomous escalation</text>
 
   <!-- Group 1: Scheduler Daemon -->
@@ -61,11 +61,11 @@
   <text x="75" y="380" class="code-text">Payload: "CRON: health_sweep"</text>
   <text x="75" y="400" class="code-text">Payload: "CRON: consolidate"</text>
   <text x="75" y="420" class="code-text">Payload: "CRON: daily_standup"</text>
-  <text x="75" y="440" class="code-text">Injects into amux-mypai-cron pane</text>
+  <text x="75" y="440" class="code-text">Injects into mypai-cron pane</text>
 
   <!-- Group 2: mypai-cron Agent Execution -->
   <rect x="380" y="95" width="350" height="570" class="group-box" />
-  <text x="395" y="120" class="group-label">2. amux-mypai-cron Session (omp eval)</text>
+  <text x="395" y="120" class="group-label">2. mypai-cron Session (omp eval)</text>
 
   <!-- System Instructions Trigger Box -->
   <rect x="395" y="140" width="320" height="100" class="card-green" />
@@ -113,7 +113,7 @@
   <text x="795" y="350" class="code-text">  title="Fix Broken Build",</text>
   <text x="795" y="370" class="code-text">  lane="Todo")</text>
   <text x="795" y="395" class="code-text">amux.post("messages",</text>
-  <text x="795" y="415" class="code-text">  target="mypai-workspace", ...)</text>
+  <text x="795" y="415" class="code-text">  target="mypai-main", ...)</text>
 
   <!-- Diagnostic Alert -->
   <rect x="775" y="455" width="270" height="185" class="card-red" />

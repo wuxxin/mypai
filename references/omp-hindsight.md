@@ -10,7 +10,7 @@ This document serves as an exhaustive reference for all up-to-date Hindsight con
 
 ## 1. Global Hindsight Configuration (`config.yml`)
 
-Hindsight configuration is declared under the `memory:` and `hindsight:` blocks in `omp/agent/config.yml` (and profile overrides in `omp/profiles/<profile>/config.yml`).
+Hindsight configuration is declared under the `memory:` and `hindsight:` blocks in `omp/agent/config.yml`.
 
 ```yaml
 memory:
@@ -88,9 +88,10 @@ hindsight:
 
 ## 2. Memory Bank & Mental Model Definitions (`*.yaml` / `*.json`)
 
-Bank definitions live in `omp/agent/memorybanks/` and `omp/profiles/<profile>/memorybanks/`. They configure extraction missions, disposition weights, and synthesized mental model queries.
+Bank definitions live in `omp/agent/memorybanks/`. They configure extraction missions, disposition weights, and synthesized mental model queries. During bootstrap in `omp.env`, memory banks are provisioned automatically:
 
-### Example: `omp/profiles/mypai/memorybanks/mypai.yaml`
+
+### Example: `omp/agent/memorybanks/mypai.yaml`
 
 ```yaml
 version: '1'
@@ -155,25 +156,7 @@ mental_models:
 
 ## 3. Environment Variables (`omp.env`)
 
-Environment variables override file configurations during sandbox launcher initialization:
-
-```bash
-# Hindsight Server Base URL
-export HINDSIGHT_API_URL="http://localhost:28888"
-
-# Target Memory Bank Identifier
-export HINDSIGHT_BANK_ID="mypai"
-```
-
-During bootstrap in `omp.env`, memory banks are provisioned automatically:
-
-```bash
-# Provision Base OMP Bank:
-${LAUNCHER_INSTALL_SOURCE:-.}/bin/membank-ctl update "$HINDSIGHT_API_URL" ${LAUNCHER_INSTALL_SOURCE:-.}/omp/agent/memorybanks --yes
-
-# Provision Profile Bank:
-${LAUNCHER_INSTALL_SOURCE:-.}/bin/membank-ctl update "$HINDSIGHT_API_URL" ${LAUNCHER_INSTALL_SOURCE:-.}/omp/profiles/mypai/memorybanks --yes
-```
+Environment variables set will **override file configurations**, **do NOT** set HINDSIGHT_BANK_ID in the omp env, or omp will always use BANK_ID from env instead from config.
 
 ---
 
@@ -187,14 +170,13 @@ ${LAUNCHER_INSTALL_SOURCE:-.}/bin/membank-ctl update "$HINDSIGHT_API_URL" ${LAUN
 # 1. Update/Provision memory banks from JSON or YAML definitions (Idempotent):
 membank-ctl update <API_URL> <BANKS_PATH> --yes [--prune]
 
-# Examples:
+# Example:
 ./bin/membank-ctl update http://localhost:28888 ./omp/agent/memorybanks --yes
-./bin/membank-ctl update http://localhost:28888 ./omp/profiles/mypai/memorybanks --yes --prune
 
 # 2. Export server memory bank configuration and mental models to YAML or JSON:
 membank-ctl export <API_URL> <bankname> [--json|--yaml] [--out filename]
 
-# Examples:
+# Example:
 ./bin/membank-ctl export http://localhost:28888 mypai --yaml --out mypai-exported.yaml
 ```
 

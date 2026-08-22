@@ -69,11 +69,9 @@ Provision the sandbox environment and generate the `omp` binary launcher in `~/.
 `sandbox-ctl install` performs the following automated steps:
 1. Copies configuration templates from `./aoe/*` into `$HOME/.config/agent-of-empires/` for the AoE execution host.
 2. Copies configuration templates from `./omp/agent/*` into `$HOME/.omp/agent/` for Base OMP.
-3. Copies configuration templates from `./omp/profiles/mypai/*` into `$HOME/.omp/profiles/mypai/agent/` for the MyPai profile.
-4. Generates minimal `$HOME/.amux/server.env` for the `amux-server` binary (`AMUX_RS_PORT=28824`, `AMUX_BACKEND=aoe`).
-5. Provisions the managed Base Python virtual environment at `$HOME/.omp/python-env` (containing `omp-rpc`, `mypai_runtime`, `arbor`, and `openadapt`).
-6. Provisions the MyPai Profile Python virtual environment at `$HOME/.omp/profiles/mypai/python-env` (containing `omp-rpc`, `mypai_runtime`, `httpx`, `pydantic`).
-7. Executes `membank-ctl update` to provision and seed Hindsight memory banks for `oh-my-pi` and `mypai`.
+3. Generates minimal `$HOME/.amux/server.env` for the `amux-server` binary (`AMUX_RS_PORT=28824`, `AMUX_BACKEND=aoe`).
+4. Provisions the managed Base Python virtual environment at `$HOME/.omp/python-env` (containing `omp-rpc`, `mypai_runtime`, `arbor`, and `openadapt`).
+5. Executes `membank-ctl update` to provision and seed Hindsight memory banks for `oh-my-pi` and `mypai`.
 
 ### 5. Launch Oh-my-PI & MyPai Mesh
 
@@ -135,10 +133,7 @@ mypai/
 ├── Makefile                         # Modern GNU Makefile (buildenv, test, lint, coverage)
 ├── pyproject.toml                   # Root package and test dependency definition
 ├── omp.env                          # Sandbox launcher & amux supervisor config
-├── amux/                            # amux server env, starter templates & fleet hooks (~/.amux/)
-│   ├── server.env                   # Process-level environment configuration
-│   ├── templates/                   # Session starter templates (software-project, etc.)
-│   └── hooks/                       # git-shared-guard.py, hook-report.sh
+
 ├── bin/
 │   └── membank-ctl                  # Hindsight sync CLI utility
 ├── src/
@@ -158,16 +153,6 @@ mypai/
 │   │   ├── agents/                  # orchestrator, debugger, pythonista, writer, patcher, scout, ...
 │   │   ├── skills/                  # ulw-plan, systematic-debugging, git-master, review-work, tdd
 │   │   └── commands/                # plan, ulw-plan, debug, review, git, scout, security, ...
-│   ├── profiles/
-│   │   └── mypai/                   # MyPai Profile (~/.omp/profiles/mypai/agent/)
-│   │       ├── config.yml, models.yml, mcp.json
-│   │       ├── memorybanks/         # mypai.yaml (8-model LifeOS bank)
-│   │       ├── agents/              # mypai.md (mypai-main, mypai-channel, mypai-cron)
-│   │       └── commands/            # learn.md, reflect.md
-│   └── sessions/                    # Canonical session starter instructions
-│       ├── mypai-main/              # CLAUDE.md for central brain & orchestrator
-│       ├── mypai-channel/           # CLAUDE.md for chat ingress gateway
-│       └── mypai-cron/              # CLAUDE.md for automation reactor
 ├── submodules/
 │   ├── agents-shared                # Shared infrastructure, sandbox-ctl, model downloaders
 │   ├── aur-packages                 # Custom ROCm/HIP PKGBUILDs

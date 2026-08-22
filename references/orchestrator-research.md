@@ -1,13 +1,13 @@
-# AI Agent Orchestration Architecture: amux, cc-connect, oh-my-pi & Agent of Empires
+# AI Agent Orchestration Architecture: Agent of Empires, , oh-my-pi, amux, cc-connect
 
 ## 1. Executive Summary & Core Stack
 
 The multi-agent system combines four specialized components into an autonomous, observable, and multi-channel Linux deployment:
 
+- **`Agent of Empires` (`aoe`) (Deep Inspector & Visual Cockpit):** Delivers rich TUI and Web PWA (`aoe serve`) monitoring, parsing OMP terminal breadcrumbs (`OMP_PROFILE`, `PI_PROFILE`), plan steps, uncommitted diffs, and structured ACP cards.
+- **`oh-my-pi` (`omp`) (Agent Execution Engine):** Runs both as an interactive terminal CLI, a headless tool-using runner, an **ACP (Agent Client Protocol) provider**, and an **in-process Python `eval` engine**. Configured with distinct profiles (`mypai` vs. default `oh-my-pi`).
 - **`amux` (Control Plane, Scheduler & Process Supervisor):** Manages native `tmux` agent sessions, SQLite event journaling, atomic card claiming, built-in cron schedulers (`/api/schedules`), and inter-worker messaging (`/api/messages`).
 - **`cc-connect` (Chat Bridge Gateway):** Provides external multi-platform messaging (Signal, Telegram, Slack, Discord) via WebSocket Bridge protocol and attaches directly to persistent `tmux` agent panes.
-- **`oh-my-pi` (`omp`) (Agent Execution Engine):** Runs both as an interactive terminal CLI, a headless tool-using runner, an **ACP (Agent Client Protocol) provider**, and an **in-process Python `eval` engine**. Configured with distinct profiles (`mypai` vs. default `oh-my-pi`).
-- **`Agent of Empires` (`aoe`) (Deep Inspector & Visual Cockpit):** Delivers rich TUI and Web PWA (`aoe serve`) monitoring, parsing OMP terminal breadcrumbs (`OMP_PROFILE`, `PI_PROFILE`), plan steps, uncommitted diffs, and structured ACP cards.
 
 ```mermaid
 flowchart TD
@@ -29,9 +29,9 @@ flowchart TD
     CC -->|"Keystrokes / Prompts"| Chan
 
     subgraph Sessions["Supervised Agent Sessions (tmux)"]
-        Chan["amux-mypai-channel<br/>(Profile: mypai | Frontend)<br/>• omp eval + tools<br/>• Messages mypai main"]
-        Work["amux-mypai-workspace<br/>(Profile: mypai | Main Brain)<br/>• Central Coordinator / Orchestrator<br/>• Coordinates all amux agents"]
-        Cron["amux-mypai-cron<br/>(Profile: mypai | Automation)<br/>• omp eval + tools<br/>• Messages mypai main"]
+        Chan["mypai-channel<br/>(Profile: mypai | Frontend)<br/>• omp eval + tools<br/>• Messages mypai main"]
+        Work["mypai-main<br/>(Profile: mypai | Main Brain)<br/>• Central Coordinator / Orchestrator<br/>• Coordinates all amux agents"]
+        Cron["mypai-cron<br/>(Profile: mypai | Automation)<br/>• omp eval + tools<br/>• Messages mypai main"]
         Tasks["amux-task-worker-N<br/>(Profile: normal | Sandboxed)<br/>• Task Execution"]
     end
 
@@ -56,16 +56,16 @@ flowchart TD
 
 `amux` supervises processes inside named `tmux` windows/panes (`amux-<name>`):
 
-1. **`mypai-workspace` (`amux-mypai-workspace`):**
-   - **Command:** `omp --profile mypai --directory mypai-workspace`
+1. **`mypai-main` (`mypai-main`):**
+   - **Command:** `omp --profile mypai --directory mypai-main`
    - **Role:** Main coordinator / `@orchestrator` brain (`mypai main`). Coordinates all `amux` agents, manages Kanban cards, assigns sub-tasks to workers, and instructs `mypai-channel` when user communication is needed.
-2. **`mypai-channel` (`amux-mypai-channel`):**
+2. **`mypai-channel` (`mypai-channel`):**
    - **Command:** `omp --profile mypai --directory mypai-channel`
-   - **Role:** Dedicated communication frontend. Listens to user inputs forwarded by `cc-connect`, uses `omp eval` and tools to parse requests, communicates with `mypai-workspace` (`mypai main`) via `amux` messaging, and formats outgoing responses.
-3. **`mypai-cron` (`amux-mypai-cron`):**
+   - **Role:** Dedicated communication frontend. Listens to user inputs forwarded by `cc-connect`, uses `omp eval` and tools to parse requests, communicates with `mypai-main` (`mypai main`) via `amux` messaging, and formats outgoing responses.
+3. **`mypai-cron` (`mypai-cron`):**
    - **Command:** `omp --profile mypai --directory mypai-cron`
-   - **Role:** Dedicated automation & scheduler executor. Receives timed triggers from `amux` scheduler, evaluates tasks via `omp eval` and in-process tools using the `omp` Python venv, and messages `mypai-workspace` (`mypai main`) with findings, cards, or required escalations.
-4. **On-Demand Task Workers (`amux-<task-name>`):**
+   - **Role:** Dedicated automation & scheduler executor. Receives timed triggers from `amux` scheduler, evaluates tasks via `omp eval` and in-process tools using the `omp` Python venv, and messages `mypai-main` (`mypai main`) with findings, cards, or required escalations.
+4. **On-Demand Task Workers (`<task-name>`):**
    - **Command:** `omp --directory <target-repo>` (Normal profile)
    - **Role:** Ephemeral or persistent specialist agents (`@fixer`, `@explorer`, etc.).
    - **Default Policy:** `amux` spawns normal profile `omp` sessions by default, ensuring isolated project sandboxes without mutating global MyPai profiles.
@@ -86,36 +86,36 @@ The following matrix defines the exact network protocol, socket, endpoint, and m
 | **Signal User** | `signal-cli-rest-api` | Signal Protocol (E2EE) on port `28080` | Inbound / Outbound messages |
 | **`signal-cli-rest-api`** | `signal_bridge.py` | WebSocket stream (`ws://localhost:28080/v1/receive/...`) | JSON event stream of raw Signal envelopes |
 | **`signal_bridge.py`** | `cc-connect` | WebSocket Bridge Protocol (`ws://localhost:9810/bridge/ws`) | Standardized bridge message framing |
-| **`cc-connect`** | **`amux-mypai-channel`** | Native `tmux` driver (`session="amux-mypai-channel"`, `pane="0"`) | **Inbound:** `tmux send-keys`<br/>**Outbound:** `tmux capture-pane` polling |
-| **`amux-mypai-channel`** | **`amux-mypai-workspace`** (`mypai main`) | Axum REST API via in-process `httpx` (`https://localhost:28824/api/messages`) | POST JSON payload with target `mypai-workspace` |
-| **`amux Scheduler`** | **`amux-mypai-cron`** | `amux-server` Rust scheduler daemon / steering queue | Direct prompt delivery (`CRON: <action>`) into session pane |
-| **`amux-mypai-cron`** | **`amux-mypai-workspace`** (`mypai main`) | Axum REST API via in-process `httpx` (`https://localhost:28824/api/messages` & `/api/board/cards`) | Status notifications, task dispatches, and Kanban cards |
-| **`amux-mypai-workspace`** (`mypai main`) | **`amux-mypai-channel`** | Axum REST API via in-process `httpx` (`https://localhost:28824/api/messages`) | User-facing responses to be output on channel pane |
-| **`amux-mypai-workspace`** (`mypai main`) | **`amux-task-worker-N`** | Axum REST API (`/api/sessions`, `/api/board/cards`, `/api/messages`) | Spawns normal-profile workers, claims cards, assigns sub-tasks |
-| **`amux-task-worker-N`** | **`amux-mypai-workspace`** (`mypai main`) | Axum REST API (`/api/messages`, `/api/board/cards/{id}`) | Task completion reports, diff confirmations, card status updates |
+| **`cc-connect`** | **`mypai-channel`** | Native `tmux` driver (`session="mypai-channel"`, `pane="0"`) | **Inbound:** `tmux send-keys`<br/>**Outbound:** `tmux capture-pane` polling |
+| **`mypai-channel`** | **`mypai-main`** (`mypai main`) | Axum REST API via in-process `httpx` (`https://localhost:28824/api/messages`) | POST JSON payload with target `mypai-main` |
+| **`amux Scheduler`** | **`mypai-cron`** | `amux-server` Rust scheduler daemon / steering queue | Direct prompt delivery (`CRON: <action>`) into session pane |
+| **`mypai-cron`** | **`mypai-main`** (`mypai main`) | Axum REST API via in-process `httpx` (`https://localhost:28824/api/messages` & `/api/board/cards`) | Status notifications, task dispatches, and Kanban cards |
+| **`mypai-main`** (`mypai main`) | **`mypai-channel`** | Axum REST API via in-process `httpx` (`https://localhost:28824/api/messages`) | User-facing responses to be output on channel pane |
+| **`mypai-main`** (`mypai main`) | **`amux-task-worker-N`** | Axum REST API (`/api/sessions`, `/api/board/cards`, `/api/messages`) | Spawns normal-profile workers, claims cards, assigns sub-tasks |
+| **`amux-task-worker-N`** | **`mypai-main`** (`mypai main`) | Axum REST API (`/api/messages`, `/api/board/cards/{id}`) | Task completion reports, diff confirmations, card status updates |
 | **All `omp` Sessions** | **Hindsight Service** | HTTP REST API on `http://localhost:28888` | Turn retention (`/retain`), recall (`/recall`), mental model reflection |
 | **`Agent of Empires` (`aoe`)** | **All `amux-*` Sessions** | **1. Tmux Introspection:** Terminal breadcrumbs (`session/capture/omp.rs`)<br/>**2. ACP Protocol:** stdio/IPC when `omp` runs in `omp acp` mode | Deep live inspection, TUI matrix navigation, Web PWA dashboard (`aoe serve`) |
 
 ### Connection Deep-Dive by Agent Session
 
-1. **`amux-mypai-channel` (Communication Gateway):**
+1. **`mypai-channel` (Communication Gateway):**
    - **Connected FROM:** `cc-connect` via tmux PTY/pane injection (`tmux send-keys`).
-   - **Connects TO:** `amux-mypai-workspace` via HTTP POST to `https://localhost:28824/api/messages` executed from `omp eval` using `httpx` / `mypai_http`.
+   - **Connects TO:** `mypai-main` via HTTP POST to `https://localhost:28824/api/messages` executed from `omp eval` using `httpx` / `mypai_http`.
    - **Connects TO:** `Hindsight` on `http://localhost:28888` for contextual user preference queries.
 
-2. **`amux-mypai-cron` (Timed Automation Engine):**
+2. **`mypai-cron` (Timed Automation Engine):**
    - **Connected FROM:** `amux-server` background scheduler loop via direct prompt injection.
-   - **Connects TO:** `amux-mypai-workspace` via HTTP POST (`/api/messages` and `/api/board/cards`) from `omp eval` using `httpx`.
+   - **Connects TO:** `mypai-main` via HTTP POST (`/api/messages` and `/api/board/cards`) from `omp eval` using `httpx`.
    - **Connects TO:** Host filesystem and git repos via `omp` loopback bridge (`tool.read`, `tool.search`).
 
-3. **`amux-mypai-workspace` (`mypai main` / Orchestrator):**
-   - **Connected FROM:** `amux-mypai-channel` and `amux-mypai-cron` via the `amux` message bus.
+3. **`mypai-main` (`mypai main` / Orchestrator):**
+   - **Connected FROM:** `mypai-channel` and `mypai-cron` via the `amux` message bus.
    - **Connects TO:** `amux-task-worker-N` by spawning them via `amux-server` session endpoints and dispatching Kanban cards.
-   - **Connects TO:** `amux-mypai-channel` via `POST /api/messages` when user interaction or confirmation is required.
+   - **Connects TO:** `mypai-channel` via `POST /api/messages` when user interaction or confirmation is required.
    - **Connects TO:** `Hindsight` (`bankId: mypai`) for strategic reflection and mental model tracking.
 
 4. **`amux-task-worker-N` (Execution Workers):**
-   - **Connected FROM:** `amux-mypai-workspace` via amux Kanban board cards and inter-worker messages.
+   - **Connected FROM:** `mypai-main` via amux Kanban board cards and inter-worker messages.
    - **Connects TO:** Target codebase directories with normal `omp` profiles and isolated project Hindsight banks.
    - **Observed BY:** `Agent of Empires` (`aoe`) for real-time diff analysis and tool-call step tracking.
 
@@ -125,32 +125,32 @@ The following matrix defines the exact network protocol, socket, endpoint, and m
 1. The user sends a message via Signal.
 2. `signal-cli-rest-api` emits a webhook event to `signal_bridge.py`.
 3. `signal_bridge.py` forwards the message over WebSocket (`ws://localhost:9810/bridge/ws`) to `cc-connect`.
-4. `cc-connect` (configured with `agent = "tmux"` and `session = "amux-mypai-channel"`) writes keystrokes into the persistent `mypai-channel` tmux pane.
+4. `cc-connect` (configured with `agent = "tmux"` and `session = "mypai-channel"`) writes keystrokes into the persistent `mypai-channel` tmux pane.
 
 ### Inter-Agent Orchestration Loop (eval ➔ amux msg ➔ mypai main)
 1. `mypai-channel` receives user input, executes an in-process `eval` / tool pass to parse intent and extract structured metadata.
-2. `mypai-channel` dispatches instructions to `mypai-workspace` (`mypai main`) via `amux` REST API:
+2. `mypai-channel` dispatches instructions to `mypai-main` (`mypai main`) via `amux` REST API:
    ```python
    import httpx
 
    httpx.post(
        "https://localhost:28824/api/messages",
        json={
-           "target": {"worker_name": "mypai-workspace"},
+           "target": {"worker_name": "mypai-main"},
            "body": "User requested refactoring of auth module in repo XYZ"
        },
        verify=False
    )
    ```
-3. Similarly, `mypai-cron` receives periodic `CRON:` triggers, executes `eval` + loopback tools (checking repo states, APIs, metrics), and dispatches reports or files task cards to `mypai-workspace`.
-4. `mypai-workspace` (`mypai main`) receives message turns from both `channel` and `cron`, updates the amux board (`POST /api/board/cards`), claims tasks, and invokes worker sessions (`omp --directory repos/XYZ`).
-5. Workers execute actions, reporting progress and results back to `mypai-workspace`.
+3. Similarly, `mypai-cron` receives periodic `CRON:` triggers, executes `eval` + loopback tools (checking repo states, APIs, metrics), and dispatches reports or files task cards to `mypai-main`.
+4. `mypai-main` (`mypai main`) receives message turns from both `channel` and `cron`, updates the amux board (`POST /api/board/cards`), claims tasks, and invokes worker sessions (`omp --directory repos/XYZ`).
+5. Workers execute actions, reporting progress and results back to `mypai-main`.
 
 ### Outbound Notification Flow (Agent ➔ User)
-1. `mypai-workspace` completes the job or requires user confirmation.
-2. `mypai-workspace` sends an amux message targeting `mypai-channel`.
+1. `mypai-main` completes the job or requires user confirmation.
+2. `mypai-main` sends an amux message targeting `mypai-channel`.
 3. `mypai-channel` crafts the user-facing response and outputs it to its terminal.
-4. `cc-connect` captures the output from `amux-mypai-channel` pane and transmits the response back through `signal_bridge.py` ➔ `signal-cli-rest-api` ➔ Signal.
+4. `cc-connect` captures the output from `mypai-channel` pane and transmits the response back through `signal_bridge.py` ➔ `signal-cli-rest-api` ➔ Signal.
 
 
 ## 5. `amux` Scheduler Architecture & `mypai-cron` Execution Engine
@@ -159,7 +159,7 @@ The following matrix defines the exact network protocol, socket, endpoint, and m
 - **Architecture:** The `amux` scheduler is a **global, SQLite-backed background daemon engine** hosted inside `crates/amux-server/src/runtime_jobs/scheduler.rs`.
 - **Targeting:** While the schedule registry is global across the entire `amux` server, individual schedule entries are **scoped directly to specific target agent sessions** via the `session` (or `worker`) field, or set to `kind = "shell"` for unattached jobs:
   - When a session-bound schedule fires, `amux` delivers the command/prompt directly to the targeted worker's turn boundary (or steering queue).
-  - To prevent queue collisions and latency in interactive or main orchestration lanes, all periodic and timed cron jobs target the dedicated **`mypai-cron`** session (`amux-mypai-cron`).
+  - To prevent queue collisions and latency in interactive or main orchestration lanes, all periodic and timed cron jobs target the dedicated **`mypai-cron`** session (`mypai-cron`).
 
 ### Schedule Definition via `amux` REST API
 Periodic tasks are registered with standard cron syntax via Python `eval`:
@@ -227,13 +227,13 @@ When you receive a message starting with `CRON: <action>`, you MUST NOT make seq
 
 ### Built-in Helper Functions available in Python `eval`
 The following standard helpers are available from `mypai_http`:
-- `amux.post("messages", target={"worker_name": "mypai-workspace"}, body="...")`: Sends inter-worker messages to `mypai-workspace` or `mypai-channel`.
+- `amux.post("messages", target={"worker_name": "mypai-main"}, body="...")`: Sends inter-worker messages to `mypai-main` or `mypai-channel`.
 - `amux.post("board/cards", title="...", description="...", status="Todo")`: Creates Kanban cards on amux board.
 - `tool.recall("..."): Queries Hindsight memory on the session's default bank.`
 - `signal.post("send", number="+12345", recipients=["+12345"], message="...")`: Outbound Signal notification.
 
 ### Action Handlers
-- `CRON: health_sweep`: Run git status / build checks across workspaces; if failures occur, file an amux card and message `mypai-workspace`.
+- `CRON: health_sweep`: Run git status / build checks across workspaces; if failures occur, file an amux card and message `mypai-main`.
 - `CRON: memory_consolidation`: Trigger Hindsight `/consolidate` and mental model refresh endpoints.
 - `CRON: daily_standup`: Collect completed task cards from amux API and instruct `mypai-channel` to post summary to Signal.
 ```
@@ -249,7 +249,7 @@ uncommitted = tool.read("scratch/build-status.json")
 # 2. Check amux server metrics via high-level HTTP client
 metrics = amux.get("metrics")
 
-# 3. If anomaly detected, dispatch card and notify mypai-workspace
+# 3. If anomaly detected, dispatch card and notify mypai-main
 if metrics.get("failed_runs", 0) > 0:
     amux.post(
         "board/cards",
@@ -259,7 +259,7 @@ if metrics.get("failed_runs", 0) > 0:
     )
     amux.post(
         "messages",
-        target={"worker_name": "mypai-workspace"},
+        target={"worker_name": "mypai-main"},
         body=f"CRON health_sweep: {metrics['failed_runs']} jobs failed. Card filed."
     )
 
@@ -282,7 +282,7 @@ print("CRON: health_sweep completed successfully.")
 
 Hindsight vector memory and mental model reflection behave differently across profiles:
 
-| Dimension | Default Profile (`~/.omp/agent/config.yml`) | MyPai Profile (`~/.omp/profiles/mypai/config.yml`) |
+| Dimension | Default Profile (`~/.omp/agent/config.yml`) | MyPai Profile |
 | :--- | :--- | :--- |
 | **`hindsight.bankId`** | `oh-my-pi` | `mypai` |
 | **`hindsight.scoping`** | `per-project-tagged` | `global` |
@@ -340,7 +340,7 @@ try:
     # 3. Retain turn observation using omp's native retain tool
     tool.retain(items=[{
         "content": f"Turn Summary: Processed '{input_text}' under active mental models. Outcome: Connection pool validated.",
-        "context": "mypai-workspace:turn-execution"
+        "context": "mypai-main:turn-execution"
     }])
 
     # 4. Success: Stay completely silent (no stdout) to prevent context pollution
@@ -383,7 +383,7 @@ agent_session_idle_timeout_mins = 0
 type = "tmux"
 
 [projects.agent.options]
-session = "amux-mypai-channel"
+session = "mypai-channel"
 pane = "0"
 auto_create = false
 prompt_pattern = "[❯\\$#>%]\\s*$"

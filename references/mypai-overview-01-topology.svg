@@ -36,7 +36,7 @@
   <!-- Connectors (Drawn behind node boxes) -->
   <!-- 1. User/Signal to cc-connect -->
   <line x1="168" y1="216" x2="232" y2="216" stroke="#2e5aa8" stroke-width="1.2" marker-end="url(#arrow-link)"/>
-  
+
   <!-- 2. cc-connect to mypai-channel (turn delivery) -->
   <line x1="392" y1="216" x2="456" y2="216" stroke="#4f5d75" stroke-width="1" marker-end="url(#arrow)"/>
 
@@ -94,7 +94,7 @@
   <text x="312" y="214" class="node-title">cc-connect</text>
   <text x="312" y="232" class="node-sub">:9810 · tmux-driver</text>
 
-  <!-- Node 3: amux-mypai-channel -->
+  <!-- Node 3: mypai-channel -->
   <rect x="456" y="168" width="160" height="96" rx="6" fill="#f5f5f5"/>
   <rect x="456" y="168" width="160" height="96" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
   <rect x="464" y="174" width="40" height="12" rx="2" fill="transparent" stroke="#2d3142" stroke-width="0.8"/>
@@ -118,7 +118,7 @@
   <text x="888" y="326" class="node-title">mypai-main</text>
   <text x="888" y="344" class="node-sub">TELOS · Kanban Owner</text>
 
-  <!-- Node 6: amux-mypai-cron -->
+  <!-- Node 6: mypai-cron -->
   <rect x="808" y="168" width="160" height="96" rx="6" fill="#f5f5f5"/>
   <rect x="808" y="168" width="160" height="96" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
   <rect x="816" y="174" width="36" height="12" rx="2" fill="transparent" stroke="#2d3142" stroke-width="0.8"/>

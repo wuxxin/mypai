@@ -69,7 +69,7 @@
   <text x="70" y="515" class="title-text">cc-connect</text>
   <text x="70" y="535" class="sub-text">Bridge Server (:9810)</text>
   <text x="70" y="555" class="code-text">agent = "tmux"</text>
-  <text x="70" y="570" class="code-text">target = amux-mypai-channel</text>
+  <text x="70" y="570" class="code-text">target = mypai-channel</text>
 
   <!-- Ingress Connectors -->
   <path d="M 150 210 L 150 250" class="conn-active" marker-end="url(#arrow)" />
@@ -115,15 +115,15 @@
 
   <!-- mypai-channel Session -->
   <rect x="595" y="140" width="240" height="120" class="card-green" />
-  <text x="610" y="165" class="title-text">amux-mypai-channel</text>
+  <text x="610" y="165" class="title-text">mypai-channel</text>
   <text x="610" y="185" class="sub-text">omp --profile mypai (Channel)</text>
   <text x="610" y="205" class="code-text">• omp eval + loopback tools</text>
   <text x="610" y="225" class="code-text">• User Intent Translation</text>
   <text x="610" y="245" class="code-text">• Outputs reply to cc-connect</text>
 
-  <!-- mypai-workspace Session -->
+  <!-- mypai-main Session -->
   <rect x="595" y="280" width="240" height="135" class="card-highlight" />
-  <text x="610" y="305" class="title-text">amux-mypai-workspace</text>
+  <text x="610" y="305" class="title-text">mypai-main</text>
   <text x="610" y="325" class="sub-text">omp --profile mypai (Main)</text>
   <text x="610" y="345" class="code-text">• Central Coordinator / Brain</text>
   <text x="610" y="365" class="code-text">• Manages Tasks &amp; Claims</text>
@@ -132,7 +132,7 @@
 
   <!-- mypai-cron Session -->
   <rect x="595" y="435" width="240" height="110" class="card-accent" />
-  <text x="610" y="460" class="title-text">amux-mypai-cron</text>
+  <text x="610" y="460" class="title-text">mypai-cron</text>
   <text x="610" y="480" class="sub-text">omp --profile mypai (Cron)</text>
   <text x="610" y="500" class="code-text">• Listens to CRON: triggers</text>
   <text x="610" y="520" class="code-text">• Executes in-process eval</text>
@@ -169,11 +169,11 @@
   <!-- Inter-Component Cross Connections -->
   <!-- cc-connect to mypai-channel -->
   <path d="M 245 540 Q 550 540 595 200" class="conn-green" marker-end="url(#arrow-green)" />
-  
+
   <!-- mypai-channel to amux-server message API -->
   <path d="M 595 220 L 535 220" class="conn-active" marker-end="url(#arrow)" />
 
-  <!-- amux-server to mypai-workspace -->
+  <!-- amux-server to mypai-main -->
   <path d="M 535 240 L 595 310" class="conn-active" marker-end="url(#arrow)" />
 
   <!-- scheduler to mypai-cron -->
@@ -182,7 +182,7 @@
   <!-- mypai-cron to amux-server -->
   <path d="M 595 490 L 535 260" class="conn-orange" marker-end="url(#arrow-orange)" />
 
-  <!-- mypai-workspace to workers -->
+  <!-- mypai-main to workers -->
   <path d="M 715 415 L 715 565" class="conn-active" marker-end="url(#arrow)" />
 
   <!-- All sessions to AoE -->

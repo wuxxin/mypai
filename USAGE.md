@@ -73,10 +73,10 @@ To directly inspect or interact with any active session pane:
 tmux attach -t amux-mypai-main
 
 # Attach to the communication gateway
-tmux attach -t amux-mypai-channel
+tmux attach -t mypai-channel
 
 # Attach to the cron reactor
-tmux attach -t amux-mypai-cron
+tmux attach -t mypai-cron
 
 # Attach to an active task worker
 tmux attach -t amux-task-worker-1
@@ -211,7 +211,7 @@ amux.create_schedule(
 ```
 
 ### What Happens When Cron Fires:
-1. `amux-server` injects `CRON: health_sweep ...` into `amux-mypai-cron`.
+1. `amux-server` injects `CRON: health_sweep ...` into `mypai-cron`.
 2. `mypai-cron` executes an in-kernel `eval` cell:
    - Probes git status and FIXME markers via native `tool.search()`.
    - Checks server metrics via `amux.get_metrics()`.

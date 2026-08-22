@@ -29,9 +29,9 @@ By strictly leveraging **in-kernel Python `eval` execution** paired with native 
 ![01 · Global System Topology & Multi-Session Control Plane](next-gen-arch-01.svg)
 
 **Key Architectural Aspects:**
-1. **Single Entry Point (`cc-connect`):** Directs incoming Signal chat into `amux-mypai-channel` without spawning new child sessions.
+1. **Single Entry Point (`cc-connect`):** Directs incoming Signal chat into `mypai-channel` without spawning new child sessions.
 2. **Central Nervous System (`amux-mypai-main`):** Acts as `@orchestrator` (`mypai main`), coordinating all tasks and delegating work to ephemeral task workers (`amux-task-worker-N`).
-3. **Dedicated Automation Lane (`amux-mypai-cron`):** Receives scheduled cron triggers from `amux-server` without blocking interactive chat.
+3. **Dedicated Automation Lane (`mypai-cron`):** Receives scheduled cron triggers from `amux-server` without blocking interactive chat.
 4. **Unified Observability (`aoe`):** Connects to all sessions concurrently over tmux sockets and ACP protocol for live monitoring.
 
 ---
@@ -40,7 +40,7 @@ By strictly leveraging **in-kernel Python `eval` execution** paired with native 
 ![02 · Inter-Agent Orchestration & Communication Sequence](next-gen-arch-02.svg)
 
 **Lifecycle of a User Request:**
-1. **User Signal Prompt ➔ `cc-connect`:** Delivered via WebSocket bridge into `amux-mypai-channel`.
+1. **User Signal Prompt ➔ `cc-connect`:** Delivered via WebSocket bridge into `mypai-channel`.
 2. **Intent Parsing & Translation:** `mypai-channel` runs Python `eval` with loopback tools to extract repository names and intent.
 3. **Inter-Worker Dispatch:** Dispatches request to `mypai-main` via `httpx.post("https://localhost:28824/api/messages", ...)`.
 4. **Kanban Work Claim:** `mypai-main` moves task card to `Doing`, launches `amux-task-worker-1` with normal `omp` profile.
@@ -76,11 +76,11 @@ By strictly leveraging **in-kernel Python `eval` execution** paired with native 
 
 ---
 
-### Blueprint 05: Automated Scheduler & `amux-mypai-cron` Event Reactor
-![05 · Automated Scheduler & amux-mypai-cron Event Reactor](next-gen-arch-05.svg)
+### Blueprint 05: Automated Scheduler & `mypai-cron` Event Reactor
+![05 · Automated Scheduler & mypai-cron Event Reactor](next-gen-arch-05.svg)
 
 **Autonomous Cron Execution Loop:**
-1. **Durable Trigger:** `amux-server` cron scheduler fires `CRON: <action>` directly into `amux-mypai-cron`.
+1. **Durable Trigger:** `amux-server` cron scheduler fires `CRON: <action>` directly into `mypai-cron`.
 2. **Immediate Python `eval` Execution:** Agent system prompt directs `mypai-cron` to execute Python `eval` cells without sequential terminal commands.
 3. **Loopback Probing:** Inspects file trees, git status, and metrics via `tool.search()`, `tool.read()`, and `amux.get_metrics()`.
 4. **Conditional Routing:**

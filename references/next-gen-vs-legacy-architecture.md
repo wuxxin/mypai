@@ -4,7 +4,7 @@
 
 This document presents a comprehensive, component-by-component comparison between the **Legacy Architecture** defined in [`submodules/omp-mypai`](file:///home/wuxxin/agent-shared/code/mypai/submodules/omp-mypai) (skills/mypai_tools/references) and the **Next-Generation Architecture** (`amux` + `cc-connect` + `oh-my-pi` + `aoe`).
 
-The core transformation replaces custom, single-process Python daemon glue (`mypai_daemon` on `:52080` managing a single `omp --mode rpc` child) with a distributed, multi-session control plane where **`mypai-workspace` (main)**, **`mypai-channel`**, and **`mypai-cron`** strictly **double down on in-kernel Python `eval`** (`lang: "py"`) to coordinate, execute, and automate.
+The core transformation replaces custom, single-process Python daemon glue (`mypai_daemon` on `:52080` managing a single `omp --mode rpc` child) with a distributed, multi-session control plane where **`mypai-main` (main)**, **`mypai-channel`**, and **`mypai-cron`** strictly **double down on in-kernel Python `eval`** (`lang: "py"`) to coordinate, execute, and automate.
 
 ---
 
@@ -28,8 +28,8 @@ The core transformation replaces custom, single-process Python daemon glue (`myp
 ├────────────────────────────────────────────────────────────────────────────────────────────────────────┤
 │ • Decentralized Rust Control Plane (`amux-server` on :28824) supervising native tmux agent sessions     │
 │ • 3 Dedicated Persistent `mypai` profile sessions (`workspace`, `channel`, `cron`) + Ephemeral Workers │
-│ • `cc-connect` WebSocket Bridge (:9810) attached directly to `amux-mypai-channel` tmux pane           │
-│ • `amux` Durable Scheduler Engine firing triggers directly into `amux-mypai-cron`                     │
+│ • `cc-connect` WebSocket Bridge (:9810) attached directly to `mypai-channel` tmux pane           │
+│ • `amux` Durable Scheduler Engine firing triggers directly into `mypai-cron`                     │
 │ • `Agent of Empires` (`aoe` / `aoe serve`) providing rich TUI matrix & Web PWA observability          │
 │ • Dual-Profile Hindsight isolation: Global strategic models (`mypai`) vs Project-tagged facts (`omp`) │
 │ • Execution driven 100% by In-Kernel Python `eval` with Loopback Host Tools (`tool.*`)                │
@@ -43,9 +43,9 @@ The core transformation replaces custom, single-process Python daemon glue (`myp
 | Subsystem | Legacy Architecture (`omp-mypai`) | Next-Generation Architecture | Transformation Rationale |
 | :--- | :--- | :--- | :--- |
 | **Control Plane & Process Supervisor** | Custom `mypai_daemon` (FastAPI, Uvicorn, port `52080`). Manages one `omp_rpc` child via stdio pipes. | **`amux-server`** (Rust, Axum, port `28824`). Supervises multiple native `tmux` agent sessions (`amux-*`). | Eliminates stdio pipe locking, recovers automatically via tmux, provides atomic SQLite CAS state, native Kanban boards, and structured inter-worker message bus. |
-| **Session Topography** | Single monolithic agent session trying to handle chat, cron, and task execution simultaneously. | **Partitioned multi-session topology**: `mypai-workspace` (Brain), `mypai-channel` (Frontend), `mypai-cron` (Automation), `task-worker-N` (Execution). | Prevents interactive chat lockup when heavy tasks or cron jobs are executing; guarantees dedicated lane concurrency. |
+| **Session Topography** | Single monolithic agent session trying to handle chat, cron, and task execution simultaneously. | **Partitioned multi-session topology**: `mypai-main` (Brain), `mypai-channel` (Frontend), `mypai-cron` (Automation), `task-worker-N` (Execution). | Prevents interactive chat lockup when heavy tasks or cron jobs are executing; guarantees dedicated lane concurrency. |
 | **Turn Serialization & Concurrency** | Custom in-memory `TurnQueue` with priority-flush state machine (Abort ➔ Steer ➔ Callback ➔ Prompt). | **`amux` Native Inter-Worker Bus (`POST /api/messages`)** & turn steering queue per tmux pane. | Replaces 2000+ lines of custom Python queue state-machine code with robust, persistent, SQLite-backed message routing. |
-| **External Ingress & Chat Gateway** | `signal_chat` FastMCP tool server (`read_message`, `send_message`) with polling and webhook router. | **`cc-connect`** Gateway (:9810) with native tmux driver (`agent = "tmux"`, `session = "amux-mypai-channel"`). | Multi-platform chat support (Signal, Telegram, Slack, Discord) out-of-the-box; zero custom MCP server maintenance. |
+| **External Ingress & Chat Gateway** | `signal_chat` FastMCP tool server (`read_message`, `send_message`) with polling and webhook router. | **`cc-connect`** Gateway (:9810) with native tmux driver (`agent = "tmux"`, `session = "mypai-channel"`). | Multi-platform chat support (Signal, Telegram, Slack, Discord) out-of-the-box; zero custom MCP server maintenance. |
 | **Scheduled Automation & Cron** | In-daemon APScheduler + SQLite DB (`add_job`, `run_once`, `list_jobs`) enqueuing prompt turns. | **`amux` Durable Scheduler Engine** (`POST /api/schedules`) firing `CRON: <action>` prompts directly to `mypai-cron`. | Decouples automation from the chat/orchestration loop; schedules are durable across daemon restarts. |
 | **Subagent Task Delegation** | Custom `AcpDelegationManager` spawning `omp --mode acp` workers, saving `acp_execution_array`. | **`amux` Board Cards (`POST /api/board/cards`)** + on-demand worker sessions (`omp --directory <dir>`). | Native Kanban workflow (`Todo ➔ Doing ➔ Done`); unifies manual user tasks and automated worker tasks under one board. |
 | **Memory & Knowledge Isolation** | Single Hindsight bank (`oh-my-pi` or `mypai`), often flooded with compilation logs, tool outputs, and diffs. | **Dual-Profile Hindsight Isolation**: `mypai` profile (Global scoping, mental models, manual recall/retain) vs `oh-my-pi` profile (Project-tagged, auto-retain). | Keeps strategic user preferences and high-level decisions clean from transient task noise. |
@@ -56,7 +56,7 @@ The core transformation replaces custom, single-process Python daemon glue (`myp
 
 ## 2. Doubling Down on In-Kernel Python `eval`
 
-In the next-generation architecture, **all coordination, execution, and automation logic across `mypai-workspace`, `mypai-channel`, and `mypai-cron` is executed directly via in-process Python `eval` cells.**
+In the next-generation architecture, **all coordination, execution, and automation logic across `mypai-main`, `mypai-channel`, and `mypai-cron` is executed directly via in-process Python `eval` cells.**
 
 ### Why Python `eval` Surpasses Custom Daemon Code & Shell Calls
 
@@ -73,9 +73,9 @@ In the next-generation architecture, **all coordination, execution, and automati
 
 ## 3. Concrete In-Kernel Execution Patterns
 
-### Pattern A: `amux-mypai-channel` (Chat Ingress & Intent Translation)
+### Pattern A: `mypai-channel` (Chat Ingress & Intent Translation)
 
-`mypai-channel` receives raw text from the user via `cc-connect` and uses Python `eval` to query mental models, parse intent, and dispatch structured tasks to `mypai-workspace`.
+`mypai-channel` receives raw text from the user via `cc-connect` and uses Python `eval` to query mental models, parse intent, and dispatch structured tasks to `mypai-main`.
 
 ```python
 from mypai_http import amux
@@ -94,14 +94,14 @@ try:
     # 2. Incoming message processing
     user_input = "Please refactor the auth middleware in repo backend-core."
     
-    # 3. Intent parsing & structured dispatch to mypai-workspace
+    # 3. Intent parsing & structured dispatch to mypai-main
     amux.post(
         "messages",
-        target={"worker_name": "mypai-workspace"},
+        target={"worker_name": "mypai-main"},
         body=f"USER_REQUEST: {user_input}\nPREFERENCES: {_USER_PREFS[:100]}"
     )
     
-    # 4. Success: Silent execution (user response will come via mypai-workspace callback)
+    # 4. Success: Silent execution (user response will come via mypai-main callback)
 
 except Exception as err:
     _LAST_ERROR = err
@@ -110,9 +110,9 @@ except Exception as err:
 
 ---
 
-### Pattern B: `amux-mypai-workspace` (Main Orchestrator & Task Coordinator)
+### Pattern B: `mypai-main` (Main Orchestrator & Task Coordinator)
 
-`mypai-workspace` receives turns from `channel` and `cron`, manages the `amux` Kanban board, spawns workers, and retains strategic outcomes to Hindsight.
+`mypai-main` receives turns from `channel` and `cron`, manages the `amux` Kanban board, spawns workers, and retains strategic outcomes to Hindsight.
 
 ```python
 from mypai_http import amux
@@ -162,7 +162,7 @@ except Exception as err:
 
 ---
 
-### Pattern C: `amux-mypai-cron` (Automated Probing, Sweeps & Escalation)
+### Pattern C: `mypai-cron` (Automated Probing, Sweeps & Escalation)
 
 `mypai-cron` receives periodic `CRON:` prompts from `amux-server` and runs Python `eval` inspection routines without human intervention.
 
@@ -184,7 +184,7 @@ try:
 
     # 3. Conditional evaluation:
     if failed_runs > 0 or "FAILED" in build_log:
-        # Action required: escalate to mypai-workspace
+        # Action required: escalate to mypai-main
         amux.post(
             "board/cards",
             title="Investigate Build / Cron Failures",
@@ -193,7 +193,7 @@ try:
         )
         amux.post(
             "messages",
-            target={"worker_name": "mypai-workspace"},
+            target={"worker_name": "mypai-main"},
             body=f"CRON Alert: Build anomalies detected. New card filed."
         )
     else:
@@ -214,6 +214,6 @@ except Exception as err:
 2. **Context Window Efficiency:**
    Replacing conversational CLI tool chains with in-kernel Python `eval` reduces turn context consumption by **60–80%**, while strict silence on success keeps the token history immaculate.
 3. **Pure Separation of Concerns:**
-   Strategic governance and user preferences live in `mypai-workspace` and the `mypai` memory bank; frontend messaging lives in `mypai-channel`; automated background operations live in `mypai-cron`; heavy code execution lives in isolated task workers.
+   Strategic governance and user preferences live in `mypai-main` and the `mypai` memory bank; frontend messaging lives in `mypai-channel`; automated background operations live in `mypai-cron`; heavy code execution lives in isolated task workers.
 4. **Complete Observability:**
    Every session, breadcrumb, ACP tool card, diff, and Kanban state change is live-rendered and interactive in `Agent of Empires` (`aoe`).

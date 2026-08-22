@@ -5,7 +5,7 @@
 The **MyPAI Architecture** unifies autonomous personal assistance, multi-channel chat routing, scheduled automation, and codebase engineering across a distributed multi-session mesh. Powered by **`amux`**, **`cc-connect`**, **`oh-my-pi` (`omp`)**, and **`Agent of Empires` (`aoe`)**, the system eliminates monolithic daemon bottlenecks and replaces conversational shell scripting with **in-kernel Python `eval` execution (`lang: "py"`)**, **native loopback host tools (`tool.*`)**, and **isolated dual-profile Hindsight memory banks**.
 
 ### Self-Contained Repository Architecture (No Plugin Required)
-MyPAI eliminates the legacy `omp-mypai` plugin and submodule entirely. Because the monolithic daemon and old MCP wrappers are retired, OMP profiles (`~/.omp/agent/` and `~/.omp/profiles/mypai/agent/`) load natively from filesystem templates, while the in-kernel runtime library (`mypai_runtime`) and management utilities (`bin/membank-ctl`) live directly inside the root `mypai` repository. This eliminates plugin loader latency, removes git submodule friction, and makes `mypai` a clean, standalone repository.
+MyPAI eliminates the legacy `omp-mypai` plugin and submodule entirely. Because the monolithic daemon and old MCP wrappers are retired, OMP profiles (`~/.omp/agent/` load natively from filesystem templates, while the in-kernel runtime library (`mypai_runtime`) and management utilities (`bin/membank-ctl`) live directly inside the root `mypai` repository. This eliminates plugin loader latency, removes git submodule friction, and makes `mypai` a clean, standalone repository.
 
 ---
 
@@ -110,7 +110,6 @@ Oh-My-Pi resolves Python virtual environments per profile. When an agent execute
 
 1. **Active / Project Virtualenv:** `$VIRTUAL_ENV` or `./.venv` in the active working directory.
 2. **Managed Profile Virtualenv:**
-   - For profile `mypai` (`omp --profile mypai`): `~/.omp/profiles/mypai/python-env`
    - For default profile (`omp`): `~/.omp/python-env`
 3. **System Interpreter:** `/usr/bin/python` (fallback).
 
@@ -124,14 +123,6 @@ flowchart LR
         B_Rpc["omp-rpc & arbor"]
         B_Run["mypai_runtime<br/>(amux.send_message, wait_for_response)"]
         B_Pkgs["openadapt, httpx, pydantic"]
-    end
-
-    subgraph ProfileEnv["MyPAI Profile Venv (~/.omp/profiles/mypai/python-env)"]
-        direction TB
-        P_Py["bin/python (Python 3.14)"]
-        P_Rpc["omp-rpc (Native RPC SDK)"]
-        P_Run["mypai_runtime<br/>(amux, hindsight, diagnostics)"]
-        P_Pkgs["httpx, pydantic, fastmcp"]
     end
 
     subgraph TaskWorkers["Task Worker Sessions (amux-task-worker-N)"]
@@ -148,14 +139,13 @@ flowchart LR
     end
 
     BaseEnv -->|"Managed Interpreter & Runtime"| TaskWorkers
-    ProfileEnv -->|"Managed Interpreter & Full Stack"| CoreSessions
-    TaskWorkers -.->|"Global PYTHONPATH Fallback"| B_Run
+    BaseEnv -->|"Managed Interpreter & Runtime"| CoreSessions
 ```
 
 #### How Normal Profile Agents Access `amux.send_message`
 Normal profile agents (`omp --directory <repo>`) must be able to communicate with `mypai-main` seamlessly, regardless of whether they execute inside the managed base venv (`~/.omp/python-env`) or an active repo-local venv (`./.venv`).
 
-1. **Dual Venv Installation:** Both `~/.omp/python-env` and `~/.omp/profiles/mypai/python-env` have `mypai_runtime` and `amux` installed during `LAUNCHER_INSTALL_CMDS`.
+1. **Venv Installation:** `~/.omp/python-env` has `mypai_runtime` installed during `LAUNCHER_INSTALL_CMDS`.
 2. **Global Fallback via `PYTHONPATH`:** `omp.env` exports `PYTHONPATH="$HOME/.omp/python-env/lib/python3.14/site-packages:$PYTHONPATH"`. Even if a task worker runs inside a target repository's `.venv`, Python will cleanly resolve `import amux` or `from mypai_runtime import amux`.
 3. **Strict Fail-Fast Engine:** `amux.py` is engineered with `httpx` for connection pooling, keep-alive, and clean typed JSON response validation.
 
@@ -264,7 +254,7 @@ amux = AmuxClient()
 
 ## 4. Agent Roles, Input Inspection & Reaction Protocols
 
-### Role 1: `amux-mypai-channel` (Chat Ingress & User Gateway)
+### Role 1: `mypai-channel` (Chat Ingress & User Gateway)
 
 - **System Context & Responsibility:** Acts as the single point of contact between the human user (via `cc-connect` over Signal/Telegram) and the MyPAI mesh.
 - **Input Inspection:**
@@ -342,7 +332,7 @@ except Exception as err:
 
 ---
 
-### Role 3: `amux-mypai-cron` (Durable Automation & Probing Reactor)
+### Role 3: `mypai-cron` (Durable Automation & Probing Reactor)
 
 - **System Context & Responsibility:** Executes periodic sweeps, repository audits, memory consolidations, and health checks without human intervention.
 - **Input Inspection:** Receives `CRON: <action> [params...]` prompts directly from the `amux` scheduler engine.
@@ -406,7 +396,7 @@ except Exception as err:
 
 ### Dual-Profile Memory Strategy
 
-| Dimension | `mypai` Profile (`~/.omp/profiles/mypai/`) | Base `oh-my-pi` Profile (`~/.omp/agent/`) |
+| Dimension | `mypai` Instances | Default `oh-my-pi` Instances |
 | :--- | :--- | :--- |
 | **Bank ID** | `mypai` | `oh-my-pi` |
 | **Scoping** | `global` | `per-project-tagged` |
@@ -415,198 +405,9 @@ except Exception as err:
 | **Auto Retain** | `false` (curated knowledge ingestion) | `true` (automatic turn capture) |
 | **Autolearn** | `true` | `true` |
 
-### Integrated MyPAI Bank Configuration (`omp/profiles/mypai/memorybanks/mypai.yaml`)
-
-Incorporating all missions and mental models from `references/memorybanks-research/assistant-test.yaml`:
-
-```yaml
-version: '1'
-bank:
-  retain_mission: >
-    Consolidate the user's preferences, recurring patterns in behavior, routines, scheduled events,
-    commitments, decisions, mood tracking metrics, relational and social updates, and psychological insights.
-    Consolidate details relating to their sleep-wake schedule, supplement stacks, workout sessions, and
-    interpersonal encounters. Ignore small talk and transient details. Consolidate what they ask for repeatedly
-    and what they care about. What annoys them? What makes them laugh? Consolidate the user's running machine
-    configuration, available tools, paths/services shared with the agent, the agent harness, and active features.
-  enable_observations: true
-  observations_mission: >
-    Extract the user's preferences, recurring patterns in habits, routines, constraints, values, decisions,
-    physical wellness (fasting, sleep, health, supplements), mood and emotional state, personal context,
-    relational network, and ADHD-specific coping strategies. Extract the user's running machine configuration,
-    available tools, shared paths, and agent harness features. Capture behavioral cues for future adaptation.
-  reflect_mission: >
-    Synthesize an empathetic, actionable, and highly context-aware response based on the user's core preferences,
-    routines, physical/psychological wellness, ADHD coping strategies, active commitments, and running host environment.
-    Highlight actionable recommendations, deadlines, and emotional/relational nuances while respecting boundaries.
-
-mental_models:
-  - id: user-profile
-    name: User Profile & Core Preferences
-    source_query: >
-      What are the core facts about the user? What is his professional background, preferred programming
-      languages/tools, contact details, timezone, and surroundings, and how do they like to be helped?
-    max_tokens: 2048
-    trigger:
-      mode: full
-      refresh_after_consolidation: true
-
-  - id: worldview-philosophy-maxims
-    name: Worldview, Philosophy & Maxims
-    source_query: >
-      What are User's core beliefs, philosophical views, maxims/quotes, visions, political views, business ideas,
-      comedy ideas, deep questions, and general principles?
-    max_tokens: 2048
-    trigger:
-      mode: full
-      refresh_after_consolidation: true
-
-  - id: host-agent-config
-    name: User Host & Agent Environment Profile
-    source_query: >
-      What are the core facts about the user's host machine? (Hardware, OS, major packages for local inference
-      and agent setup) What packages are used for inference, memory, and channels? What tools and shared paths are configured?
-    max_tokens: 2048
-    trigger:
-      mode: full
-      refresh_after_consolidation: true
-
-  - id: inner-work
-    name: Inner Work, Dreams & Mood History
-    source_query: >
-      What are the user's dream logs, shadow work, active imagination sessions, mood tracking logs, and reviews?
-    max_tokens: 2048
-    trigger:
-      mode: full
-      refresh_after_consolidation: true
-
-  - id: routines-health
-    name: Routines & Wellness Stack
-    source_query: >
-      What is the user's daily sleep-wake schedule, routine, supplement intake timing/details, fasts, workout
-      activities, and wellness routines?
-    max_tokens: 2048
-    trigger:
-      mode: full
-      refresh_after_consolidation: true
-
-  - id: project-tasks-commitments
-    name: Active Tasks & Accountability
-    source_query: >
-      What are the user's active/short/mid-term tasks, project details, Socratic check-ins, commitments, and deadlines?
-    max_tokens: 1024
-    trigger:
-      mode: full
-      refresh_after_consolidation: true
-
-  - id: inner-work-protection
-    name: Grief Processing & Protection
-    source_query: >
-      What are the user's emotional grief processing, trigger boundaries, anniversaries, coping/recovery strategies,
-      and dialogue between inner parts (protectors, firefighters, exiles)?
-    max_tokens: 2048
-    trigger:
-      mode: full
-      refresh_after_consolidation: true
-
-  - id: relational-network
-    name: Relational Network & Encounters
-    source_query: >
-      Who are the people the user mentions? What is the background, context, and timeline of his interactions
-      and encounters with them?
-    max_tokens: 1024
-    trigger:
-      mode: full
-      refresh_after_consolidation: true
-```
-
-### Slim Base OMP Bank Configuration (`omp/agent/memorybanks/oh-my-pi.yaml`)
-
-```yaml
-version: '1'
-bank:
-  disposition_skepticism: 3
-  disposition_literalism: 3
-  disposition_empathy: 4
-  retain_extraction_mode: concise
-  enable_observations: true
-  enable_auto_consolidation: true
-  recall_max_tokens: 1536
-
-mental_models:
-  - id: user-preferences
-    name: User Preferences
-    source_query: >
-      What does the user prefer in coding style, tooling, communication, and review?
-      Capture only durable preferences expressed across sessions.
-    max_tokens: 600
-    trigger:
-      mode: delta
-      refresh_after_consolidation: true
-
-  - id: project-conventions
-    name: Project Conventions
-    source_query: >
-      What are this project's conventions for code style, build, testing, release, and pull-request review?
-    max_tokens: 800
-    trigger:
-      mode: delta
-      refresh_after_consolidation: true
-
-  - id: project-decisions
-    name: Project Decisions
-    source_query: >
-      What durable architectural or product decisions have been made for this project, and what rationale was recorded?
-    max_tokens: 800
-    trigger:
-      mode: delta
-      refresh_after_consolidation: true
-
-  - id: active-initiatives-and-commitments
-    name: Active Initiatives & Commitments
-    source_query: >
-      What are the active project initiatives, open commitments, pending deliverables, and work sweep state?
-    max_tokens: 1000
-    trigger:
-      mode: delta
-      refresh_after_consolidation: true
-```
-
 ---
 
-## 7. Sandbox Launcher & Daemon Provisioning (`omp.env`)
-
-In `omp.env`, the service setup is re-architected from the single `mypai_daemon` to the `amux` control plane and `cc-connect` bridge:
-
-```bash
-# Core Environment Exports
-OMP_PYTHON_VENV="$HOME/.omp/python-env"
-MYPAI_PYTHON_VENV="$HOME/.omp/profiles/mypai/python-env"
-MYPAI_MAIN_DIR="$HOME/agent-shared/mypai-main"
-MYPAI_CHANNEL_DIR="$HOME/agent-shared/mypai-channel"
-MYPAI_CRON_DIR="$HOME/agent-shared/mypai-cron"
-
-# Primary Service Execution (amux server)
-LAUNCHER_SERVICE_ENABLED="true"
-LAUNCHER_SERVICE_CMD="amux-server"
-LAUNCHER_SERVICE_ARGS="--port 28824 --data-dir $HOME/.amux"
-
-# Persistent Sidecars: cc-connect bridge
-LAUNCHER_SIDECARS="cc_connect"
-LAUNCHER_SIDECAR_CC_CONNECT_CMD="cc-connect"
-LAUNCHER_SIDECAR_CC_CONNECT_ARGS="--config $HOME/.cc-connect/config.toml"
-
-# Idempotent Install Routine
-# 1. Copies config.yml, mcp.json, models.yml, and agent instructions to ~/.omp/agent and ~/.omp/profiles/mypai/agent
-# 2. Provisions ~/.omp/python-env (base) and ~/.omp/profiles/mypai/python-env (mypai profile)
-# 3. Installs omp-rpc and mypai_runtime into both environments
-# 4. Imports initial amux schedules for mypai-cron
-# 5. Updates Hindsight memory banks using membank-ctl
-```
-
----
-
-## 8. Reconciliation of Roles, Specialists & Agent Archetypes
+## 7 Reconciliation of Roles, Specialists & Agent Archetypes
 
 The MyPAI ecosystem reconciles the built-in `oh-my-pi` subagents, the `oh-myopencode-slim` profiles, the `obra/superpowers` workflows, and the `athola/claude-night-market` domain specialist archetypes into a unified, high-performance agent roster.
 
