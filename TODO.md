@@ -1,5 +1,9 @@
 # TODO
 
+
+omp was updated from pkgver=17.4.0.r0.g72000ac to: pkgver=17.4.4.r0.ga7e19be
+aoe was updated from pkgver=1.14.1.r0.g9b0d691 to: pkgver=1.15.0.r0.gb90c4b0
+
 mcp's
 
 - https://github.com/nihalxkumar/arch-mcp
