@@ -4,9 +4,13 @@ This document defines the canonical port allocations across the **MyPAI** and **
 
 All services use unprivileged non-ephemeral ports in the **`20000`–`29000`** range to eliminate ephemeral port collisions while running without root privileges.
 
+**Linux Ephemeral Port Safety ($< 32768$):**
+- By default on Linux, `/proc/sys/net/ipv4/ip_local_port_range` allocates outbound dynamic sockets between `32768` and `60999`.
+- By shifting all local services into the `20000`–`29000` window, daemons avoid ephemeral port collisions on daemon boot/restart.
+
 ---
 
-## 1. Complete Port Map
+## Complete Port Map
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────────────────────┐
@@ -47,44 +51,29 @@ All services use unprivileged non-ephemeral ports in the **`20000`–`29000`** r
 
 ---
 
-## 2. Tiered Architecture & Rationale
-
-1. **Linux Ephemeral Port Safety ($< 32768$):**
-   - By default on Linux, `/proc/sys/net/ipv4/ip_local_port_range` allocates outbound dynamic sockets between `32768` and `60999`.
-   - By shifting all local services into the `20000`–`29000` window, daemons avoid ephemeral port collisions on daemon boot/restart.
-
-2. **Logical Symmetrical Sub-Ranges:**
-   - **`200xx` / `21080`**: Hardware inference backends & unified router
-   - **`2088x`**: Signal communication endpoints
-   - **`2808x`**: Agent of Empires execution host & Web PWA
-   - **`2882x`**: amux-server state plane & Kanban bus
-   - **`2888x`**: Hindsight cognitive vector memory bank
-   - **`9810`**: cc-connect chat bridge
-
----
-
-## 3. Standard Environment Exports
+## Standard Environment Exports
 
 ```bash
 # Cognitive Plane & Kanban (amux)
-export AMUX_RS_PORT="28824"
-export AMUX_PORT="28824"
-export AMUX_URL="https://localhost:28824"
-export AMUX_API_URL="https://localhost:28824/api"
-
-# Execution Cockpit & ACP Host (aoe)
-export AOE_PORT="28080"
-export AOE_URL="http://localhost:28080"
-export AOE_API_URL="http://localhost:28080/api"
+export AMUX_API_URL
 
 # Memory Bank (Hindsight)
-export HINDSIGHT_API_URL="http://localhost:28888"
-export HINDSIGHT_API_WORKER_HTTP_PORT="28889"
+export HINDSIGHT_API_URL
 
-# Chat Ingress (cc-connect)
-export CC_CONNECT_PORT="9810"
-export CC_CONNECT_URL="http://localhost:9810"
+# Execution Cockpit & ACP Host (aoe)
+export AOE_DAEMON_URL
+export AOE_DAEMON_TOKEN
 
-# Local Inference Router
-export LOCAL_ROUTER_URL="http://localhost:21080/v1"
+# Local Inference (local-router.py)
+export OPENAI_BASE_URL
+export LLAMA_CPP_BASE_URL
+
+# oh-my-pi Python VENV
+export OMP_PYTHON_VENV
+
+# mypai work dirs
+export MYPAI_MAIN_DIR
+export MYPAI_CHANNEL_DIR
+export MYPAI_CRON_DIR
+
 ```
