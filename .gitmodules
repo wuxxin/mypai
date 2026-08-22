@@ -4,4 +4,4 @@
 
 [submodule "submodules/aur-packages"]
 	path = submodules/aur-packages
-	url = https://github.com/wuxxin/aur-packages
+	url = https://github.com/wuxxin/aur-packages.git
