@@ -1,19 +1,19 @@
 # AGENTS.md — System Realities & Agent Operating Guidelines
 
-Operational rules, repository realities, invariants, and specialist profiles for MyPAI.
+Operational rules, invariants, and specialist profiles for MyPAI.
 
 ---
 
-## 1. System Reality & Multi-Session Mesh
+## 1. Multi-Session System 
 
-Distributed mesh on **`aoe` (:28080)**, **`amux-server` (:28824)**, **`cc-connect` (:9810)**, **`oh-my-pi` (`omp`)**, and **`Hindsight` (:28888)**.
+Agent Hosting using **`agent of empires` (:28080)**, **`amux-server` (:28824)**, **`cc-connect` (:9810)**, **`oh-my-pi` (`omp`)**, and **`Hindsight` (:28888)**.
 
 - **`aoe` (:28080):** Execution host, ACP (Agent Client Protocol) runner, TUI cockpit, git worktrees, diff review, and mobile Web PWA.
 - **`amux-server` (:28824):** Cognitive state store, durable Kanban board (`/api/board/cards`), turn-boundary message router (`/api/messages`), and cron scheduler (`/api/schedules`).
-- **`mypai-main` (`mypai`):** Cognitive brain, TELOS governor, LifeOS mental models, Kanban owner, and task worker coordinator.
-- **`mypai-channel` (`mypai`):** Chat ingress (`cc-connect` bridge). Ingests user turns and forwards structured requests to main.
-- **`mypai-cron` (`mypai`):** Automation reactor triggered via `amux` message bus (`CRON: <action>`). Executes silent in-kernel sweeps.
-- **`task-worker-N` (`normal`):** Isolated on-demand coding workers running in target repositories/worktrees via ACP.
+- **`mypai-main`:** Cognitive brain, governor, mental models, Kanban owner, and task worker coordinator.
+- **`mypai-cron`:** Automation reactor triggered via `amux` message bus (`CRON: <action>`). Executes silent in-kernel sweeps.
+- **`mypai-channel`:** Chat ingress (`cc-connect` bridge). Ingests user turns and forwards structured requests to main.
+- **`code-worker-N`:** Isolated on-demand coding workers running in target repositories/worktrees via ACP.
 - **In-Kernel Execution (`lang: "py"`):** Execute messaging, memory reflection, and bulk processing in Python kernel via `mypai_runtime`.
 - **Hindsight Tooling Strategy:**
   - **Session Default Bank:** Use in-process OMP loopback tools (`tool.reflect()`, `tool.recall()`, `tool.retain()`).
@@ -27,12 +27,12 @@ Distributed mesh on **`aoe` (:28080)**, **`amux-server` (:28824)**, **`cc-connec
 
 ```
 mypai/
-├── Makefile / pyproject.toml / omp.env   # GNU buildenv, dependencies & supervisor config
-├── aoe/ (config.toml, README.md)         # Agent of Empires daemon & ACP settings
+├── Makefile / pyproject.toml / omp.env  # GNU buildenv, dependencies & supervisor config
+├── aoe/ (config.toml, README.md)        # Agent of Empires daemon & ACP settings
 ├── bin/membank-ctl                      # Hindsight memory bank sync CLI
 ├── src/mypai_runtime/                   # In-Kernel Python runtime (amux, hindsight, diagnostics)
 ├── tests/ (conftest.py, unit/, e2e/)    # Pytest suite (full amux REST, hindsight, diagnostics, E2E)
-├── omp/ (agent/, profiles/, sessions/)  # Base & MyPai profiles, memorybanks, agents, skills, sessions
+├── omp/ (agent/                         # Base profile, memorybanks, agents, skills, sessions
 ├── submodules/                          # agents-shared, aur-packages, private-seeds
 └── references/ / USAGE.md / README.md   # Specifications, test docs & user manual
 ```
@@ -42,8 +42,7 @@ mypai/
 ## 3. Strict Fail-Fast Invariants
 
 1. **`httpx` Only:** Pure `httpx` in `mypai_runtime`. No defensive `urllib` fallbacks.
-2. **Managed Venv Only:** Execute in `~/.omp/python-env` or `~/.omp/profiles/mypai/python-env`. Never use bare system Python.
-3. **`amux` HTTP Bus Only:** Cross-session turns route via `POST /api/messages` with JSON payloads & correlation IDs. No raw keystroke injection.
+2. **Managed Venv:** Use `~/.omp/python-env` as omp default venv,   executing from shell.
 4. **Loopback First:** Use in-kernel `tool.*` and AST tools over subshell spawning (`cat`, `grep`, `sed`).
 5. **`xd://` Tools Only:** Discover tools and propose plans via `xd://` (`write xd://propose`, `write xd://resolve`, `write xd://reject`, `read xd://`).
 6. **Explicit Errors:** Never use empty `except: pass`. Capture stack traces in `_LAST_ERROR` and raise typed domain exceptions.

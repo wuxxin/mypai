@@ -1,5 +1,14 @@
 # TODO
 
+mcp's
+
+- https://github.com/nihalxkumar/arch-mcp
+- https://github.com/ourongxing/newsnow
+
+
+for frontend coding ?: https://github.com/shadcn-ui/ui
+
+
 i installed [vllm.cpp-git-hip](directory;file:///home/wuxxin/agent-shared/code/mypai/submodules/aur-packages/vllm.cpp-git-hip) , i want to test it as future second engine in [local-chat.sh](file;file:///home/wuxxin/agent-shared/code/mypai/submodules/agents-shared/assistants/local-chat.sh) . dont modify local-chat.sh for now, we want a speed test of the new engine. read the chat entries of [local-benchmark.md](file;file:///home/wuxxin/agent-shared/code/mypai/submodules/agents-shared/assistants/local-benchmark.md) , to get our baseline, and its json for the running parameter. 
 
 
