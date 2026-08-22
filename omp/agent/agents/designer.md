@@ -8,6 +8,7 @@ tools:
   - grep
   - glob
   - bash
+  - eval
 model: "@designer"
 thinking_effort: "medium"
 ---

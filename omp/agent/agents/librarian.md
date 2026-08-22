@@ -10,6 +10,7 @@ tools:
   - web_search
   - ast_grep
   - yield
+  - eval
 model: "@smol"
 thinking_effort: "minimal"
 ---

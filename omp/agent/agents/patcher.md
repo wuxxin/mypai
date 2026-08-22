@@ -8,6 +8,7 @@ tools:
   - grep
   - glob
   - bash
+  - eval
 model: "@smol"
 thinking_effort: "minimal"
 ---

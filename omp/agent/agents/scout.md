@@ -9,6 +9,7 @@ tools:
   - ast_grep
   - web_search
   - yield
+  - eval
 model: "@smol"
 thinking_effort: "minimal"
 ---

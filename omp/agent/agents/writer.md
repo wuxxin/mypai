@@ -8,6 +8,7 @@ tools:
   - grep
   - glob
   - yield
+  - eval
 model: "@smol"
 thinking_effort: "minimal"
 ---

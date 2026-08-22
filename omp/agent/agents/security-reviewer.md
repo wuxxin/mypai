@@ -8,6 +8,7 @@ tools:
   - lsp
   - ast_grep
   - yield
+  - eval
 model: "@slow"
 thinking_effort: "high"
 ---
