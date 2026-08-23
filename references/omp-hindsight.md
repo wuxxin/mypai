@@ -117,8 +117,9 @@ When using `scoping: per-project-tagged`, Oh-My-Pi executes both a global prompt
 Bank definitions live in `omp/agent/memorybanks/`. They configure extraction missions, disposition weights, and synthesized mental model queries.
 
 > [!NOTE]
-> For an exhaustive, parameter-by-parameter manual covering every single field possible in a Hindsight bank definition (`bank:`, `mental_models:`, and `directives:`), see:
-> 📖 [**Hindsight Memory Bank Configuration Reference (`references/hindsight-memorybank.md`)**](file:///home/wuxxin/agent-shared/code/mypai/references/hindsight-memorybank.md)
+> - 📖 Full parameter-by-parameter manual: [**Hindsight Memory Bank Configuration Reference (`references/hindsight-memorybank.md`)**](file:///home/wuxxin/agent-shared/code/mypai/references/hindsight-memorybank.md)
+> - 📄 Built-in Oh-My-Pi default mental model seeds: [**`default-omp-bankconfig.yaml`**](file:///home/wuxxin/agent-shared/code/mypai/references/memorybanks-research/default-omp-bankconfig.yaml)
+> - 📄 Complete default Hindsight in-engine bank configuration: [**`default-hindsight-bankconfig.yaml`**](file:///home/wuxxin/agent-shared/code/mypai/references/memorybanks-research/default-hindsight-bankconfig.yaml)
 
 ### Example: `omp/agent/memorybanks/oh-my-pi.yaml`
 

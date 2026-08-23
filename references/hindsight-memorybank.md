@@ -12,6 +12,11 @@ A memory bank definition file contains three primary sections:
 3. `mental_models`: Persisted, auto-synthesized topical summaries injected into prompts.
 4. `directives`: (Optional) Hard behavioral instructions enforced during reflection.
 
+> [!TIP]
+> **Reference Defaults**:
+> - 📄 Complete default Hindsight bank configuration: [**`default-hindsight-bankconfig.yaml`**](file:///home/wuxxin/agent-shared/code/mypai/references/memorybanks-research/default-hindsight-bankconfig.yaml)
+> - 📄 Built-in Oh-My-Pi mental model seeds: [**`default-omp-bankconfig.yaml`**](file:///home/wuxxin/agent-shared/code/mypai/references/memorybanks-research/default-omp-bankconfig.yaml)
+
 ```yaml
 version: '1'
 bank:
