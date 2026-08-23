@@ -1,4 +1,17 @@
 # TODO
+hmm, for mypai i want another workflow: but first lets consolidate the mypai mental models:
+
+i did write a new version, so reread. 
+i want to reconsile - id: routines-health - id: project-tasks-commitments
+- id: inner-work
+- id: inner-work-protection
+
+for now i want to keep - id: user-profile - id: worldview-philosophy-maxims
+- id: host-agent-config
+- id: relational-network
+as it is.
+
+for the 
 
 
 omp was updated from pkgver=17.4.0.r0.g72000ac to: pkgver=17.4.4.r0.ga7e19be

@@ -3,30 +3,39 @@ bank:
   disposition_skepticism: 4
   disposition_literalism: 4
   disposition_empathy: 5
+  retain_extraction_mode: full-session
+  enable_observations: true
+  enable_auto_consolidation: true
+  recall_max_tokens: 1536
+
   retain_mission: Consolidate the user's preferences, recurring patterns in behavior,
     routines, scheduled events, commitments, decisions, mood tracking metrics, relational
     and social updates, and psychological insights. Consolidate details relating to
     their sleep-wake schedule, supplement stacks, workout sessions, and interpersonal encounters.
     Consolidate the user's running machine configuration, available tools, paths/services
-    shared with the agent, TELOS framework goals (IDEAL_STATE, CURRENT_STATE), and architectural Anti-Criteria.
-    Ignore small talk, transient thought processes, and raw terminal outputs.
-  enable_observations: true
+    shared with the agent. Ignore small talk, transient thought processes, and raw terminal outputs.
+
   observations_mission: Extract the user's preferences, recurring habits, routines, constraints,
     values, decisions, physical wellness, mood and emotional state, personal context, relationships,
-    ADHD-specific coping strategies, host machine configuration, active TELOS goals, and Anti-Criteria compliance.
+    ADHD-specific coping strategies, host machine configuration.
     Track how constraints and priorities evolve over time.
+
   reflect_mission: Synthesize an empathetic, actionable, and context-aware response based on the user's
     core preferences, routines, physical/psychological wellness, ADHD coping strategies, active commitments,
-    TELOS goal alignment, and running host environment. Highlight actionable recommendations, deadlines,
+    and running host environment. Highlight actionable recommendations, deadlines,
     and emotional/relational nuances while respecting boundaries.
+
 mental_models:
 - id: user-profile
-  name: User Profile & Core Preferences
+  name: User Profile, Core Preferences and Routines
   source_query: What are the core facts about the user? What is his professional background,
-    preferred programming languages/tools, contact details, timezone, and surroundings,
+    preferred programming languages/tools, contact details, timezone, location and surroundings,
     and how do they like to be helped?
+  scopes:
+    - global
+  projectTagged: false
   tags: []
-  max_tokens: 2048
+  max_tokens: 1536
   trigger:
     mode: full
     refresh_after_consolidation: true
@@ -36,6 +45,9 @@ mental_models:
   name: Worldview, Philosophy & Maxims
   source_query: What are User's core beliefs, philosophical views, maxims/quotes, visions,
     political views, business ideas, comedy ideas, deep questions, and general principles?
+  scopes:
+    - global
+  projectTagged: false
   tags: []
   max_tokens: 2048
   trigger:
@@ -45,20 +57,29 @@ mental_models:
 
 - id: host-agent-config
   name: User Host & Agent Environment Profile
-  source_query: "What are the core facts about the user's host machine? (Hardware, OS, major packages for local inference\nand agent setup) What packages are used for inference, the agent, the memory system, and chat channels?\nWhat shared paths and tools are available to the agent?"
+  source_query: What are the core facts about the user's host machine?
+    What Hardware, OS, major packages for local inference and agent setup are used?
+    What packages are used for inference, the agent, the memory system, and chat channels?
+    What shared paths, tools, eval tool python runtime config is available to the agent?
+  scopes:
+    - global
+  projectTagged: false
   tags: []
-  max_tokens: 2048
+  max_tokens: 1024
   trigger:
     mode: full
     refresh_after_consolidation: true
     exclude_mental_models: false
 
-- id: inner-work
-  name: Inner Work, Dreams & Mood History
-  source_query: What are the user's dream logs, shadow work, active imagination sessions,
-    mood tracking logs, and reviews?
+- id: relational-network
+  name: Relational Network & Encounters
+  source_query: Who are the people the user mentions? What is the background, context,
+    and timeline of his interactions and encounters with them?
+  scopes:
+    - global
+  projectTagged: false
   tags: []
-  max_tokens: 2048
+  max_tokens: 1024
   trigger:
     mode: full
     refresh_after_consolidation: true
@@ -68,6 +89,9 @@ mental_models:
   name: Routines & Wellness Stack
   source_query: What is the user's daily sleep-wake schedule, routine, supplement intake
     timing/details, fasts, inline-skating activities, and wellness routines?
+  scopes:
+    - global
+  projectTagged: false
   tags: []
   max_tokens: 2048
   trigger:
@@ -79,8 +103,25 @@ mental_models:
   name: Active Tasks & Accountability
   source_query: What are the user's active/short/mid-term tasks, project details, Socratic
     check-ins, commitments, and deadlines?
+  scopes:
+    - global
+  projectTagged: false
   tags: []
   max_tokens: 1024
+  trigger:
+    mode: full
+    refresh_after_consolidation: true
+    exclude_mental_models: false
+
+- id: inner-work
+  name: Inner Work, Dreams & Mood History
+  source_query: What are the user's dream logs, shadow work, active imagination sessions,
+    mood tracking logs, and reviews?
+  scopes:
+    - global
+  projectTagged: false
+  tags: []
+  max_tokens: 2048
   trigger:
     mode: full
     refresh_after_consolidation: true
@@ -90,6 +131,9 @@ mental_models:
   name: Grief Processing & Protection
   source_query: What are the user's emotional grief processing, trigger boundaries, anniversaries,
     coping/recovery strategies, and dialogue between inner parts (protectors, firefighters, exiles)?
+  scopes:
+    - global
+  projectTagged: false
   tags: []
   max_tokens: 2048
   trigger:
@@ -97,24 +141,4 @@ mental_models:
     refresh_after_consolidation: true
     exclude_mental_models: false
 
-- id: relational-network
-  name: Relational Network & Encounters
-  source_query: Who are the people the user mentions? What is the background, context,
-    and timeline of his interactions and encounters with them?
-  tags: []
-  max_tokens: 1024
-  trigger:
-    mode: full
-    refresh_after_consolidation: true
-    exclude_mental_models: false
 
-- id: lifeos-anti-criteria
-  name: Anti-Criteria & System Architectural Invariants
-  source_query: What are the explicit Anti-Criteria (forbidden outcomes, security hazards,
-    breaking changes) and non-negotiable architectural invariants?
-  tags: []
-  max_tokens: 1024
-  trigger:
-    mode: full
-    refresh_after_consolidation: true
-    exclude_mental_models: false

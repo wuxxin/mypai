@@ -7,6 +7,24 @@ bank:
   enable_observations: true
   enable_auto_consolidation: true
   recall_max_tokens: 1536
+
+  retain_mission: Extract overall project goals, technical decisions and their rationale,
+    architectural choices, coding patterns and conventions, project structure facts,
+    library/tool preferences, recurring issues, developer workflow preferences, user
+    commitments, routines, and running host machine & agent environment configuration
+    (OS, hardware, agent harness tools and features, shared paths).
+    Ignore intermediate subagent thought process text, raw terminal outputs,
+    line-level code patches, transient debugging output, and boilerplate.
+
+  observations_mission: Track active project progress, ongoing task state, overall
+    architectural roadmap, tech stack evolution, team conventions, developer preferences,
+    host machine profile & tools, user constraints, active commitments, and multi-agent
+    coordination history over time.
+
+  reflect_mission: Synthesize an executive summary of current project status, developer
+    preferences, host environment setup, upcoming goals, active subagent assignments,
+    key user constraints, active commitments, and recent session handoffs.
+
 mental_models:
 - id: user-preferences
   name: User Preferences
@@ -14,33 +32,38 @@ mental_models:
     and review? Capture only durable preferences expressed across sessions, not one-off
     requests.
   max_tokens: 600
+  scopes:
+    - global
+  projectTagged: false
   trigger:
     mode: delta
     refresh_after_consolidation: true
+
 - id: project-conventions
   name: Project Conventions
   source_query: What are this project's conventions for code style, build, testing,
     release, and pull-request review? Only include conventions that are explicit in
     the project (settings, scripts, contributor docs, repeatedly enforced in review).
   max_tokens: 800
+  scopes:
+    - per-project-tagged
+  projectTagged: true
   trigger:
     mode: delta
     refresh_after_consolidation: true
+
 - id: project-decisions
-  name: Project Decisions
+  name: Architectural Decisions, Anti-Criteria
   source_query: What durable architectural or product decisions have been made for
-    this project, and what rationale or trade-offs were recorded? Include only decisions
-    that are stable across sessions; exclude transient plans, unresolved ideas, and
-    active task state.
-  max_tokens: 800
-  trigger:
-    mode: delta
-    refresh_after_consolidation: true
-- id: active-initiatives-and-commitments
-  name: Active Initiatives & Task Commitments
-  source_query: What are the active milestones, in-flight refactoring initiatives, and task
-    commitments for this codebase?
-  max_tokens: 800
+    this project, and what rationale or trade-offs were recorded?
+    What are the explicit Anti-Criteria (forbidden outcomes, security hazards,
+    breaking changes) and non-negotiable architectural invariants?
+    Include only decisions that are stable across sessions; exclude transient plans,
+    unresolved ideas, and active task state.
+  max_tokens: 1024
+  scopes:
+    - per-project-tagged
+  projectTagged: true
   trigger:
     mode: delta
     refresh_after_consolidation: true
