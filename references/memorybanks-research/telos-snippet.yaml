@@ -1,0 +1,24 @@
+version: '1'
+bank:
+  retain_mission: shared with the agent, ...
+    TELOS framework goals (IDEAL_STATE, CURRENT_STATE), and architectural Anti-Criteria.
+    ... Ignore small talk, transient thought processes, and raw terminal outputs.
+  observations_mission: host machine configuration, ...
+    active TELOS goals, and Anti-Criteria compliance.
+    ...
+    Track how constraints and priorities evolve over time.
+  reflect_mission: active commitments, ...
+    TELOS goal alignment,
+    ... and running host environment.
+
+mental-models:
+- id: lifeos-anti-criteria
+  name: Anti-Criteria & System Architectural Invariants
+  source_query: What are the explicit Anti-Criteria (forbidden outcomes, security hazards,
+    breaking changes) and non-negotiable architectural invariants?
+  tags: []
+  max_tokens: 1024
+  trigger:
+    mode: full
+    refresh_after_consolidation: true
+    exclude_mental_models: false
