@@ -51,3 +51,15 @@ notify_on_wake_fire = true
 auto_cleanup = true
 enabled = true
 init_submodules = true
+
+[hooks]
+on_create = [
+    'u="${AMUX_API_URL:-https://localhost:28824}"; u="${u%/}"; curl -sk -X POST "$u/api/sessions" -H "Authorization: Bearer ${AMUX_AUTH_TOKEN:-}" -H "Content-Type: application/json" -d "{\"name\": \"$AOE_SESSION_TITLE\", \"dir\": \"$AOE_PROJECT_PATH\", \"provider\": \"${AOE_TOOL:-omp}\"}" 2>/dev/null || true'
+]
+on_launch = [
+    'u="${AMUX_API_URL:-https://localhost:28824}"; u="${u%/}"; curl -sk -X POST "$u/api/sessions" -H "Authorization: Bearer ${AMUX_AUTH_TOKEN:-}" -H "Content-Type: application/json" -d "{\"name\": \"$AOE_SESSION_TITLE\", \"dir\": \"$AOE_PROJECT_PATH\", \"provider\": \"${AOE_TOOL:-omp}\"}" 2>/dev/null || true'
+]
+on_destroy = [
+    'u="${AMUX_API_URL:-https://localhost:28824}"; u="${u%/}"; curl -sk -X DELETE "$u/api/sessions/$AOE_SESSION_TITLE" -H "Authorization: Bearer ${AMUX_AUTH_TOKEN:-}" 2>/dev/null || true'
+]
+
