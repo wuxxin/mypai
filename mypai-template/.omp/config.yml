@@ -1,0 +1,24 @@
+modelRoles:
+  default: llama.cpp/qwen3
+setupVersion: 2
+compaction:
+  thresholdPercent: 85
+  handoffSaveToDisk: false
+  methodOrder:
+    - snapcompact
+    - remote
+    - soft
+memory:
+  backend: hindsight
+autolearn:
+  enabled: true
+hindsight:
+  apiUrl: http://localhost:28888
+  bankId: mypai
+  scoping: global
+  retainMode: turn
+  autoRecall: false
+  autoRetain: false
+  mentalModelsEnabled: true
+  mentalModelAutoSeed: true
+
