@@ -1,0 +1,20 @@
+{
+  "servers": {
+    "pyright": { "disabled": true },
+    "basedpyright": { "disabled": true },
+    "pylsp": { "disabled": true },
+    "ruff": {
+      "command": "ruff",
+      "args": ["server"],
+      "fileTypes": [".py", ".pyi"],
+      "rootMarkers": ["pyproject.toml", "ruff.toml", ".ruff.toml", ".git"],
+      "isLinter": true
+    },
+    "ty": {
+      "command": "ty",
+      "args": ["lsp"],
+      "fileTypes": [".py", ".pyi"],
+      "rootMarkers": ["pyproject.toml", "setup.py", ".git"]
+    }
+  }
+}

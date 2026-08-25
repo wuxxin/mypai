@@ -29,9 +29,9 @@ hindsight:
   apiUrl: http://localhost:28888
   bankId: oh-my-pi
   scoping: per-project-tagged
-  retainMode: full-session
-  autoRecall: true
-  autoRetain: true
+  retainMode: concise
+  autoRecall: false
+  autoRetain: false
   mentalModelsEnabled: true
   mentalModelAutoSeed: true
 mcpServers:
