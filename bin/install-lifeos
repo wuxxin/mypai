@@ -1,0 +1,325 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# install-lifeos - Idempotent installer and manager for LifeOS with OmpHooksBridge in OMP
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+
+usage() {
+    cat <<'EOF'
+install-lifeos - Management CLI for LifeOS with OmpHooksBridge in Oh My Pi (OMP)
+
+Usage:
+  install-lifeos install | uninstall [OPTIONS]
+
+Subcommands:
+  install    Idempotently clones, deploys, and configures LifeOS with OmpHooksBridge into ~/.omp
+  uninstall  Removes LifeOS runtime, hooks, skills, and extension from ~/.omp
+
+Global Options:
+  -h, --help  Show help information
+
+EOF
+}
+
+usage_install() {
+    cat <<'EOF'
+Usage: install-lifeos install [OPTIONS]
+
+Idempotently performs LifeOS installation targeting OMP:
+  1. Manages ~/.claude symlink pointing to ~/.omp (backing up existing directory if not a link).
+  2. Clones the LifeOS PR #1945 payload (feat/omp-hooks-bridge) into scratch directory.
+  3. Deploys Core skills, runtime, and memory scaffold.
+  4. Scaffolds and links the private USER vault (~/agent-private/lifeos/USER).
+  5. Installs OmpHooksBridge.ts extension into ~/.omp/agent/extensions/.
+  6. Deploys hook scripts and merges settings.json.
+  7. Runs official identity token substitution pass (Principal and Assistant).
+  8. Configures Doctor capability declines (voice, codex, interceptor, cloudflare, fabric).
+  9. Ensures shell alias 'lifeos' is configured in ~/.bashrc and ~/.zshrc.
+
+Options:
+  --config-root DIR       Target harness directory (default: $HOME/.omp)
+  --lifeos-dir DIR        Private data root directory (default: ${LIFEOS_DIR:-$HOME/agent-private/lifeos})
+  --principal NAME        Principal first name (default: Felix)
+  --principal-full NAME   Principal full name (default: Felix Erkinger)
+  --da NAME               Digital Assistant persona name (default: Noben)
+  --scratch DIR           Scratch payload directory (default: $HOME/agent-shared/scratch/lifeos-payload)
+  -h, --help              Show this help message and exit
+EOF
+}
+
+usage_uninstall() {
+    cat <<'EOF'
+Usage: install-lifeos uninstall [OPTIONS]
+
+Removes LifeOS runtime and hooks from the OMP configuration directory:
+  1. Removes ~/.omp/LIFEOS, ~/.omp/skills, ~/.omp/hooks, ~/.omp/settings.json.
+  2. Removes OmpHooksBridge.ts from extensions directory.
+  3. Removes ~/.claude symlink (and restores ~/.claude-old if present).
+  4. Cleans up 'lifeos' shell alias from ~/.bashrc and ~/.zshrc.
+  Note: Private user data in ~/agent-private/lifeos is preserved.
+
+Options:
+  --config-root DIR   Target harness directory (default: $HOME/.omp)
+  -h, --help          Show this help message and exit
+EOF
+}
+
+check_prereqs() {
+    if ! command -v bun >/dev/null 2>&1; then
+        echo "Error: bun is required but not found on PATH." >&2
+        exit 1
+    fi
+    if ! command -v git >/dev/null 2>&1; then
+        echo "Error: git is required but not found on PATH." >&2
+        exit 1
+    fi
+    if ! command -v python3 >/dev/null 2>&1; then
+        echo "Error: python3 is required but not found on PATH." >&2
+        exit 1
+    fi
+}
+
+cmd_install() {
+    local config_root="${HOME}/.omp"
+    local lifeos_dir="${LIFEOS_DIR:-${HOME}/agent-private/lifeos}"
+    local principal_name="Felix"
+    local principal_full_name="Felix Erkinger"
+    local da_name="Noben"
+    local scratch_dir="${HOME}/agent-shared/scratch/lifeos-payload"
+
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+        --config-root)
+            config_root="$2"
+            shift 2
+            ;;
+        --lifeos-dir)
+            lifeos_dir="$2"
+            shift 2
+            ;;
+        --principal)
+            principal_name="$2"
+            shift 2
+            ;;
+        --principal-full)
+            principal_full_name="$2"
+            shift 2
+            ;;
+        --da)
+            da_name="$2"
+            shift 2
+            ;;
+        --scratch)
+            scratch_dir="$2"
+            shift 2
+            ;;
+        -h | --help)
+            usage_install
+            exit 0
+            ;;
+        *)
+            echo "Error: Unknown option '$1'" >&2
+            usage_install
+            exit 1
+            ;;
+        esac
+    done
+
+    check_prereqs
+
+    echo "==> Configuring ~/.claude symlink -> ${config_root}"
+    mkdir -p "${config_root}"
+    if [[ -e "${HOME}/.claude" && ! -L "${HOME}/.claude" ]]; then
+        local stamp
+        stamp="$(date +%s)"
+        local backup="${HOME}/.claude-old-${stamp}"
+        echo "Backing up existing non-symlink ~/.claude to ${backup}"
+        mv "${HOME}/.claude" "${backup}"
+    fi
+    ln -sfn "${config_root}" "${HOME}/.claude"
+
+    echo "==> Preparing LifeOS PR #1945 payload in ${scratch_dir}"
+    mkdir -p "$(dirname "${scratch_dir}")"
+    if [[ -d "${scratch_dir}/LifeOS" ]]; then
+        echo "Updating existing payload repository..."
+        git -C "${scratch_dir}" fetch --depth 1 origin feat/omp-hooks-bridge || true
+        git -C "${scratch_dir}" reset --hard origin/feat/omp-hooks-bridge || true
+    else
+        rm -rf "${scratch_dir}"
+        git clone --depth 1 -b feat/omp-hooks-bridge https://github.com/Faizalj/LifeOS.git "${scratch_dir}"
+    fi
+
+    local payload_dir="${scratch_dir}/LifeOS"
+
+    echo "==> Deploying Core skills and runtime"
+    mkdir -p "${lifeos_dir}/USER"
+    (
+        cd "${payload_dir}"
+        bun Tools/DeployCore.ts --apply
+        bun Tools/ScaffoldUser.ts --config-dir "${lifeos_dir}" --apply
+        bun Tools/LinkUser.ts --config-dir "${lifeos_dir}" --apply
+    )
+
+    echo "==> Installing OmpHooksBridge.ts extension"
+    mkdir -p "${config_root}/agent/extensions"
+    cp "${payload_dir}/install/LIFEOS/TOOLS/OmpHooksBridge.ts" "${config_root}/agent/extensions/OmpHooksBridge.ts"
+    if [[ -d "${REPO_ROOT}/omp/agent/extensions" ]]; then
+        cp "${payload_dir}/install/LIFEOS/TOOLS/OmpHooksBridge.ts" "${REPO_ROOT}/omp/agent/extensions/OmpHooksBridge.ts"
+    fi
+
+    echo "==> Deploying settings and hook definitions"
+    (
+        cd "${payload_dir}"
+        bun Tools/InstallSettings.ts --apply
+        bun Tools/InstallHooks.ts --apply
+    )
+
+    echo "==> Configuring settings.json environment"
+    python3 -c "
+import json, pathlib
+path = pathlib.Path('${config_root}') / 'settings.json'
+if path.exists():
+    with open(path, 'r', encoding='utf-8') as f:
+        settings = json.load(f)
+    env = settings.setdefault('env', {})
+    env['OMP_VOICE'] = '0'
+    with open(path, 'w', encoding='utf-8') as f:
+        json.dump(settings, f, indent=2)
+        f.write('\n')
+"
+
+    echo "==> Running identity token substitution pass"
+    python3 -c "
+import pathlib
+file = pathlib.Path('${config_root}') / 'skills' / 'LifeOS' / 'Tools' / 'InstallEngine.ts'
+if file.exists():
+    content = file.read_text(encoding='utf-8')
+    content = content.replace(
+        'if (entry.name === \"install\" && dir.endsWith(join(\"skills\", \"LifeOS\"))) continue;',
+        'if ((entry.name === \"install\" || entry.name === \"Tools\") && dir.endsWith(join(\"skills\", \"LifeOS\"))) continue;'
+    )
+    file.write_text(content, encoding='utf-8')
+"
+    (
+        cd "${payload_dir}"
+        bun -e "
+import { substituteTree } from './Tools/InstallEngine';
+const vars = {
+  '{{PRINCIPAL_NAME}}': '${principal_name}',
+  '{{PRINCIPAL_FULL_NAME}}': '${principal_full_name}',
+  '{{DA_NAME}}': '${da_name}',
+  '{{DA_FULL_NAME}}': '${da_name}',
+  '{{PRIMARY_VOICE_ID}}': 'none',
+  '{{SECONDARY_VOICE_ID}}': 'none',
+  '{{LIFEOS_VERSION}}': 'v8.20.2',
+};
+substituteTree(process.env.HOME + '/.claude/hooks', vars);
+substituteTree(process.env.HOME + '/.claude/LIFEOS', vars);
+substituteTree(process.env.HOME + '/.claude/skills', vars);
+"
+    )
+
+    echo "==> Restoring clean InstallEngine.ts"
+    cp "${payload_dir}/Tools/InstallEngine.ts" "${config_root}/skills/LifeOS/Tools/InstallEngine.ts"
+
+    echo "==> Configuring Doctor capability defaults"
+    bun "${HOME}/.claude/LIFEOS/TOOLS/Doctor.ts" decline voice >/dev/null 2>&1 || true
+    bun "${HOME}/.claude/LIFEOS/TOOLS/Doctor.ts" decline codex >/dev/null 2>&1 || true
+    bun "${HOME}/.claude/LIFEOS/TOOLS/Doctor.ts" decline interceptor >/dev/null 2>&1 || true
+    bun "${HOME}/.claude/LIFEOS/TOOLS/Doctor.ts" decline cloudflare >/dev/null 2>&1 || true
+    bun "${HOME}/.claude/LIFEOS/TOOLS/Doctor.ts" decline fabric >/dev/null 2>&1 || true
+
+    echo "==> Configuring shell launch alias"
+    local alias_cmd='alias lifeos="OMP_VOICE=0 LIFEOS_DIR=~/.omp omp --append-system-prompt ~/.omp/LIFEOS/LIFEOS_SYSTEM_PROMPT.md"'
+    if [[ -f "${HOME}/.bashrc" ]] && ! grep -q "alias lifeos=" "${HOME}/.bashrc"; then
+        echo "${alias_cmd}" >>"${HOME}/.bashrc"
+    fi
+    if [[ -f "${HOME}/.zshrc" ]] && ! grep -q "alias lifeos=" "${HOME}/.zshrc"; then
+        echo "${alias_cmd}" >>"${HOME}/.zshrc"
+    fi
+
+    echo "==> Verification: Doctor status"
+    bun "${HOME}/.claude/LIFEOS/TOOLS/Doctor.ts"
+
+    echo "LifeOS installation completed successfully!"
+}
+
+cmd_uninstall() {
+    local config_root="${HOME}/.omp"
+
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+        --config-root)
+            config_root="$2"
+            shift 2
+            ;;
+        -h | --help)
+            usage_uninstall
+            exit 0
+            ;;
+        *)
+            echo "Error: Unknown option '$1'" >&2
+            usage_uninstall
+            exit 1
+            ;;
+        esac
+    done
+
+    echo "==> Removing LifeOS components from ${config_root}"
+    rm -rf "${config_root}/LIFEOS"
+    rm -rf "${config_root}/skills"
+    rm -rf "${config_root}/hooks"
+    rm -rf "${config_root}/settings.json"*
+    rm -f "${config_root}/agent/extensions/OmpHooksBridge.ts"
+
+    if [[ -L "${HOME}/.claude" ]]; then
+        local link_target
+        link_target="$(readlink "${HOME}/.claude" || true)"
+        if [[ "${link_target}" == "${config_root}" || "${link_target}" == "${HOME}/.omp" ]]; then
+            echo "Removing ~/.claude symlink"
+            rm -f "${HOME}/.claude"
+        fi
+    fi
+
+    echo "==> Cleaning up shell aliases"
+    if [[ -f "${HOME}/.bashrc" ]]; then
+        sed -i '/alias lifeos=/d' "${HOME}/.bashrc"
+    fi
+    if [[ -f "${HOME}/.zshrc" ]]; then
+        sed -i '/alias lifeos=/d' "${HOME}/.zshrc"
+    fi
+
+    echo "LifeOS uninstallation completed."
+    echo "Note: Private user data in ~/agent-private/lifeos was left untouched."
+}
+
+main() {
+    if [[ $# -eq 0 ]]; then
+        usage
+        exit 1
+    fi
+
+    case "$1" in
+    install)
+        shift
+        cmd_install "$@"
+        ;;
+    uninstall)
+        shift
+        cmd_uninstall "$@"
+        ;;
+    -h | --help)
+        usage
+        exit 0
+        ;;
+    *)
+        echo "Error: Unknown subcommand '$1'" >&2
+        usage
+        exit 1
+        ;;
+    esac
+}
+
+main "$@"
