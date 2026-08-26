@@ -79,3 +79,4 @@ generate_image:
   enabled: false
 speechgen:
   enabled: false
+defaultThinkingLevel: auto
