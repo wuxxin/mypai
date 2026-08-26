@@ -1,0 +1,354 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# claude-shim - Claude CLI compatibility shim for LifeOS utility inference via Oh My Pi (omp)
+
+usage() {
+    cat <<'EOF'
+claude-shim - Claude CLI compatibility shim for LifeOS utility inference
+
+Usage:
+  claude [options] [prompt]
+  echo "prompt" | claude [options]
+
+Options:
+  -p, --print                               Non-interactive print mode
+  --model <model>                           Target model (prioritizes $LIFEOS_TOOLS_MODEL_NAME)
+  --effort <effort>                         Thinking effort (prioritizes $LIFEOS_TOOLS_MODEL_EFFORT)
+  --output-format <json|text>               Output format (default: json)
+  --system-prompt <prompt>                  Inline system prompt
+  --system-prompt-file <path>               Path to system prompt file
+  --tools <tools>                           Tool allowlist (empty or "none" disables tools)
+  --allowedTools <tools>                    Allowed tools alias
+  --exclude-dynamic-system-prompt-sections  Ignored for Claude Code compatibility
+  --setting-sources <sources>               Ignored for Claude Code compatibility
+  -h, --help                                Show this help message and exit
+  -v, --version                             Show version and exit
+EOF
+}
+
+cli_model=""
+cli_effort=""
+output_format="json"
+system_prompt=""
+system_prompt_file=""
+tools_flag=""
+positional_args=()
+
+while [ $# -gt 0 ]; do
+    case "$1" in
+    -p | --print)
+        shift
+        ;;
+    --model)
+        cli_model="${2:-}"
+        shift 2
+        ;;
+    --model=*)
+        cli_model="${1#*=}"
+        shift
+        ;;
+    --effort)
+        cli_effort="${2:-}"
+        shift 2
+        ;;
+    --effort=*)
+        cli_effort="${1#*=}"
+        shift
+        ;;
+    --output-format)
+        output_format="${2:-json}"
+        shift 2
+        ;;
+    --output-format=*)
+        output_format="${1#*=}"
+        shift
+        ;;
+    --system-prompt)
+        system_prompt="${2:-}"
+        shift 2
+        ;;
+    --system-prompt=*)
+        system_prompt="${1#*=}"
+        shift
+        ;;
+    --system-prompt-file)
+        system_prompt_file="${2:-}"
+        shift 2
+        ;;
+    --system-prompt-file=*)
+        system_prompt_file="${1#*=}"
+        shift
+        ;;
+    --tools)
+        tools_flag="${2:-}"
+        shift 2
+        ;;
+    --tools=*)
+        tools_flag="${1#*=}"
+        shift
+        ;;
+    --allowedTools)
+        tools_flag="${2:-}"
+        shift 2
+        ;;
+    --allowedTools=*)
+        tools_flag="${1#*=}"
+        shift
+        ;;
+    --setting-sources)
+        shift 2
+        ;;
+    --setting-sources=*)
+        shift
+        ;;
+    --exclude-dynamic-system-prompt-sections)
+        shift
+        ;;
+    -h | --help)
+        usage
+        exit 0
+        ;;
+    -v | --version)
+        echo "claude-shim (omp backend) 1.0.0"
+        exit 0
+        ;;
+    --)
+        shift
+        while [ $# -gt 0 ]; do
+            positional_args+=("$1")
+            shift
+        done
+        break
+        ;;
+    -*)
+        # Ignore unknown flags for Claude CLI compatibility
+        shift
+        ;;
+    *)
+        positional_args+=("$1")
+        shift
+        ;;
+    esac
+done
+
+if [ -n "$system_prompt_file" ] && [ -f "$system_prompt_file" ]; then
+    system_prompt=$(cat "$system_prompt_file")
+fi
+
+target_model="${LIFEOS_TOOLS_MODEL_NAME:-}"
+if [ -z "$target_model" ]; then
+    case "${cli_model:-}" in
+    "" | haiku* | sonnet* | opus* | fable* | claude* | anthropic*)
+        target_model="llama.cpp/qwen3"
+        ;;
+    *)
+        target_model="$cli_model"
+        ;;
+    esac
+fi
+
+raw_effort="${LIFEOS_TOOLS_MODEL_EFFORT:-${cli_effort:-high}}"
+case "$raw_effort" in
+off | none | 0)
+    target_effort="off"
+    ;;
+minimal | min)
+    target_effort="minimal"
+    ;;
+low)
+    target_effort="low"
+    ;;
+medium | med)
+    target_effort="medium"
+    ;;
+high)
+    target_effort="high"
+    ;;
+max | xhigh | highest)
+    target_effort="max"
+    ;;
+auto)
+    target_effort="auto"
+    ;;
+*)
+    target_effort="high"
+    ;;
+esac
+
+stdin_content=""
+if [ ! -t 0 ]; then
+    stdin_content=$(cat)
+fi
+
+positional_prompt=""
+if [ ${#positional_args[@]} -gt 0 ]; then
+    positional_prompt="${positional_args[*]}"
+fi
+
+if [ -n "$stdin_content" ] && [ -n "$positional_prompt" ]; then
+    user_prompt="${stdin_content}"$'\n\n'"${positional_prompt}"
+elif [ -n "$stdin_content" ]; then
+    user_prompt="$stdin_content"
+else
+    user_prompt="$positional_prompt"
+fi
+
+omp_args=(
+    "-p"
+    "--no-session"
+    "--no-skills"
+    "--no-rules"
+    "--no-title"
+    "--profile=isolated"
+    "--mode=json"
+    "--model=${target_model}"
+    "--thinking=${target_effort}"
+)
+
+if [ -z "$tools_flag" ] || [ "$tools_flag" = "none" ] || [ "$tools_flag" = "''" ] || [ "$tools_flag" = '""' ]; then
+    omp_args+=("--no-tools")
+fi
+
+if [ -n "$system_prompt" ]; then
+    omp_args+=("--system-prompt=${system_prompt}")
+fi
+
+stderr_tmp=$(mktemp)
+trap 'rm -f "$stderr_tmp"' EXIT
+
+omp_exit=0
+omp_output=$(printf '%s' "$user_prompt" | omp "${omp_args[@]}" 2>"$stderr_tmp") || omp_exit=$?
+
+OMP_RAW_OUTPUT="$omp_output" python3 - "$output_format" "$target_model" "$omp_exit" "$stderr_tmp" <<'PYEOF'
+import json
+import os
+import sys
+
+def main():
+    output_format = sys.argv[1] if len(sys.argv) > 1 else "json"
+    target_model = sys.argv[2] if len(sys.argv) > 2 else "llama.cpp/qwen3"
+    omp_exit_code = int(sys.argv[3]) if len(sys.argv) > 3 else 0
+    stderr_path = sys.argv[4] if len(sys.argv) > 4 else ""
+
+    stderr_text = ""
+    if stderr_path:
+        try:
+            with open(stderr_path, "r", encoding="utf-8") as f:
+                stderr_text = f.read().strip()
+        except Exception:
+            pass
+
+    raw_input = os.environ.get("OMP_RAW_OUTPUT", "")
+
+    assistant_text = ""
+    model_name = target_model
+    input_tokens = 0
+    output_tokens = 0
+    stop_reason = "end_turn"
+    found_assistant = False
+    error_message = ""
+
+    for line in raw_input.splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            event = json.loads(line)
+        except Exception:
+            continue
+
+        event_type = event.get("type")
+        if event_type == "error":
+            error_message = event.get("error", "Unknown error")
+        elif event_type in ("message_end", "turn_end"):
+            msg = event.get("message", {})
+            if msg.get("role") == "assistant":
+                content = msg.get("content", [])
+                text_parts = []
+                for part in content:
+                    if isinstance(part, dict):
+                        if part.get("type") == "text":
+                            text_parts.append(part.get("text", ""))
+                    elif isinstance(part, str):
+                        text_parts.append(part)
+                if text_parts:
+                    assistant_text = "".join(text_parts)
+                    found_assistant = True
+
+                usage = msg.get("usage", {})
+                input_tokens = usage.get("input", usage.get("inputTokens", input_tokens))
+                output_tokens = usage.get("output", usage.get("outputTokens", output_tokens))
+
+                prov = msg.get("provider")
+                mod = msg.get("model")
+                if prov and mod and "/" not in mod:
+                    model_name = f"{prov}/{mod}"
+                elif mod:
+                    model_name = mod
+
+                sr = msg.get("stopReason")
+                if sr:
+                    stop_reason = "end_turn" if sr == "stop" else sr
+
+        elif event_type == "agent_end":
+            messages = event.get("messages", [])
+            for msg in messages:
+                if msg.get("role") == "assistant":
+                    content = msg.get("content", [])
+                    text_parts = []
+                    for part in content:
+                        if isinstance(part, dict):
+                            if part.get("type") == "text":
+                                text_parts.append(part.get("text", ""))
+                        elif isinstance(part, str):
+                            text_parts.append(part)
+                    if text_parts and not assistant_text:
+                        assistant_text = "".join(text_parts)
+                        found_assistant = True
+
+                    usage = msg.get("usage", {})
+                    input_tokens = usage.get("input", usage.get("inputTokens", input_tokens))
+                    output_tokens = usage.get("output", usage.get("outputTokens", output_tokens))
+
+                    prov = msg.get("provider")
+                    mod = msg.get("model")
+                    if prov and mod and "/" not in mod:
+                        model_name = f"{prov}/{mod}"
+                    elif mod:
+                        model_name = mod
+
+    if omp_exit_code != 0 or (not found_assistant and not assistant_text):
+        err = error_message or stderr_text or f"omp process failed with exit code {omp_exit_code}"
+        if output_format == "json":
+            envelope = {
+                "type": "error",
+                "is_error": True,
+                "api_error_status": 500,
+                "result": err,
+                "error": err,
+            }
+            print(json.dumps(envelope))
+        else:
+            print(err, file=sys.stderr)
+        sys.exit(1)
+
+    if output_format == "text":
+        print(assistant_text)
+    else:
+        envelope = {
+            "type": "result",
+            "result": assistant_text,
+            "stop_reason": stop_reason,
+            "modelUsage": {
+                model_name: {
+                    "inputTokens": input_tokens,
+                    "outputTokens": output_tokens,
+                }
+            },
+        }
+        print(json.dumps(envelope))
+
+if __name__ == "__main__":
+    main()
+PYEOF
