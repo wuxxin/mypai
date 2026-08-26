@@ -1,6 +1,8 @@
 providers:
   webSearchOrder:
     []
+  imageOrder:
+    []
 modelRoles:
   default: llama.cpp/qwen3
 symbolPreset: unicode
@@ -22,9 +24,9 @@ compaction:
     - remote
     - soft
 memory:
-  backend: hindsight
+  backend: none
 autolearn:
-  enabled: true
+  enabled: false
 hindsight:
   apiUrl: http://localhost:28888
   bankId: oh-my-pi
@@ -64,6 +66,16 @@ task:
 secrets:
   enabled: false
 composer:
-  shape: box
+  shape: borderless
 tools:
   intentTracing: false
+  xdevDocs: builtins
+contextPromotion:
+  enabled: false
+extendedContext: false
+python:
+  kernelMode: session
+generate_image:
+  enabled: false
+speechgen:
+  enabled: false
