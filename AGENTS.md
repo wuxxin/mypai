@@ -6,6 +6,7 @@ Operational rules, invariants, and specialist profiles for MyPAI.
 
 ## 1. System Architecture
 
+**UPDATE:** Currently running oh-my-pi and lifeos setup, documentation and configuration in progress. See `references/lifeos-setup.md`.
 Agents Hosting using **`agent of empires` (:28080)**, **`amux-server` (:28824)**, **`cc-connect` (:9810)**, **`oh-my-pi` (`omp`)**, and **`Hindsight` (:28888)**.
 
 - **`aoe` (:28080):** Execution host, ACP (Agent Client Protocol) runner, TUI cockpit, git worktrees, diff review, and mobile Web PWA.
