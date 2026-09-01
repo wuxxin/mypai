@@ -8,8 +8,8 @@
 
 The current architecture trajectory is:
 
-- using submodules/agents-shared for local inference service wrapper for chat,embedding,rerank,stt,tts,imagegen, and agents harness software
-- using submodules/aur-packages for archlinux aur packages and private forks of packages needed for local-inference and agent harnesses
+- using `submodules/agents-shared` repo for local inference service wrapper for chat,embedding,rerank,stt,tts,imagegen, and agents harness software
+- using `submodules/aur-packages` repo for archlinux aur packages and private forks of packages needed for local-inference and agent harnesses
 - using submodules/agents-shared/scripts/sandbox-ctl and this repo `omp.env` to configure an oh-my-pi sandbox service config
   - see omp/agent for base profile Config, Memorybanks, Agents, Commands, Skills, Extensions, Install CMDS, a.o.
 
