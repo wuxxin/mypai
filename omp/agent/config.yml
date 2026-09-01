@@ -36,11 +36,6 @@ hindsight:
   autoRetain: false
   mentalModelsEnabled: true
   mentalModelAutoSeed: true
-mcpServers:
-  arbor:
-    command: $OMP_PYTHON_VENV/bin/arbor
-    args:
-      - mcp
 bash:
   autoBackground:
     enabled: true

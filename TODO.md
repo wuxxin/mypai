@@ -1,52 +1,15 @@
 # TODO
-hmm, for mypai i want another workflow: but first lets consolidate the mypai mental models:
-
-i did write a new version, so reread. 
-i want to reconsile - id: routines-health - id: project-tasks-commitments
-- id: inner-work
-- id: inner-work-protection
-
-for now i want to keep - id: user-profile - id: worldview-philosophy-maxims
-- id: host-agent-config
-- id: relational-network
-as it is.
-
-for the 
-
 
 omp was updated from pkgver=17.4.0.r0.g72000ac to: pkgver=17.4.4.r0.ga7e19be
 aoe was updated from pkgver=1.14.1.r0.g9b0d691 to: pkgver=1.15.0.r0.gb90c4b0
 
 mcp's
-
 - https://github.com/nihalxkumar/arch-mcp
 - https://github.com/ourongxing/newsnow
 
-
-for frontend coding ?: https://github.com/shadcn-ui/ui
-
++ research omp: where can we add ts, whats the eval ts runner doing, do we have tools available in any of them,
 
 i installed [vllm.cpp-git-hip](directory;file:///home/wuxxin/agent-shared/code/mypai/submodules/aur-packages/vllm.cpp-git-hip) , i want to test it as future second engine in [local-chat.sh](file;file:///home/wuxxin/agent-shared/code/mypai/submodules/agents-shared/assistants/local-chat.sh) . dont modify local-chat.sh for now, we want a speed test of the new engine. read the chat entries of [local-benchmark.md](file;file:///home/wuxxin/agent-shared/code/mypai/submodules/agents-shared/assistants/local-benchmark.md) , to get our baseline, and its json for the running parameter. 
-
-
-consolidate all omp related prompt into a selection of prompt modules to be inserted in the specific locations when they are well defined.
-
-research omp: where can we add ts, whats the eval ts runner doing, do we have tools available in any of them,
-
-research oh-my-pi in scratch for answers: right now, we wan to begin adding first cronjobs and eval executions, 
- when a cron fires:
-
-```txt
-CRON: eval(type="py", """
-
-# now we want eg. to inspect running session, is there a way?" eg.
-if (100 * session.ctx / session.max_ctx) > 80:
-    tools.retain()
-    tools.snapcompact()
-    session.new()
-
-""")
-```
 
 + research and add if fitting
 
@@ -86,6 +49,7 @@ https://github.com/garrytan/gbrain
   + https://github.com/mvanhorn/printing-press-library/tree/main/library/media-and-entertainment/wikipedia
   + https://github.com/mvanhorn/last30days-skill
 
++ for frontend coding ?: https://github.com/shadcn-ui/ui
 
 ## External Models Speed Observed in OMP
 
