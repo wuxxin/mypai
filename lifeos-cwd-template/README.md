@@ -24,7 +24,7 @@ lifeos-cwd-template/
    - All `modelRoles` (`default`, `smol`, `task`, `slow`, `plan`, `review`, `debugger`, `security-reviewer`, `orchestrator`, `advisor`, `vision`, `tiny`) are explicitly mapped to local inference via `llama.cpp/qwen3` (`http://localhost:21080/v1`).
    - Ensures zero personal LifeOS context (TELOS, finances, health, identity, memories) is ever leaked to cloud providers.
    - `bin/claude-shim` strictly enforces `${LIFEOS_TOOLS_MODEL_NAME:-llama.cpp/qwen3}`, ignoring any CLI `--model` overrides from background scripts or hooks.
-   - **Web Research Exception**: Only the `@librarian` subagent is configured to allow cloud fallback (`@smol`) when performing external web/library searches.
+   - **Web Research Exception**: Only the `@librarian` subagent is configured to use a cloud model (`google-antigravity/gemini-3.1-flash-lite`) when performing external web/library searches.
 
 2. **Concurrency Limiting (`maxConcurrency: 1`)**:
    - Limits subagent concurrency to 1 to protect local GPU/inference memory on the host workstation.

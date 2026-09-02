@@ -40,8 +40,8 @@ task:
     security-reviewer: llama.cpp/qwen3:high
     designer: llama.cpp/qwen3
     writer: llama.cpp/qwen3
-    # Librarian is dedicated to external web and API documentation research
-    librarian: "@smol"
+    # Librarian is dedicated to external web and API documentation research (explicit cloud model)
+    librarian: "google-antigravity/gemini-3.1-flash-lite"
 
 # Scoped Hindsight memory configuration for LifeOS
 hindsight:
