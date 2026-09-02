@@ -1,10 +1,28 @@
 providers:
+  maxInFlightRequests:
+    google-antigravity: 6
+    deepseek: 4
+    anthropic: 2
+    llama.cpp: 1
   webSearchOrder:
     []
   imageOrder:
     []
 modelRoles:
-  default: llama.cpp/qwen3
+  default: google-antigravity/gemini-3.7-flash
+  smol: google-antigravity/gemini-3.1-flash-lite
+  task: google-antigravity/gemini-3.7-flash
+  slow: google-antigravity/claude-opus-4-6:high
+  plan: google-antigravity/gemini-3.1-pro:high
+  review: deepseek/deepseek-v4-pro:low
+  scout: google-antigravity/gemini-3.1-flash-lite
+  patcher: google-antigravity/gemini-3.1-flash-lite
+  debugger: google-antigravity/claude-opus-4-6:high
+  security-reviewer: google-antigravity/claude-opus-4-6:high
+  orchestrator: google-antigravity/gemini-3.7-flash:high
+  advisor: google-antigravity/gemini-3.7-flash:low
+  vision: google-antigravity/gemini-3.7-flash
+  tiny: google-antigravity/gemini-3.1-flash-lite
 symbolPreset: unicode
 theme:
   dark: titanium
@@ -50,14 +68,27 @@ checkpoint:
 github:
   enabled: true
 todo:
-  remindersMax: 8
+  remindersMax: 10
 computer:
   display: all
 task:
   eager: default
-  maxConcurrency: 32
+  maxConcurrency: 6
+  maxRecursionDepth: 2
+  maxEffort: max
   agentIdleTtlMs: 420000
   prewalk: false
+  enableLsp: true
+  agentModelOverrides:
+    scout: "@smol"
+    patcher: "@smol"
+    task: "@task"
+    reviewer: "@review"
+    debugger: "@slow"
+    security-reviewer: "@slow"
+    librarian: "@smol"
+    designer: "@task"
+    writer: "@task"
 secrets:
   enabled: false
 composer:

@@ -71,6 +71,34 @@ OMP uses a tiered configuration system combining global defaults, profile settin
   - `extensions`
   - `task.disabledAgents`
 
+
+### Workspace & CLI Override Standardization
+
+1. **Per-Project Workspace Model Override (`<cwd>/.omp/config.yml`):**
+   Creating `<cwd>/.omp/config.yml` in any project directory allows fine-grained model role overrides without touching global settings:
+   ```yaml
+   # <cwd>/.omp/config.yml
+   modelRoles:
+     smol: "google-antigravity/gemini-3.1-flash-lite"
+     default: "google-antigravity/gemini-3.7-flash"
+     slow: "google-antigravity/claude-opus-4-6:high"
+     plan: "google-antigravity/gemini-3.1-pro:high"
+   ```
+   OMP deep-merges this file on launch, overriding only specified roles while retaining all other global `modelRoles` and agent mappings.
+
+2. **Per-Project System Prompt Override (`<cwd>/.omp/APPEND_SYSTEM.md`):**
+   - **Global fallback:** If no workspace `.omp/APPEND_SYSTEM.md` exists, OMP loads `~/.omp/agent/APPEND_SYSTEM.md` (which symlinks to `agents/orchestrator.md`), making the `@orchestrator` persona the default coordinator.
+   - **Project override:** Creating `<cwd>/.omp/APPEND_SYSTEM.md` takes full precedence, overriding the global orchestrator append prompt for that specific workspace while preserving the core OMP engineering harness (`system-prompt.md`).
+   - **Subagent isolation:** Subagents spawned via `task(agent: "...")` receive only their dedicated specialist role from `agents/<name>.md` and NEVER inherit `APPEND_SYSTEM.md`.
+
+3. **CLI Launch Parameter & Environment Overrides:**
+   Runtime CLI parameters override workspace and global config:
+   - `omp --model <model-or-role>`: Overrides `modelRoles.default` (supports aliases like `@slow`, `@smol` or full provider IDs).
+   - `omp --smol <model>`: Overrides `modelRoles.smol`.
+   - `omp --slow <model>`: Overrides `modelRoles.slow`.
+   - `omp --plan <model>`: Overrides `modelRoles.plan`.
+   - `omp --config <file>`: Merges an overlay config file on top of effective settings.
+   - Environment variables: `PI_SMOL_MODEL`, `PI_SLOW_MODEL`, `PI_PLAN_MODEL`, `PI_MODEL`.
 ---
 
 ## 3. System Prompt Layering & Construction Engine
