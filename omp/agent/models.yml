@@ -10,8 +10,17 @@ providers:
         name: qwen3
         reasoning: true
         input: ["text", "image"]
-        contextWindow: 128000
-        maxTokens: 32768
+        contextWindow: 120192
+        maxTokens: 16384
+        thinking:
+          mode: effort
+          efforts: ["minimal", "low", "medium", "high"]
+      - id: qwen3-thinking
+        name: qwen3-thinking
+        reasoning: true
+        input: ["text", "image"]
+        contextWindow: 120192
+        maxTokens: 16384
         thinking:
           mode: effort
           efforts: ["minimal", "low", "medium", "high"]
