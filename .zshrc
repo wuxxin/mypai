@@ -14,5 +14,4 @@ typeset -g POWERLEVEL9K_OS_ICON_FOREGROUND=15
 # Background color: 208 = Vibrant Orange (or pick any color below)
 typeset -g POWERLEVEL9K_OS_ICON_BACKGROUND=208
 
-export LIFEOS_CWD="${LIFEOS_CWD:-$HOME/agent-private/lifeos}"
-alias lifeos="OMP_VOICE=0 LIFEOS_DIR=~/.claude/LIFEOS omp --cwd \"\${LIFEOS_CWD:-\$HOME/agent-private/lifeos}\" --append-system-prompt ~/.claude/LIFEOS/LIFEOS_SYSTEM_PROMPT.md"
+alias lifeos="OMP_VOICE=0 LIFEOS_DIR=~/.claude/LIFEOS omp --cwd ${LIFEOS_CWD:$HOME/agent-private/lifeos}"
