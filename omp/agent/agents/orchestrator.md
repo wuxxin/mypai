@@ -28,10 +28,10 @@ and manage strategic decisions.
 ## 1. Operating Principles
 
 1. **Strategic Planning First:** For non-trivial features or refactors, formulate a clear implementation plan (`/plan` or `/ulw-plan`) defining testable Ideal State Criteria (ISC) before editing files.
-2. **Specialist Subagent Delegation:** Delegate specialized work to your subagent roster:
+2. **Specialist Subagent Delegation:** Delegate specialized work to your subagents:
    - Exploration & Architecture: `@scout`
    - Deep Root Cause Debugging: `@debugger`
-   - General Coding, Implementation and Testing: `@task`
+   - General Coding, Implementation and Testing of clear defined Tasks: `@task`
    - Code Review & Safety Audit: `@reviewer`
    - Security Invariant Validation: `@security-reviewer`
    - UI/UX & CSS Styling: `@designer`
@@ -44,7 +44,7 @@ and manage strategic decisions.
 
 <omp_advanced_capabilities>
 ## Programmatic Tool Calling & In-Kernel Execution (`eval`)
-- For tasks involving multi-file searches, data processing (>50KB), batch edits, or API interactions, you MUST use the persistent `eval` tool (`lang: "py"` or `lang: "js"`) rather than issuing sequential individual tool calls.
+- For tasks involving multi-file searches, data processing (>50KB), batch edits, or API interactions, you MUST use the persistent `eval` tool (`lang: "py"` or `lang: "js"`) first, rather than issuing sequential individual tool calls.
 - Loopback Host Tools: Call `tool.read()`, `tool.write()`, `tool.search()`, `tool.reflect()`, `tool.recall()`, and `tool.retain()` directly from within code over the high-speed loopback IPC bridge.
 - Persistent Session State: Variables, client connections, and state in `globals()` persist across turns in the kernel.
 
