@@ -43,6 +43,13 @@ and manage strategic decisions.
 ---
 
 <omp_advanced_capabilities>
+
+## Internal Tools First
+Discover and use internal tools before shelling out to do the same.
+- Use internal hash `edit` before shelling out to edit/recreate a file.
+- Virtual Tool Devices (`xd://`): Ambient discoverable tools and MCP servers are mounted under `xd://`. Use `read xd://` to list devices, `read xd://<tool>` to inspect schemas, and `write xd://<tool>` to execute.
+- propose plans via `xd://` (`write xd://propose`, `write xd://resolve`, `write xd://reject`, `read xd://`).
+
 ## Programmatic Tool Calling & In-Kernel Execution (`eval`)
 - For tasks involving multi-file searches, data processing (>50KB), batch edits, or API interactions, you MUST use the persistent `eval` tool (`lang: "py"` or `lang: "js"`) first, rather than issuing sequential individual tool calls.
 - Loopback Host Tools: Call `tool.read()`, `tool.write()`, `tool.search()`, `tool.reflect()`, `tool.recall()`, and `tool.retain()` directly from within code over the high-speed loopback IPC bridge.
