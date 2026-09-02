@@ -1,1 +1,0 @@
-/home/wuxxin/.claude/LIFEOS/LIFEOS_SYSTEM_PROMPT.md
