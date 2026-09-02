@@ -46,7 +46,7 @@ task:
 # Scoped Hindsight memory configuration for LifeOS
 hindsight:
   apiUrl: http://localhost:28888
-  bankId: mypai
+  bankId: lifeos
   scoping: global
   retainMode: concise
   autoRecall: false
