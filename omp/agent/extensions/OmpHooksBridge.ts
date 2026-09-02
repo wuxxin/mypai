@@ -40,7 +40,7 @@ import type { ExtensionAPI } from "@oh-my-pi/pi-coding-agent";
 const HOME = homedir();
 const LIFEOS_DIR = process.env.LIFEOS_DIR ?? join(HOME, ".claude");
 const SETTINGS_PATH = join(LIFEOS_DIR, "settings.json");
-const LOG_PATH = process.env.OMP_BRIDGE_LOG ?? join(HOME, ".omp", "lifeos-bridge.log");
+const LOG_PATH = process.env.OMP_BRIDGE_LOG;
 const PULSE_NOTIFY = "http://127.0.0.1:31337/notify";
 const VOICE_ID = process.env.OMP_VOICE_ID ?? "fTtv3eikoepIosk8dTZ5";
 const HOOK_TIMEOUT_MS = 30_000;
@@ -74,6 +74,7 @@ const TOOL_UP: Record<string, string> = {
 };
 
 function log(line: Record<string, unknown>): void {
+  if (!LOG_PATH) return;
   try {
     appendFileSync(LOG_PATH, JSON.stringify({ ts: new Date().toISOString(), ...line }) + "\n");
   } catch { /* never crash on logging */ }

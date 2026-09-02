@@ -40,9 +40,9 @@ while [ $# -gt 0 ]; do
     -p | --print)
         shift
         ;;
-    --model)
+    -m | --model)
         cli_model="${2:-}"
-        shift 2
+        shift 2 2>/dev/null || shift
         ;;
     --model=*)
         cli_model="${1#*=}"
@@ -50,7 +50,7 @@ while [ $# -gt 0 ]; do
         ;;
     --effort)
         cli_effort="${2:-}"
-        shift 2
+        shift 2 2>/dev/null || shift
         ;;
     --effort=*)
         cli_effort="${1#*=}"
@@ -58,7 +58,7 @@ while [ $# -gt 0 ]; do
         ;;
     --output-format)
         output_format="${2:-json}"
-        shift 2
+        shift 2 2>/dev/null || shift
         ;;
     --output-format=*)
         output_format="${1#*=}"
@@ -66,7 +66,7 @@ while [ $# -gt 0 ]; do
         ;;
     --system-prompt)
         system_prompt="${2:-}"
-        shift 2
+        shift 2 2>/dev/null || shift
         ;;
     --system-prompt=*)
         system_prompt="${1#*=}"
@@ -74,35 +74,33 @@ while [ $# -gt 0 ]; do
         ;;
     --system-prompt-file)
         system_prompt_file="${2:-}"
-        shift 2
+        shift 2 2>/dev/null || shift
         ;;
     --system-prompt-file=*)
         system_prompt_file="${1#*=}"
         shift
         ;;
-    --tools)
-        tools_flag="${2:-}"
-        shift 2
+    --append-system-prompt | --append-system-prompt-file)
+        shift 2 2>/dev/null || shift
         ;;
-    --tools=*)
+    --append-system-prompt=* | --append-system-prompt-file=*)
+        shift
+        ;;
+    --tools | --allowedTools)
+        tools_flag="${2:-}"
+        shift 2 2>/dev/null || shift
+        ;;
+    --tools=* | --allowedTools=*)
         tools_flag="${1#*=}"
         shift
         ;;
-    --allowedTools)
-        tools_flag="${2:-}"
-        shift 2
+    --setting-sources | --session-id | --session | -s | --resume | -r | --cwd | -C | --project | -d | --config-dir | --permission-mode | --timeout | --max-tokens | --temperature | --profile | --mcp-config | --api-key | --agent | --agent-type)
+        shift 2 2>/dev/null || shift
         ;;
-    --allowedTools=*)
-        tools_flag="${1#*=}"
+    --setting-sources=* | --session-id=* | --session=* | --resume=* | --cwd=* | --project=* | --config-dir=* | --permission-mode=* | --timeout=* | --max-tokens=* | --temperature=* | --profile=* | --mcp-config=* | --api-key=* | --agent=* | --agent-type=*)
         shift
         ;;
-    --setting-sources)
-        shift 2
-        ;;
-    --setting-sources=*)
-        shift
-        ;;
-    --exclude-dynamic-system-prompt-sections)
+    --exclude-dynamic-system-prompt-sections | --dangerously-skip-permissions | --continue | -c | --fork-session | --no-session | --verbose | --debug | --strict)
         shift
         ;;
     -h | --help)
@@ -121,9 +119,27 @@ while [ $# -gt 0 ]; do
         done
         break
         ;;
-    -*)
-        # Ignore unknown flags for Claude CLI compatibility
+    --*=*)
+        # Safely discard any unrecognized option of the form --option=value
         shift
+        ;;
+    -*)
+        # Safely discard unrecognized option flag.
+        # If followed by a non-flag argument:
+        # - If more tokens remain after $2, $2 is the flag's argument (consume both)
+        # - If only $2 remains and stdin is piped, $2 is the flag's argument (consume both)
+        # - If only $2 remains and no stdin is piped, $2 is the positional user prompt
+        if [ $# -ge 2 ] && [[ "$2" != -* ]]; then
+            if [ $# -gt 2 ]; then
+                shift 2
+            elif [ ! -t 0 ]; then
+                shift 2
+            else
+                shift 1
+            fi
+        else
+            shift
+        fi
         ;;
     *)
         positional_args+=("$1")
@@ -136,17 +152,9 @@ if [ -n "$system_prompt_file" ] && [ -f "$system_prompt_file" ]; then
     system_prompt=$(cat "$system_prompt_file")
 fi
 
-target_model="${LIFEOS_TOOLS_MODEL_NAME:-}"
-if [ -z "$target_model" ]; then
-    case "${cli_model:-}" in
-    "" | haiku* | sonnet* | opus* | fable* | claude* | anthropic*)
-        target_model="llama.cpp/qwen3"
-        ;;
-    *)
-        target_model="$cli_model"
-        ;;
-    esac
-fi
+# Data safety invariant: Always force local model from LIFEOS_TOOLS_MODEL_NAME (default: llama.cpp/qwen3),
+# ignoring any --model argument passed by LifeOS scripts/hooks to guarantee personal context stays local.
+target_model="${LIFEOS_TOOLS_MODEL_NAME:-llama.cpp/qwen3}"
 
 raw_effort="${LIFEOS_TOOLS_MODEL_EFFORT:-${cli_effort:-high}}"
 case "$raw_effort" in

@@ -232,12 +232,12 @@ substituteTree(process.env.HOME + '/.claude/skills', vars);
     bun "${HOME}/.claude/LIFEOS/TOOLS/Doctor.ts" decline fabric >/dev/null 2>&1 || true
 
     echo "==> Configuring shell launch alias"
-    local alias_cmd='alias lifeos="OMP_VOICE=0 LIFEOS_DIR=~/.omp omp --append-system-prompt ~/.omp/LIFEOS/LIFEOS_SYSTEM_PROMPT.md"'
+    local alias_cmd='export LIFEOS_CWD="${LIFEOS_CWD:-$HOME/agent-private/lifeos}"'"\n"'alias lifeos="OMP_VOICE=0 LIFEOS_DIR=~/.omp omp --cwd \"\${LIFEOS_CWD:-\$HOME/agent-private/lifeos}\" --append-system-prompt ~/.omp/LIFEOS/LIFEOS_SYSTEM_PROMPT.md"'
     if [[ -f "${HOME}/.bashrc" ]] && ! grep -q "alias lifeos=" "${HOME}/.bashrc"; then
-        echo "${alias_cmd}" >>"${HOME}/.bashrc"
+        echo -e "${alias_cmd}" >>"${HOME}/.bashrc"
     fi
     if [[ -f "${HOME}/.zshrc" ]] && ! grep -q "alias lifeos=" "${HOME}/.zshrc"; then
-        echo "${alias_cmd}" >>"${HOME}/.zshrc"
+        echo -e "${alias_cmd}" >>"${HOME}/.zshrc"
     fi
 
     echo "==> Verification: Doctor status"
