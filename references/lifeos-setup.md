@@ -1,6 +1,11 @@
 # LifeOS Setup Reference & Harness Architecture
 
-This document details the architectural topology of LifeOS, its integration with the Oh My Pi (OMP) / MyPAI runtime mesh, the mechanics of utility inference vs. agent harness execution, and a root cause diagnostic for background inference failures.
+> [!IMPORTANT]
+> **Current Focus & Status**:
+> - **LifeOS Integration:** The primary active engineering focus is layering and stabilizing LifeOS into OMP. The integration is currently basically working, but actively undergoing adjustments.
+> - **`mypai_runtime`:** The Python runtime package (`src/mypai_runtime/`) will be used in the target setup, but is **not currently used or ported to be used correctly** yet. Porting is scheduled once LifeOS integration adjustments are stabilized.
+
+This document details the architectural topology of LifeOS, its integration with Oh My Pi (OMP), the mechanics of utility inference vs. agent harness execution, and diagnostics for background inference.
 
 ---
 
@@ -37,15 +42,15 @@ LifeOS runs as a hybrid system with the core framework located in the OMP profil
 
 ### Network Services & Port Mapping
 
-| Port | Service | Process / Command | Responsibility |
-|---|---|---|---|
-| `:31337` | **Pulse** | `bun run --cwd ~/.claude/LIFEOS/PULSE pulse.ts` | LifeOS dashboard, background hooks, voice server, and metrics. |
-| `:28080` | **Agent of Empires (AoE)** | `aoe serve --port 28080` | ACP execution host, TUI cockpit, worktree supervisor. |
-| `:28824` | **amux-server** | `amux-server` | Cognitive state store, durable Kanban board, message bus, cron. |
-| `:28888` | **Hindsight** | `hindsight-server` | Long-term vector/lexical memory bank sync and recall. |
-| `:9810` | **cc-connect** | `cc-connect --config ~/.cc-connect/config.toml` | Chat ingress and bridge. |
-| `:21080` | **llama.cpp / Local LLM** | `llama-server` (or proxy) | Local inference provider (`http://localhost:21080/v1`). |
-
+| Port | Service | Status | Process / Command | Responsibility |
+|---|---|---|---|---|
+| `:31337` | **Pulse** | **Active** | `bun run --cwd ~/.claude/LIFEOS/PULSE pulse.ts` | LifeOS dashboard, background hooks, voice server, and metrics. |
+| `:28888` | **Hindsight** | **Active** | `hindsight-server` | Long-term vector/lexical memory bank sync and mental model recall. |
+| `:21080` | **local-router / Local LLM** | **Active** | `local-router.py` (or `llama-server`) | Unified OpenAI-compatible local inference gateway (`http://localhost:21080/v1`). |
+| `:20080`–`:20100` | **Local Inference Engines** | **Active** | `llama-server`, `whisper-server`, etc. | Dedicated engines for chat, embeddings, reranking, STT, TTS, image generation. |
+| `:28080` | **Agent of Empires (AoE)** | *Retired (Gen-2)* | `aoe serve --port 28080` | Legacy ACP execution host and TUI cockpit (superseded by direct OMP harness). |
+| `:28824` | **amux-server** | *Retired (Gen-2)* | `amux-server` | Legacy cognitive state store, Kanban board, and cron bus (superseded by LifeOS + OMP). |
+| `:9810` | **cc-connect** | *Retired (Gen-2)* | `cc-connect` | Legacy chat ingress bridge (superseded by direct OMP channels / Pulse). |
 ---
 
 ## 2. Harness Execution vs. Utility Inference
@@ -61,26 +66,24 @@ In this environment, two distinct execution mechanisms govern AI calls:
    [ Interactive Agent Loop ]                  [ LifeOS Background / Pulse ]
                │                                             │
                ▼                                             ▼
-   Agent of Empires / OMP                       LifeOS PULSE / Tools / Hooks
+          Oh-My-Pi (OMP)                               LifeOS PULSE / Tools / Hooks
     (~/.omp/agent/config.yml)                    (e.g., algorithm-tab.ts)
                │                                             │
                ▼                                             ▼
      Local / API Providers                         LIFEOS/TOOLS/Inference.ts
-  (e.g., llama.cpp :21080/v1)                                │
+  (e.g., local-router :21080)                                │
                                                              ▼
-                                                Subprocess: `claude` CLI
+                                                Subprocess: `claude` CLI / shim
                                                 (--output-format json)
                                                              │
                                                              ▼
-                                                Anthropic Subscription API
-```
+                                                Anthropic API or Local OMP Shim
 
 ### A. OMP Agent Execution (`~/.omp/agent/`)
 
 - **Configuration:** `~/.omp/agent/config.yml` and `~/.omp/agent/models.yml`.
-- **Primary Model Role:** Defaults to `llama.cpp/qwen3` at `http://localhost:21080/v1` or configured cloud providers.
-- **Role:** Drives the primary agent loop, conversational turns, MCP tools, and subagents (`aoe`).
-
+- **Primary Model Role:** Defaults to configured models (`local-router`, cloud providers) configured in `models.yml`.
+- **Role:** Drives the primary agent loop, conversational turns, MCP tools, and subagents (`task(agent: "...")`).
 ### B. LifeOS Utility Inference (`LIFEOS/TOOLS/Inference.ts`)
 
 LifeOS scripts, background hooks, and Pulse dashboard tabs execute targeted LLM calls (e.g., classifying amber items, summarizing the algorithm chain) using `LIFEOS/TOOLS/Inference.ts`.

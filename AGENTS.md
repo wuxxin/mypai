@@ -4,23 +4,25 @@
 
 ## 1. System Architecture
 
-**UPDATE:** this is currently in major restructuring.
+**UPDATE:** System architecture is currently in major restructuring.
 
-The current architecture trajectory is:
+### Current Architectural Focus: LifeOS Integration
+The primary active focus is layering and stabilizing **LifeOS** (https://github.com/danielmiessler/LifeOS) into the OMP sandbox:
+- **Integration Status:** Basically working, but actively undergoing adjustments.
+- **Harness Layering:** `~/.omp/LIFEOS` (with `~/.claude` symlinked to `~/.omp`).
+- **Setup & Lifecycle:** Scaffolded via `bin/install-lifeos` (idempotent installation and updates).
+- **Bridge Extension:** `omp/agent/extensions/OmpHooksBridge.ts` translates Claude Code hooks for OMP.
+- **Launch Command:** `OMP_VOICE=0 LIFEOS_DIR=~/.claude/LIFEOS omp --append-system-prompt ~/.claude/LIFEOS/LIFEOS_SYSTEM_PROMPT.md` (or `lifeos` alias).
+- Detailed setup notes: `references/lifeos-setup.md`.
 
-- using `submodules/agents-shared` repo for local inference service wrapper for chat,embedding,rerank,stt,tts,imagegen, and agents harness software
-- using `submodules/aur-packages` repo for archlinux aur packages and private forks of packages needed for local-inference and agent harnesses
-- using submodules/agents-shared/scripts/sandbox-ctl and this repo `omp.env` to configure an oh-my-pi sandbox service config
-  - see omp/agent for base profile Config, Memorybanks, Agents, Commands, Skills, Extensions, Install CMDS, a.o.
+### Target Trajectory & Submodules
+- **`submodules/agents-shared`**: Local inference wrappers (`local-router` on `:21080` for chat, embedding, rerank, stt, tts, imagegen) and `sandbox-ctl` environment isolation.
+- **`submodules/aur-packages`**: Arch Linux AUR packages and private PKGBUILD forks.
+- **`omp/agent`**: Base profile configuration (`config.yml`, `models.yml`, `agents/`, `skills/`, `extensions/`, `memorybanks/`).
+- **Hindsight Memory**: Long-term vector memory on `:28888` managed via `bin/membank-ctl`.
 
-- layer LifeOS (https://github.com/danielmiessler/LifeOS) into sandbox ~/.omp/LIFEOS 
-    - this is currenty done manual, there is a rudementary script in `bin/install-lifeos`.
-    - sandbox `~/.claude` is ymlinked to `~/.omp` for more compatibility for runnning _LifeOS under omp, instead of claude.
-    - `omp/agent/extensions/OmpHooksBridge.ts` and .md is used to make omp compatible with claude-code hooks for lifeos
-    - start lifeos with `OMP_VOICE=0 LIFEOS_DIR=~/.claude/LIFEOS omp --append-system-prompt ~/.claude/LIFEOS/LIFEOS_SYSTEM_PROMPT.md`
-
-documentation and configuration in progress. See `references/lifeos-setup.md`.
-
+### `mypai_runtime` Status
+- `src/mypai_runtime/` will be used in the target setup, but is **not currently used or ported to be used correctly** in the active harness yet. Its refactoring and adaptation to OMP + LifeOS is deferred until LifeOS integration adjustments are complete.
 ## Harness Usage
 
 - **Internal Tools First:** Discover and use internal tools before shelling out to do the same

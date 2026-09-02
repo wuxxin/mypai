@@ -1,10 +1,13 @@
 # MyPAI Testing & Quality Architecture (`references/mypai-test.md`)
 
+> [!NOTE]
+> **Testing Architecture Note**:
+> This document covers test verification for the Python runtime package (`mypai_runtime`), including unit tests for Hindsight memory, error diagnostics, and legacy `amux` client bindings.
+> While `amux` is retired in the Gen-3 active trajectory in favor of direct OMP + LifeOS integration, the test suites remain active to ensure library code quality and backward compatibility.
+
 ## Executive Summary
 
-The **MyPAI Test Architecture** establishes a rigorous, automated verification matrix spanning in-kernel Python runtime packages, the `amux` inter-worker message bus, `Hindsight` vector memory integration, and end-to-end multi-session workflows. Driven by `pytest`, `pytest-cov`, `ruff`, `mypy`, and a modern GNU `Makefile`, the test suite guarantees **97%+ line coverage**, strict type safety, and zero regressions across distributed multi-agent sessions.
-
----
+The **MyPAI Test Architecture** establishes a rigorous, automated verification matrix spanning in-kernel Python runtime packages, `Hindsight` vector memory integration, diagnostics context extraction, and legacy `amux` client protocols. Driven by `pytest`, `pytest-cov`, `ruff`, `mypy`, and a modern GNU `Makefile`, the test suite guarantees **97%+ line coverage**, strict type safety, and zero regressions across runtime libraries.
 
 ## 1. Testing Philosophy & Test Layering
 

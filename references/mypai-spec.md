@@ -1,11 +1,14 @@
-# MyPAI System Specification (`references/mypai-spec.md`)
+# MyPAI System Specification (`references/mypai-spec.md`) [Gen-2 Reference]
+
+> [!IMPORTANT]
+> **Architecture Status: TRANSITIONAL / RETIRED (Gen-2)**
+> This specification describes the Generation 2 (`aoe` :28080, `amux` :28824, `cc-connect` :9810) multi-session orchestration architecture.
+> In the **active Generation 3 architecture**, the system operates directly on **`oh-my-pi` (`omp`)** + **`LifeOS`** (`~/.omp/LIFEOS` with Pulse dashboard on `:31337` and `OmpHooksBridge.ts`), backed by **`submodules/agents-shared`** local inference and **Hindsight** memory (`:28888`).
+> Please refer to [**`README.md`**](../README.md), [**`USAGE.md`**](../USAGE.md), and [**`AGENTS.md`**](../AGENTS.md) for the active system documentation.
 
 ## Executive Summary
 
-The **MyPAI Architecture** unifies autonomous personal assistance, multi-channel chat routing, scheduled automation, and codebase engineering across a distributed multi-session mesh. Powered by **`amux`**, **`cc-connect`**, **`oh-my-pi` (`omp`)**, and **`Agent of Empires` (`aoe`)**, the system eliminates monolithic daemon bottlenecks and replaces conversational shell scripting with **in-kernel Python `eval` execution (`lang: "py"`)**, **native loopback host tools (`tool.*`)**, and **isolated dual-profile Hindsight memory banks**.
-
-### Self-Contained Repository Architecture (No Plugin Required)
-MyPAI eliminates the legacy `omp-mypai` plugin and submodule entirely. Because the monolithic daemon and old MCP wrappers are retired, OMP profiles (`~/.omp/agent/` load natively from filesystem templates, while the in-kernel runtime library (`mypai_runtime`) and management utilities (`bin/membank-ctl`) live directly inside the root `mypai` repository. This eliminates plugin loader latency, removes git submodule friction, and makes `mypai` a clean, standalone repository.
+The **MyPAI Generation 2 Architecture** unified autonomous personal assistance, multi-channel chat routing, scheduled automation, and codebase engineering across a distributed multi-session mesh powered by **`amux`**, **`cc-connect`**, **`oh-my-pi` (`omp`)**, and **`Agent of Empires` (`aoe`)**.
 
 ---
 

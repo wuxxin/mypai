@@ -1,122 +1,102 @@
-# MyPAI & Oh-My-Pi Usage Guide
+# MyPAI & Oh-My-Pi (OMP) + LifeOS Operational Guide
 
-This guide explains how to use **MyPAI** and **Oh-My-Pi (OMP)** from an operator and developer perspective.
-
----
-
-## 1. System Overview & Core Topology
-
-MyPAI runs on a clean separation of concerns between the **`aoe` ACP Execution Cockpit** (:28080) and the **`amux` Cognitive & State Mesh** (:28824):
-
-```mermaid
-flowchart TD
-    subgraph Chat["External Chat Ingress"]
-        ExtUser["External User (Signal / Telegram / Matrix)"]
-        CC["cc-connect Gateway (:9810)"]
-        ExtUser -->|"E2EE Messages"| CC
-    end
-
-    subgraph Cockpit["AoE Execution Cockpit (:28080)"]
-        direction TB
-        Chan["mypai-channel<br/>(Chat Ingress)"]
-        Brain["mypai-main<br/>(Brain & Orchestrator)"]
-        Cron["mypai-cron<br/>(Scheduled Sweeps)"]
-        Workers["task-worker-N<br/>(@orchestrator + Specialists)"]
-        
-        Brain -->|"aoe session / worktrees"| Workers
-    end
-
-    subgraph AmuxMesh["amux Cognitive Plane (:28824)"]
-        direction TB
-        Board["Durable Kanban Board<br/>(/api/board/cards)"]
-        Bus["Turn Message Bus<br/>(/api/messages)"]
-        Sched["Durable Scheduler Engine<br/>(/api/schedules)"]
-        
-        Sched -->|"CRON: <action>"| Bus
-    end
-
-    CC -->|"tmux send-keys"| Chan
-    Chan -->|"tmux capture-pane"| CC
-
-    Chan <-->|"POST/GET /api/messages"| Bus
-    Brain <-->|"POST/GET /api/messages"| Bus
-    Cron <-->|"POST/GET /api/messages"| Bus
-    Workers <-->|"POST/GET /api/messages"| Bus
-
-    Brain <-->|"Claim/Update Cards"| Board
-    Workers <-->|"Claim/Update Cards"| Board
-```
-
-1. **`mypai-main`:** The primary cognitive brain (running in `aoe` via ACP). Maintains long-term LifeOS memory, manages the `amux` Kanban board, coordinates subagent worktrees, and formulates user replies.
-2. **`mypai-channel`:** Dedicated chat ingress gateway (running in `aoe` via ACP). Connected to `cc-connect`, ingests incoming mobile messages, classifies intent, and routes structured turns to `mypai-main`.
-3. **`mypai-cron`:** Dedicated automation reactor (running in `aoe` via ACP). Triggered by `amux` schedulers via `/api/messages` to perform silent sweeps and post health metrics.
-4. **`task-worker-N`:** Ephemeral coding workers running in target repositories/worktrees with normal OMP profiles.
+This guide explains how to operate, develop with, and configure **MyPAI** using **Oh-My-Pi (`omp`)**, **LifeOS**, and **Hindsight Memory**.
 
 ---
 
-## 2. Managing & Attaching to Sessions
+## 1. System Architecture & Operating Model
 
-### Visual Cockpit & Web PWA (`aoe`)
-The easiest way to monitor all running sessions, diffs, and tool steps is using **Agent of Empires (`aoe`)**:
-```bash
-# Terminal TUI Matrix
-aoe
+MyPAI combines **Oh-My-Pi (`omp`)** as the high-performance agent execution harness with **LifeOS** as the cognitive intent engineering platform:
 
-# Web PWA Dashboard (browser access on localhost:28080 or Tailscale)
-aoe serve
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                              HOST WORKSPACE                                 │
+│                                                                             │
+│   ~/.claude ────────► (Symlink) ────────► ~/.omp                            │
+│                                                │                            │
+│                                                ├── LIFEOS/ (Framework Core) │
+│                                                │    ├── PULSE/ (:31337)     │
+│                                                │    ├── TOOLS/              │
+│                                                │    ├── USER ──┐ (Symlink)  │
+│                                                │    └── MEMORY ┘            │
+│                                                │           │                │
+│   ~/agent-private/lifeos ◄─────────────────────┴───────────┘                │
+│     (Private User Vault: TELOS, Identity, Long-Term Memory)                 │
+│                                                                             │
+│   OMP Base Profile (~/.omp/agent/)                                          │
+│     ├── config.yml & models.yml                                             │
+│     ├── agents/ (@orchestrator, @scout, @debugger, @reviewer, @task, ...)   │
+│     ├── skills/ (ulw-plan, systematic-debugging, git-master, review-work)   │
+│     ├── extensions/ (OmpHooksBridge.ts -> LifeOS Hooks)                     │
+│     └── memorybanks/ (oh-my-pi.yaml, mypai.yaml)                            │
+└─────────────────────────────────────────────────────────────────────────────┘
 ```
 
-### Attaching via `tmux`
-To directly inspect or interact with any active session pane:
+### Key Components:
+
+1. **Oh-My-Pi (`omp`)**: The primary execution harness driving interactive CLI sessions, task subagents (`task(agent: "...")`), internal tool devices (`xd://`), and in-kernel Python runtimes (`eval`).
+2. **LifeOS (`~/.omp/LIFEOS`)**: Intent engineering platform running the Algorithm, TELOS alignment, and Pulse dashboard on port `:31337`.
+3. **`OmpHooksBridge.ts`**: Extension bridging Claude Code hook events (`SessionStart`, `UserPromptSubmit`, `PostToolExecution`, `SessionEnd`) to OMP native extension hooks.
+4. **Local Inference Services (`submodules/agents-shared/`)**: Local model routing (`local-router` on `:21080`), chat, embeddings, reranking, STT, and TTS.
+5. **Hindsight Memory (`:28888`)**: Long-term vector memory, observation consolidation, and mental models synced via `bin/membank-ctl`.
+
+---
+
+## 2. Launching & Operating LifeOS with OMP
+
+### Quick Launch
+
+Use the configured shell alias:
 ```bash
-# Attach to the main orchestrator session
-tmux attach -t amux-mypai-main
-
-# Attach to the communication gateway
-tmux attach -t mypai-channel
-
-# Attach to the cron reactor
-tmux attach -t mypai-cron
-
-# Attach to an active task worker
-tmux attach -t amux-task-worker-1
+lifeos
 ```
-*(Detach at any time with `Ctrl-B d` without interrupting agent execution).*
 
-### Starting New Task Worker Sessions
-To spawn a new isolated task worker on a target repository:
+Or execute directly:
 ```bash
-# Via amux CLI
-amux launch worker-auth repos/backend-core --provider omp
+OMP_VOICE=0 LIFEOS_DIR=~/.claude/LIFEOS omp --append-system-prompt ~/.claude/LIFEOS/LIFEOS_SYSTEM_PROMPT.md
+```
 
-# Or via Python eval inside mypai-main:
-from mypai_runtime import amux
-amux.spawn_task_worker(
-    name="worker-auth",
-    directory="repos/backend-core",
-    prompt="Refactor auth middleware to support Bearer tokens."
-)
+### Managing the Pulse Dashboard
+
+Pulse provides observability, work kanban, wiki, voice notifications, and system health on port `:31337`:
+
+```bash
+# Start Pulse dashboard
+cd ~/.claude/LIFEOS/PULSE && bun run pulse.ts
+
+# Open in browser:
+# http://localhost:31337
+```
+
+### Re-Deploying & Managing LifeOS
+
+To deploy, update, or uninstall the LifeOS scaffold in OMP:
+```bash
+# Idempotent install / update:
+./bin/install-lifeos install
+
+# Uninstall (preserves private user data):
+./bin/install-lifeos uninstall
 ```
 
 ---
 
-## 3. Agent Roster & Specialist Roles
+## 3. Specialist Agent Roster & Delegation
 
-When interacting with Oh-My-Pi, you can delegate tasks to specialized subagents using `@<role>`:
+When interacting with Oh-My-Pi, delegate tasks to specialized subagents using `@<role>` or the `task` tool:
 
 | Subagent | Role | Best Used For |
 | :--- | :--- | :--- |
 | **`@orchestrator`** | **Main Project Coordinator** | Epic planning, subagent delegation, diff validation, and strategic escalation. Default entry point. |
 | **`@scout`** | **Discovery & Codebase Mapper** | Fast read-only symbol discovery, dependency tree mapping, AST grep searches. |
 | **`@debugger`** | **Forensic Root-Cause Investigator** | 4-phase systematic debugging, stack trace analysis, memory profiling, and hypothesis testing. |
-| **`@pythonista`** | **Python Engineering Specialist** | Idiomatic Python craftsmanship, type safety (typing/mypy), async/await, ruff formatting, pytest suites. |
-| **`@task`** | **General Implementation Worker** | Multi-language feature implementation, refactoring, and multi-file editing. |
 | **`@reviewer`** | **Code Quality & Safety Reviewer** | Multi-perspective code review, cross-boundary dispatch verification, P0–P3 structured findings. |
-| **`@security-reviewer`** | **Vulnerability Scanner** | Invariant validation, tainted data flow analysis, broken authorization and CVE detection. |
-| **`@designer`** | **UI/UX & Design System Specialist** | Token-first CSS/HTML styling, responsive layouts, accessibility (a11y), visual consistency. |
+| **`@security-reviewer`** | **Vulnerability Scanner** | Invariant validation, tainted data flow analysis, broken authorization, and CVE detection. |
+| **`@task`** | **General Implementation Worker** | Multi-language feature implementation, refactoring, and multi-file editing. |
+| **`@writer`** | **Documentation & Memory Craftsman** | Technical documentation, OpenAPI schemas, changelogs, and memory bank distillation. |
 | **`@librarian`** | **External API & Source Researcher** | Clones and inspects upstream source repos to verify API signatures and ground facts in truth. |
-| **`@writer`** | **Documentation & Memory Craftsman** | Technical documentation, OpenAPI schemas, changelogs, and Hindsight memory bank distillation. |
-| **`@patcher`** | **Ultra-Fast Mechanical Patcher** | Rapid single-file edits, typos, syntax fixes, and minimal latency data collection. |
+| **`@designer`** | **UI/UX & Design System Specialist** | Token-first CSS/HTML styling, responsive layouts, accessibility (a11y), visual consistency. |
+| **`@patcher`** | **Ultra-Fast Mechanical Patcher** | Rapid single-file edits, typos, syntax fixes, and minimal latency data edits. |
 
 ---
 
@@ -129,6 +109,9 @@ MyPAI equips agents with high-rigor engineering workflows:
 3. **`git-master` (`skills/git-master/SKILL.md`):** Safe worktree isolation (`~/.omp/wt`), uncommitted state protection, atomic conventional semantic commits.
 4. **`review-work` (`skills/review-work/SKILL.md`):** Structured multi-pass review rubric and P0–P3 finding schemas.
 5. **`test-driven-development` (`skills/test-driven-development/SKILL.md`):** Red-Green-Refactor test cycle.
+6. **`lilac` (`skills/lilac/SKILL.md`):** Lilac automated build system and repository management for Arch Linux packages.
+7. **`archlinux-pkgbuild` (`skills/archlinux-pkgbuild/SKILL.md`):** PKGBUILD creation, review, and AUR packaging standards.
+8. **`system-prompts` (`skills/system-prompts/SKILL.md`):** Authoring and editing system prompts, tool docs, and agent specifications.
 
 ---
 
@@ -143,110 +126,57 @@ In any interactive OMP session, you can invoke specialized workflows using slash
 * **`/git`** (or `/git-master`): Safe git inspection, worktree branching, and conventional commits.
 * **`/scout`**: Spawns `@scout` to explore repository architecture.
 * **`/security`**: Runs security vulnerability scan with `@security-reviewer`.
-* **`/pythonista`**: Runs deep Python typing, async, and performance optimization pass.
 * **`/writer`**: Generates documentation or updates memory banks.
 * **`/patch`**: Spawns `@patcher` for quick mechanical edits.
-* **`/learn`** (or `/reflect`): Distills recent turn insights into Hindsight mental models.
-* **`/escalate`**: Forwards questions or confirmation requests directly to `mypai-main`.
+* **`/learn`**: Distills recent turn insights into Hindsight mental models.
 
 ---
 
-## 6. In-Kernel Python `eval` Execution (`lang: "py"`)
+## 6. Hindsight Long-Term Memory Management (`bin/membank-ctl`)
 
-All coordination across agents is executed in-process using Python `eval` with the unified `mypai_runtime` and OMP loopback tools:
+Hindsight (`:28888`) maintains persistent vector memory and auto-synthesizes mental models.
 
-```python
-from mypai_runtime import amux, hindsight
-
-# 1. Send an inter-worker message
-amux.send_message(
-    target_worker="mypai-main",
-    body="WORKER_STATUS: Completed auth refactor. Unit tests passing."
-)
-
-# 2. Manage Kanban Board Cards
-card = amux.create_card(
-    title="Upgrade Database Drivers",
-    description="Migrate asyncpg to 0.30 in backend-core",
-    lane="Doing"
-)
-
-# 3. Hindsight Memory Operations:
-# - Session Default Bank: Use OMP loopback tools directly (zero latency)
-prefs = tool.reflect(query="Coding preferences")
-recalled = tool.recall(query="Authentication conventions")
-
-# - Cross-Bank / Target Bank: Use mypai_runtime REST client
-target_prefs = hindsight.reflect(query="Coding preferences", bank_id="target-bank")
-
-# 4. Synchronous in-cell waiting for response
-try:
-    reply = amux.wait_for_response(
-        target_worker="mypai-main",
-        correlation_id="req-1234",
-        timeout=30.0
-    )
-except TimeoutError:
-    print("Main did not respond within 30s")
-```
-
-
----
-
-## 7. Cron & Scheduled Automation Example
-
-Schedules in `amux-server` fire durable triggers directly into `mypai-cron`:
-
-### Registering a Schedule via Python `eval`
-```python
-from mypai_runtime import amux
-
-amux.create_schedule(
-    title="Daily Codebase & Health Sweep",
-    session="mypai-cron",
-    schedule_expr="0 8 * * *",  # Every day at 08:00
-    command="CRON: health_sweep repo=/home/wuxxin/agent-shared/code/mypai",
-    enabled=True
-)
-```
-
-### What Happens When Cron Fires:
-1. `amux-server` injects `CRON: health_sweep ...` into `mypai-cron`.
-2. `mypai-cron` executes an in-kernel `eval` cell:
-   - Probes git status and FIXME markers via native `tool.search()`.
-   - Checks server metrics via `amux.get_metrics()`.
-3. **If all clean:** Remains **100% silent (0 stdout)**.
-4. **If anomalies found:** Files an amux Kanban card (`Todo`) and alerts `mypai-main`.
-
----
-
-## 8. Development, Testing & Quality Assurance (`Makefile`)
-
-The repository includes a modern GNU Makefile to run tests, type checking, and linting locally:
+### Provisioning & Updating Memory Banks
 
 ```bash
-# View available Makefile targets
-make help
+# Idempotently sync bank configurations and mental models from local definitions:
+./bin/membank-ctl update http://localhost:28888 ./omp/agent/memorybanks --yes
 
-# Run the complete test suite (unit + e2e)
-make test
-
-# Run unit or end-to-end integration tests separately
-make test-unit
-make test-e2e
-
-# Run test suite with code coverage
-make coverage
-
-# Auto-format and lint code
-make format
-make lint
-
-# Run static type checking with mypy
-make typecheck
-
-# Run full CI validation pipeline
-make all
+# Sync and prune obsolete server-side mental models:
+./bin/membank-ctl update http://localhost:28888 ./omp/agent/memorybanks --yes --prune
 ```
 
-For complete architectural details on testing, component contract coverage, and E2E simulation flows, see [references/mypai-test.md](references/mypai-test.md).
+### Exporting Server Memory Bank State
+
+```bash
+# Export bank config to YAML:
+./bin/membank-ctl export http://localhost:28888 oh-my-pi --yaml --out oh-my-pi.yaml
+```
+
+---
+
+## 7. Local Inference Management (`submodules/agents-shared/`)
+
+Local inference services are managed via scripts in `submodules/agents-shared`:
+
+```bash
+# 1. Download model weights (LLM, vision, embeddings, rerank, TTS, STT)
+./submodules/agents-shared/scripts/local-download.sh /data/public/machine-learning/models --all
+
+# 2. Provision and start local inference daemons
+./submodules/agents-shared/assistants/local-inference.sh install --new-config
+
+# 3. Query local router status (OpenAI-compatible port :21080)
+curl http://localhost:21080/v1/models
+```
+
+---
+
+## 8. Architectural Transition & Legacy Notes
+
+> **Note on Architecture Evolution & Current Priorities:**
+> - **Active Priority:** The primary focus is stabilizing and refining the **LifeOS integration** into OMP (`~/.omp/LIFEOS`, Pulse `:31337`, `OmpHooksBridge.ts`). It is currently basically working, but actively undergoing adjustments.
+> - **`mypai_runtime` Status:** `src/mypai_runtime/` will be used in the target setup, but is **not currently used or ported to be used correctly** yet. Porting is scheduled once the LifeOS integration is stabilized.
+> - **Generation 1 (Legacy-Legacy):** The monolithic `omp-mypai` FastAPI daemon (`:52080`) has been completely removed.
+> - **Generation 2 (Transitional):** The `aoe` (:28080) ACP cockpit, `amux-server` (:28824) Kanban/message bus, `cc-connect` (:9810) chat bridge, and `mypai-channel`/`mypai-main`/`mypai-cron` 3-session model are **retired from the active trajectory**. Associated clients in `src/mypai_runtime/amux.py` and unit tests are preserved for historical reference and test suite integrity but are not used in the active OMP + LifeOS runtime path.
+> - **Generation 3 (Current Active):** Direct **`oh-my-pi` (`omp`)** + **`LifeOS`** (`~/.omp/LIFEOS` with Pulse `:31337` and `OmpHooksBridge.ts`), backed by **`submodules/agents-shared`** local inference and **Hindsight** memory.

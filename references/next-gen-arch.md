@@ -1,10 +1,14 @@
-# Next-Generation AI Agent Orchestration Architecture
+# Next-Generation AI Agent Orchestration Architecture (Gen-2 Reference)
+
+> [!IMPORTANT]
+> **Architecture Status: TRANSITIONAL / RETIRED (Gen-2)**
+> This specification details the Generation 2 multi-session mesh (`aoe` :28080, `amux` :28824, `cc-connect` :9810).
+> In the **active Generation 3 architecture**, the system has shifted to direct **`oh-my-pi` (`omp`)** + **`LifeOS`** (`~/.omp/LIFEOS` with Pulse dashboard on `:31337` and `OmpHooksBridge.ts`), backed by **`submodules/agents-shared`** local inference and **Hindsight** memory (`:28888`).
+> Please refer to [**`README.md`**](../README.md), [**`USAGE.md`**](../USAGE.md), and [**`AGENTS.md`**](../AGENTS.md) for the active system documentation.
 
 ## Executive Architecture Summary
 
-The Next-Generation MyPai Architecture upgrades the multi-agent system from monolithic bash-scripted workflows into an autonomous, observable, event-driven mesh powered by **`amux`**, **`cc-connect`**, **`oh-my-pi` (`omp`)**, and **`Agent of Empires` (`aoe`)**. 
-
-By strictly leveraging **in-kernel Python `eval` execution** paired with native **loopback tool bridges (`tool.*`)**, the new architecture eliminates shell quoting errors, reduces token context consumption, enforces silent execution discipline, and isolates strategic long-term mental models from project-level task artifacts.
+The Next-Generation MyPai Architecture (Gen-2) upgraded the multi-agent system from monolithic bash-scripted workflows (Gen-1) into an event-driven mesh powered by **`amux`**, **`cc-connect`**, **`oh-my-pi` (`omp`)**, and **`Agent of Empires` (`aoe`)**.
 
 ---
 

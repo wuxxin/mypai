@@ -1,10 +1,14 @@
-# Architectural Comparison: Legacy (`omp-mypai`) vs. Next-Gen Orchestration
+# Architectural Comparison: Legacy (Gen-1), Transitional (Gen-2), and Active (Gen-3)
+
+> [!IMPORTANT]
+> **Architecture Status Note (Generation Evolution)**:
+> - **Gen 1 (Legacy-Legacy):** Monolithic FastAPI daemon `mypai_daemon` on port `:52080` (Fully retired & removed).
+> - **Gen 2 (Transitional / Described in this document):** `omp-aoe-amux-hindsight` multi-session mesh on ports `:28080` and `:28824` (Retired from active trajectory, preserved here for reference).
+> - **Gen 3 (Active Trajectory):** Direct **`oh-my-pi` (`omp`)** + **`LifeOS`** (`~/.omp/LIFEOS` with Pulse dashboard on `:31337` and `OmpHooksBridge.ts`), backed by **`submodules/agents-shared`** and **Hindsight** memory (`:28888`). See [**`README.md`**](../../README.md) and [**`USAGE.md`**](../../USAGE.md) for the active guide.
 
 ## Executive Overview
 
-This document presents a comprehensive, component-by-component comparison between the **Legacy Architecture** defined in [`submodules/omp-mypai`](file:///home/wuxxin/agent-shared/code/mypai/submodules/omp-mypai) (skills/mypai_tools/references) and the **Next-Generation Architecture** (`amux` + `cc-connect` + `oh-my-pi` + `aoe`).
-
-The core transformation replaces custom, single-process Python daemon glue (`mypai_daemon` on `:52080` managing a single `omp --mode rpc` child) with a distributed, multi-session control plane where **`mypai-main` (main)**, **`mypai-channel`**, and **`mypai-cron`** strictly **double down on in-kernel Python `eval`** (`lang: "py"`) to coordinate, execute, and automate.
+This document preserves the component-by-component comparison between the **Legacy-Legacy Architecture** (`omp-mypai` FastAPI daemon) and the **Transitional Multi-Session Architecture** (`amux` + `cc-connect` + `oh-my-pi` + `aoe`).
 
 ---
 

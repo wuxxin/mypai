@@ -229,7 +229,7 @@ OMP supports two primary runtime topologies: **Interactive TUI Session** and **A
   - Subagents **never** inherit `APPEND_SYSTEM.md` or the orchestrator role. They only receive their dedicated specialist role from `agents/<name>.md`.
 
 ### 2. ACP Server (`omp acp`) Session Resolution
-- **Launch:** Daemon host (`aoe` on `:28080` or an IDE client) spawns `omp acp` over stdio.
+- **Launch:** Headless ACP client / IDE or daemon host spawns `omp acp` over stdio.
 - **Client Workspace Selection:** The client issues `session/new` with `cwd: "/path/to/repo"`.
 - **Factory Execution ([`packages/coding-agent/src/main.ts#L402`](../submodules/aur-packages/oh-my-pi-git-tag/src/oh-my-pi/packages/coding-agent/src/main.ts#L402)):**
   1. Clones settings for target workspace via `settings.cloneForCwd(cwd)`.
@@ -244,7 +244,7 @@ OMP supports two primary runtime topologies: **Interactive TUI Session** and **A
 - **Case B: Workdir HAS `.omp/` directory:**
   - `<cwd>/.omp/config.yml` overrides settings: Hindsight memory banks, `modelRoles`, tool settings, compaction policies.
   - `<cwd>/.omp/APPEND_SYSTEM.md` overrides or extends the top-level main session instructions.
-  - Common runtime knowledge (e.g. MyPAI runtime APIs, Hindsight REST client, `amux` message bus) is injected via shared skill references (`skill://mypai_runtime` or `.omp/skills/mypai_runtime/SKILL.md`), eliminating the need to duplicate runtime API docs across every repository's `AGENTS.md`.
+  - Common runtime knowledge (e.g. MyPAI runtime APIs, Hindsight REST client, LifeOS bridge) is injected via shared skill references (`skill://mypai_runtime` or `.omp/skills/mypai_runtime/SKILL.md`), eliminating the need to duplicate runtime API docs across every repository's `AGENTS.md`.
 
 ---
 

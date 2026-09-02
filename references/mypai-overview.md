@@ -1,8 +1,12 @@
-# MyPAI Visual Architecture & Overview
+# MyPAI Visual Architecture & Overview (Gen-2 Reference)
 
-This document provides a comprehensive visual and structural overview of the **MyPAI** ecosystem across 6 production perspectives.
+> [!IMPORTANT]
+> **Architecture Status: TRANSITIONAL / RETIRED (Gen-2)**
+> This visual overview documents the Generation 2 multi-session mesh topology (`aoe` :28080, `amux` :28824, `cc-connect` :9810).
+> The **active Generation 3 architecture** is based on direct **`oh-my-pi` (`omp`)** + **`LifeOS`** (`~/.omp/LIFEOS` with Pulse dashboard on `:31337` and `OmpHooksBridge.ts`), backed by **`submodules/agents-shared`** local inference and **Hindsight** memory (`:28888`).
+> Please refer to [**`README.md`**](../README.md), [**`USAGE.md`**](../USAGE.md), and [**`AGENTS.md`**](../AGENTS.md) for the active system documentation.
 
----
+This document provides a comprehensive visual and structural overview of the **MyPAI Generation 2** ecosystem across 6 production perspectives.
 
 ## 1. System Topology: AoE Execution Cockpit & amux Cognitive Plane
 
