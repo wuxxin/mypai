@@ -578,7 +578,7 @@ MyPAI explicitly rejects defensive silent fallbacks and degraded modes. Silent f
 
 ## 15. Testing Architecture & Quality Automation
 
-The testing architecture ensures zero regressions, 97%+ code coverage, and deterministic verification across all multi-session components. For exhaustive details, component test matrices, and E2E simulation sequence diagrams, see the dedicated testing specification in [references/mypai-test.md](references/mypai-test.md).
+The testing architecture ensures zero regressions, 97%+ code coverage, and deterministic verification across all multi-session components. For exhaustive details, component test matrices, and E2E simulation sequence diagrams, see the dedicated testing specification in [mypai-test.md](mypai-test.md).
 
 ### Makefile Target Reference
 - `make help`: Interactive target overview and active configuration discovery.

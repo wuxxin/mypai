@@ -109,6 +109,5 @@ The Next-Generation MyPai Architecture (Gen-2) upgraded the multi-agent system f
 
 ## 4. Extended Analysis & Legacy Comparison
 
-For the full component-by-component comparison with [`submodules/omp-mypai`](file:///home/wuxxin/agent-shared/code/mypai/submodules/omp-mypai) references, see:
-- [`research/next-gen-vs-legacy-architecture.md`](file:///home/wuxxin/agent-shared/code/mypai/research/next-gen-vs-legacy-architecture.md)
-
+For the full component-by-component comparison, see:
+- [`next-gen-vs-legacy-architecture.md`](next-gen-vs-legacy-architecture.md)
