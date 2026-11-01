@@ -25,6 +25,13 @@ modelRoles:
   advisor: llama.cpp/qwen3
   vision: llama.cpp/qwen3
   tiny: llama.cpp/qwen3
+  image: llama.cpp/z-image-turbo
+  speech: llama.cpp/qwen3-tts
+  dictation: llama.cpp/whisper-1
+  judge: llama.cpp/qwen3
+  memory: llama.cpp/qwen3
+  commit: llama.cpp/qwen3
+  widget: llama.cpp/qwen3
 
 # subagent concurrency and local model overrides
 task:
@@ -54,5 +61,17 @@ hindsight:
   mentalModelsEnabled: true
   mentalModelAutoSeed: true
 
+
+stt:
+  enabled: true
+  language: auto
+  provider: local
+  baseUrl: http://localhost:21080/v1
+
+generate_image:
+  enabled: true
+
+speechgen:
+  enabled: true
 autolearn:
   enabled: false

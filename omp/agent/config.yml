@@ -9,9 +9,9 @@ providers:
   imageOrder:
     []
 modelRoles:
-  default: google-antigravity/gemini-3.7-flash
+  default: google-antigravity/gemini-3.8-flash
   smol: google-antigravity/gemini-3.1-flash-lite
-  task: google-antigravity/gemini-3.7-flash
+  task: google-antigravity/gemini-3.8-flash
   slow: google-antigravity/claude-opus-4-6:high
   plan: google-antigravity/gemini-3.1-pro:high
   review: deepseek/deepseek-v4-pro:low
@@ -19,10 +19,14 @@ modelRoles:
   patcher: google-antigravity/gemini-3.1-flash-lite
   debugger: google-antigravity/claude-opus-4-6:high
   security-reviewer: google-antigravity/claude-opus-4-6:high
-  orchestrator: google-antigravity/gemini-3.7-flash:high
-  advisor: google-antigravity/gemini-3.7-flash:low
-  vision: google-antigravity/gemini-3.7-flash
+  orchestrator: google-antigravity/gemini-3.8-flash
+  advisor: google-antigravity/gemini-3.8-flash:low
+  vision: google-antigravity/gemini-3.8-flash
   tiny: google-antigravity/gemini-3.1-flash-lite
+  image: llama.cpp/z-image-turbo
+  speech: llama.cpp/qwen3-tts
+  dictation: llama.cpp/whisper-1
+  judge: google-antigravity/gemini-3.8-flash
 symbolPreset: unicode
 theme:
   dark: titanium
@@ -31,7 +35,8 @@ statusLine:
   preset: default
   separator: powerline-thin
 stt:
-  enabled: false
+  enabled: true
+  language: auto
   provider: local
   baseUrl: http://localhost:21080/v1
 compaction:
@@ -41,6 +46,7 @@ compaction:
     - snapcompact
     - remote
     - soft
+  experimentalContextManagement: true
 memory:
   backend: none
 autolearn:
@@ -71,6 +77,7 @@ todo:
   remindersMax: 10
 computer:
   display: all
+  backgroundFallback: takeover
 task:
   eager: default
   maxConcurrency: 6
@@ -102,7 +109,24 @@ extendedContext: false
 python:
   kernelMode: session
 generate_image:
-  enabled: false
+  enabled: true
 speechgen:
-  enabled: false
+  enabled: true
 defaultThinkingLevel: auto
+display:
+  hideToolActivity: false
+steeringMode: all
+followUpMode: all
+error:
+  notify: "on"
+power:
+  sleepPrevention: idle
+eval:
+  autoBackground:
+    enabled: true
+security:
+  enabled: true
+plan:
+  autosave: true
+disabledExtensions:
+  []

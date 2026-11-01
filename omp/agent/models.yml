@@ -15,3 +15,15 @@ providers:
         thinking:
           mode: effort
           efforts: ["minimal", "low", "medium", "high"]
+      - id: z-image-turbo
+        name: z-image-turbo
+        api: openai-images
+        kind: image
+      - id: qwen3-tts
+        name: qwen3-tts
+        api: openai-speech
+        kind: tts
+      - id: whisper-1
+        name: whisper-1
+        api: openai-transcriptions
+        kind: stt
