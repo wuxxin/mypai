@@ -1,9 +1,22 @@
 # TODO
 
-omp was updated from pkgver=17.4.0.r0.g72000ac to: pkgver=17.4.4.r0.ga7e19be
-aoe was updated from pkgver=1.14.1.r0.g9b0d691 to: pkgver=1.15.0.r0.gb90c4b0
+https://huggingface.co/zgcagi/ZGCM-1-7B
+https://huggingface.co/froggeric/Qwen-Fixed-Chat-Templates
+https://huggingface.co/ISTA-DASLab/Qwen3.8-27B-GSQ-RCO-GGUF
+https://huggingface.co/TokenRhythm/NeoHorse-1-4B  
+https://github.com/Edge0-AI/edge0#documentation
+https://huggingface.co/google/timesfm-3.0-pytorch
+https://huggingface.co/agentionai/Signal-3.8-27B-GGUF
+https://huggingface.co/rumik-ai/rumik-oss-1
+https://huggingface.co/peculiar-ragdoll/Qwen-Sharp-Chat-Templates
+https://huggingface.co/tencent/AuK-Flash
+https://huggingface.co/huawei-bayerlab/marigold-v2-0
+https://huggingface.co/DavidAU/Qwen3.8-27B-TWIN-TURBO-Fable-Cold-Fusion-709-L-Uncensored-NM-DAU-NEO-MTP-GGUF
+https://huggingface.co/Edge0/Edge0-35B-A3B-preview
 
 mcp's
+- aur-package figcraft-git figcraft-cli mcp
+- https://github.com/thenameisdevair/timesfm3-mcp
 - https://github.com/nihalxkumar/arch-mcp
 - https://github.com/ourongxing/newsnow
 
@@ -51,15 +64,3 @@ https://github.com/garrytan/gbrain
 
 + for frontend coding ?: https://github.com/shadcn-ui/ui
 
-## External Models Speed Observed in OMP
-
-```
-model                                      TTFT   TPS      tokens  total
-google-antigravity/tab_flash_lite_preview  355ms  274.7/s  512     1.9s
-google-antigravity/gemini-3.6-flash        597ms  257.9/s  508     2.0s
-google-antigravity/gemini-3-flash          719ms  250.3/s  651     2.6s
-google-antigravity/gemini-2.5-flash        544ms  214.5/s  506     2.4s
-deepseek/deepseek-v4-flash                 913ms  97.6/s   512     5.2s
-deepseek/deepseek-v4-pro                   911ms  45.6/s   512     11.3s
-google-antigravity/claude-opus-4-6         2.4s   37.0/s   2355    1m3s
-```
