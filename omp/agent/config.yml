@@ -1,9 +1,9 @@
 providers:
   maxInFlightRequests:
+    llama.cpp: 2
     google-antigravity: 6
     deepseek: 4
     anthropic: 2
-    llama.cpp: 1
   webSearchOrder:
     []
   imageOrder:

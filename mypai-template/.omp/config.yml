@@ -4,34 +4,34 @@
 
 providers:
   maxInFlightRequests:
-    llama.cpp: 1
+    llama.cpp: 2
     google-antigravity: 4
     deepseek: 2
     anthropic: 1
 
 # Force all model roles to local inference by default
 modelRoles:
-  default: llama.cpp/qwen3
-  smol: llama.cpp/qwen3
-  task: llama.cpp/qwen3
-  slow: llama.cpp/qwen3:high
-  plan: llama.cpp/qwen3:high
-  review: llama.cpp/qwen3
-  scout: llama.cpp/qwen3
-  patcher: llama.cpp/qwen3
-  debugger: llama.cpp/qwen3:high
-  security-reviewer: llama.cpp/qwen3:high
-  orchestrator: llama.cpp/qwen3:high
-  advisor: llama.cpp/qwen3
-  vision: llama.cpp/qwen3
-  tiny: llama.cpp/qwen3
+  default: llama.cpp/qwen3.8-flash-next:medium
+  smol: llama.cpp/qwen3.8-flash-next:low
+  task: llama.cpp/qwen3.8-flash-next:medium
+  slow: llama.cpp/qwen3.8-flash-next:xhigh
+  plan: llama.cpp/qwen3.8-flash-next:xhigh
+  review: llama.cpp/qwen3.8-flash-next:medium
+  scout: llama.cpp/qwen3.8-flash-next:low
+  patcher: llama.cpp/qwen3.8-flash-next:low
+  debugger: llama.cpp/qwen3.8-flash-next:xhigh
+  security-reviewer: llama.cpp/qwen3.8-flash-next:xhigh
+  orchestrator: llama.cpp/qwen3.8-flash-next:xhigh
+  advisor: llama.cpp/qwen3.8-flash-next:medium
+  vision: llama.cpp/qwen3.8-flash-next
+  tiny: llama.cpp/qwen3.8-flash-next:minimal
+  judge: llama.cpp/qwen3.8-flash-next:medium
+  memory: llama.cpp/qwen3.8-flash-next:low
+  commit: llama.cpp/qwen3.8-flash-next:low
+  widget: llama.cpp/qwen3.8-flash-next:low
   image: llama.cpp/z-image-turbo
   speech: llama.cpp/qwen3-tts
   dictation: llama.cpp/whisper-1
-  judge: llama.cpp/qwen3
-  memory: llama.cpp/qwen3
-  commit: llama.cpp/qwen3
-  widget: llama.cpp/qwen3
 
 # subagent concurrency and local model overrides
 task:
@@ -39,16 +39,77 @@ task:
   maxRecursionDepth: 2
   maxEffort: high
   agentModelOverrides:
-    scout: llama.cpp/qwen3
-    patcher: llama.cpp/qwen3
-    task: llama.cpp/qwen3
-    reviewer: llama.cpp/qwen3
-    debugger: llama.cpp/qwen3:high
-    security-reviewer: llama.cpp/qwen3:high
-    designer: llama.cpp/qwen3
-    writer: llama.cpp/qwen3
+    scout: llama.cpp/qwen3.8-flash-next:low
+    patcher: llama.cpp/qwen3.8-flash-next:low
+    task: llama.cpp/qwen3.8-flash-next:medium
+    reviewer: llama.cpp/qwen3.8-flash-next:medium
+    debugger: llama.cpp/qwen3.8-flash-next:xhigh
+    security-reviewer: llama.cpp/qwen3.8-flash-next:xhigh
+    designer: llama.cpp/qwen3.8-flash-next:medium
+    writer: llama.cpp/qwen3.8-flash-next:low
     # Librarian is dedicated to external web and API documentation research (explicit cloud model)
     librarian: "google-antigravity/gemini-3.1-flash-lite"
+
+retry:
+  enabled: true
+  modelFallback: true
+  fallbackChains:
+    default:
+      - llama.cpp/qwen3.8-flash-next:medium
+      - llama.cpp/qwen3.6-35B-A3B:medium
+    task:
+      - llama.cpp/qwen3.8-flash-next:medium
+      - llama.cpp/qwen3.6-35B-A3B:medium
+    slow:
+      - llama.cpp/qwen3.8-flash-next:xhigh
+      - llama.cpp/qwen3.6-35B-A3B:high
+    plan:
+      - llama.cpp/qwen3.8-flash-next:xhigh
+      - llama.cpp/qwen3.6-35B-A3B:high
+    review:
+      - llama.cpp/qwen3.8-flash-next:medium
+      - llama.cpp/qwen3.6-35B-A3B:medium
+    scout:
+      - llama.cpp/qwen3.8-flash-next:low
+      - llama.cpp/qwen3.6-35B-A3B:low
+    patcher:
+      - llama.cpp/qwen3.8-flash-next:low
+      - llama.cpp/qwen3.6-35B-A3B:low
+    debugger:
+      - llama.cpp/qwen3.8-flash-next:xhigh
+      - llama.cpp/qwen3.6-35B-A3B:high
+    security-reviewer:
+      - llama.cpp/qwen3.8-flash-next:xhigh
+      - llama.cpp/qwen3.6-35B-A3B:high
+    orchestrator:
+      - llama.cpp/qwen3.8-flash-next:xhigh
+      - llama.cpp/qwen3.6-35B-A3B:high
+    advisor:
+      - llama.cpp/qwen3.8-flash-next:medium
+      - llama.cpp/qwen3.6-35B-A3B:medium
+    vision:
+      - llama.cpp/qwen3.8-flash-next
+      - llama.cpp/qwen3.6-35B-A3B
+    tiny:
+      - llama.cpp/qwen3.8-flash-next:minimal
+      - llama.cpp/qwen3.6-35B-A3B:minimal
+    judge:
+      - llama.cpp/qwen3.8-flash-next:medium
+      - llama.cpp/qwen3.6-35B-A3B:medium
+    memory:
+      - llama.cpp/qwen3.8-flash-next:low
+      - llama.cpp/qwen3.6-35B-A3B:low
+    commit:
+      - llama.cpp/qwen3.8-flash-next:low
+      - llama.cpp/qwen3.6-35B-A3B:low
+    widget:
+      - llama.cpp/qwen3.8-flash-next:low
+      - llama.cpp/qwen3.6-35B-A3B:low
+    smol:
+      - llama.cpp/qwen3.8-flash-next:low
+      - llama.cpp/qwen3.6-35B-A3B:low
+    "llama.cpp/qwen3.8-flash-next":
+      - llama.cpp/qwen3.6-35B-A3B
 
 # Scoped Hindsight memory configuration for LifeOS
 hindsight:
@@ -61,17 +122,5 @@ hindsight:
   mentalModelsEnabled: true
   mentalModelAutoSeed: true
 
-
-stt:
-  enabled: true
-  language: auto
-  provider: local
-  baseUrl: http://localhost:21080/v1
-
-generate_image:
-  enabled: true
-
-speechgen:
-  enabled: true
 autolearn:
   enabled: false
