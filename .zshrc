@@ -13,5 +13,3 @@ typeset -g POWERLEVEL9K_OS_ICON_CONTENT_EXPANSION="[${SANDBOX_NAME}]"
 typeset -g POWERLEVEL9K_OS_ICON_FOREGROUND=15
 # Background color: 208 = Vibrant Orange (or pick any color below)
 typeset -g POWERLEVEL9K_OS_ICON_BACKGROUND=208
-
-alias lifeos="OMP_VOICE=0 LIFEOS_DIR=~/.claude/LIFEOS omp --cwd ${LIFEOS_CWD:$HOME/agent-private/lifeos}"
