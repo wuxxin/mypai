@@ -97,7 +97,7 @@ task:
     designer: "@task"
     writer: "@task"
 secrets:
-  enabled: false
+  enabled: true
 composer:
   shape: borderless
 tools:
