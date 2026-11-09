@@ -150,18 +150,46 @@ If invoking directly without the wrapper scripts:
 )
 ```
 
-### 3. Host Shell Aliases (Calling Sandboxed Binaries from Outside)
+### 3. Host Dispatcher Wrapper (`sandboxed-omp`)
 
-To invoke `ephemeral-omp`, `lifeos`, or `ephemeral-lifeos` from the host outside the sandbox, add the following aliases to `~/.bashrc` or `~/.zshrc`:
+To invoke sandboxed utilities seamlessly from the host outside the sandbox without relying on shell aliases (ensuring they work in scripts, subshells, desktop launchers, and terminal multiplexers):
 
+#### 1. Install the `sandboxed-omp` host dispatcher
 ```bash
-# Call local scripts in ~/.local/bin of the omp sandbox from outside
-alias lifeos="sandbox-ctl run omp lifeos"
-alias ephemeral-omp="sandbox-ctl run omp ephemeral-omp"
-alias ephemeral-lifeos="sandbox-ctl run omp ephemeral-lifeos"
+cat << 'EOF' > ~/.local/bin/sandboxed-omp
+#!/usr/bin/env bash
+set -euo pipefail
+
+cmd="$(basename "$0")"
+
+if [[ "$cmd" == "sandboxed-omp" ]]; then
+    if [[ $# -eq 0 ]]; then
+        exec sandbox-ctl run omp omp
+    fi
+    cmd="$1"
+    shift
+fi
+
+target_bin="$HOME/.local/bin/$cmd"
+if [[ "$cmd" == "omp" ]]; then
+    target_bin="omp"
+fi
+
+exec sandbox-ctl run omp "$target_bin" "$@"
+EOF
+chmod +x ~/.local/bin/sandboxed-omp
+```
+*(Also available directly in the repository at `bin/sandboxed-omp`)*.
+
+#### 2. Create host symlinks for each command
+```bash
+ln -sf ~/.local/bin/sandboxed-omp ~/.local/bin/lifeos
+ln -sf ~/.local/bin/sandboxed-omp ~/.local/bin/ephemeral-omp
+ln -sf ~/.local/bin/sandboxed-omp ~/.local/bin/ephemeral-lifeos
 ```
 
-Each alias routes execution through `sandbox-ctl run omp <cmd>`, calling the corresponding script in `~/.local/bin/` inside the sandbox with full environment isolation.
+When any of `lifeos`, `ephemeral-omp`, or `ephemeral-lifeos` is called on the host, the symlink dispatches to `sandboxed-omp`, which dynamically routes to `$HOME/.local/bin/<cmd>` inside the sandbox with full environment isolation.
+
 ---
 
 ## Documentation Index

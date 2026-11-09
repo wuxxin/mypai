@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Dynamic host dispatcher for sandboxed OMP utilities.
+# When invoked directly or via symlink (e.g. lifeos, ephemeral-omp, ephemeral-lifeos),
+# routes execution through sandbox-ctl into the sandboxed ~/.local/bin.
+
+cmd="$(basename "$0")"
+
+if [[ "$cmd" == "sandboxed-omp" ]]; then
+    if [[ $# -eq 0 ]]; then
+        exec sandbox-ctl run omp omp
+    fi
+    cmd="$1"
+    shift
+fi
+
+target_bin="$HOME/.local/bin/$cmd"
+if [[ "$cmd" == "omp" ]]; then
+    target_bin="omp"
+fi
+
+exec sandbox-ctl run omp "$target_bin" "$@"
