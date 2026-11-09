@@ -64,3 +64,7 @@ https://github.com/garrytan/gbrain
 
 + for frontend coding ?: https://github.com/shadcn-ui/ui
 
+
+RUNNING chat_running running on host  unknown 18451.80 ms  1682.93 t/s  115.34 ms  108.02 t/s  109.43 t/s  0.00 ms  0.00 t/s  -n.a.-  -n.a.-
+RUNNING chat_running running on host  unknown 30947.97 ms  1004.75 t/s  227.46 ms  69.93 t/s  57.39 t/s  0.00 ms  0.00 t/s  -n.a.- -n.a.-
+RUNNING chat_running running on host  unknown 19618.51 ms  1584.98 t/s  189.17 ms  92.76 t/s  75.31 t/s  0.00 ms  0.00 t/s  -n.a.- -n.a.-
