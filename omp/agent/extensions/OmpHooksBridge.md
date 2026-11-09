@@ -36,8 +36,10 @@ Restart omp — the extension auto-loads in every new session (user-level extens
 
 Configuration:
 
-- `LIFEOS_DIR` — LifeOS config root (default `~/.claude`)
-- `OMP_BRIDGE_LOG` — audit log path (default `~/.omp/lifeos-bridge.log`)
+- `LIFEOS_CONFIG_ROOT` — harness settings root holding the merged hook registry (default `~/.claude`)
+- `LIFEOS_DIR` — payload dir (`~/.claude/LIFEOS`); legacy settings location only, never the config root
+- `OMP_BRIDGE_SETTINGS` — pins the registry file explicitly
+- Audit logging is off by default. `OMP_BRIDGE_STDERR=1` writes every line to stderr prefixed `lifeos-bridge` (captured by the sidecar unit's journal: `journalctl --user -u omp.service | grep lifeos-bridge`). `OMP_BRIDGE_LOG=<path>` appends JSON lines to a file for probes and tailing.
 
 ## Verification evidence
 

@@ -32,11 +32,12 @@
  *     settings location and never as the config root. The `lifeos` alias exports
  *     it, which is why reading settings.json next to it silently found nothing.
  *   - OMP_BRIDGE_SETTINGS pins the registry file explicitly.
- *   - Audit log: every line goes to stderr prefixed with `lifeos-bridge`, so the
- *     sandbox-ctl sidecar's journal keeps it —
- *     `journalctl --user -u omp.service | grep lifeos-bridge`. stdout stays clean
- *     (in `omp -p` print mode it carries the model's answer). OMP_BRIDGE_LOG adds
- *     an extra file sink for probes and tailing.
+ *   - Audit log: silent by default — in the interactive TUI stderr lines pollute
+ *     the terminal (2026-11-09). Opt in per surface: OMP_BRIDGE_STDERR=1 writes
+ *     every line to stderr prefixed with `lifeos-bridge` for the sandbox-ctl
+ *     sidecar's journal (`journalctl --user -u omp.service | grep lifeos-bridge`);
+ *     OMP_BRIDGE_LOG=<path> appends JSON lines to a file for probes and tailing.
+ *     stdout is never touched (in `omp -p` print mode it carries the model's answer).
  *
  * Every invocation is logged to the audit log. Hook failures are logged and
  * never crash the session. Per-hook timeout 30s.
@@ -59,10 +60,11 @@ const SETTINGS_CANDIDATES = [
   join(CONFIG_ROOT, "settings.json"),
   join(PAYLOAD_DIR, "settings.json"),
 ].filter((p): p is string => typeof p === "string" && p.length > 0);
-// Audit log: stderr by default so the sidecar's journal keeps it
-// (`journalctl --user -u omp.service | grep 'lifeos-bridge'`). stdout is left alone —
-// in `omp -p` print mode stdout carries the model's answer. OMP_BRIDGE_LOG adds a file sink.
+// Audit log: off by default (interactive TUIs must stay clean). OMP_BRIDGE_STDERR=1
+// enables the stderr sink for journal capture under the sidecar unit; OMP_BRIDGE_LOG
+// adds a file sink. stdout is left alone — in `omp -p` print mode it carries the answer.
 const LOG_PREFIX = "lifeos-bridge";
+const LOG_STDERR = process.env.OMP_BRIDGE_STDERR === "1";
 const LOG_PATH = process.env.OMP_BRIDGE_LOG;
 const PULSE_NOTIFY = "http://127.0.0.1:31337/notify";
 const VOICE_ID = process.env.OMP_VOICE_ID ?? "fTtv3eikoepIosk8dTZ5";
@@ -98,9 +100,11 @@ const TOOL_UP: Record<string, string> = {
 
 function log(line: Record<string, unknown>): void {
   const json = JSON.stringify({ ts: new Date().toISOString(), ...line });
-  try {
-    process.stderr.write(`${LOG_PREFIX} ${json}\n`);
-  } catch { /* never crash on logging */ }
+  if (LOG_STDERR) {
+    try {
+      process.stderr.write(`${LOG_PREFIX} ${json}\n`);
+    } catch { /* never crash on logging */ }
+  }
   if (LOG_PATH) {
     try {
       appendFileSync(LOG_PATH, json + "\n");
