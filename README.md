@@ -149,6 +149,19 @@ If invoking directly without the wrapper scripts:
     HISTFILE=/dev/null PI_CODING_AGENT_DIR="$tmpdir" omp --no-session
 )
 ```
+
+### 3. Host Shell Aliases (Calling Sandboxed Binaries from Outside)
+
+To invoke `ephemeral-omp`, `lifeos`, or `ephemeral-lifeos` from the host outside the sandbox, add the following aliases to `~/.bashrc` or `~/.zshrc`:
+
+```bash
+# Call local scripts in ~/.local/bin of the omp sandbox from outside
+alias lifeos="sandbox-ctl run omp lifeos"
+alias ephemeral-omp="sandbox-ctl run omp ephemeral-omp"
+alias ephemeral-lifeos="sandbox-ctl run omp ephemeral-lifeos"
+```
+
+Each alias routes execution through `sandbox-ctl run omp <cmd>`, calling the corresponding script in `~/.local/bin/` inside the sandbox with full environment isolation.
 ---
 
 ## Documentation Index
