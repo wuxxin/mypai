@@ -48,11 +48,3 @@ When working in Python (Python 3.10+ through 3.14), uphold strict craftsmanship:
    - Use list/dict comprehensions, generators, context managers, and structural pattern matching (`match/case`).
    - Explicit exception handling; never use bare `except: pass`.
 
----
-
-<omp_advanced_capabilities>
-## Programmatic Tool Calling & In-Kernel Execution (`eval`)
-- For tasks involving multi-file searches, data processing (>50KB), batch edits, or API interactions, you MUST use the persistent `eval` tool (`lang: "py"` or `lang: "js"`) rather than issuing sequential individual tool calls.
-- Loopback Host Tools: Call `tool.read()`, `tool.write()`, `tool.search()`, directly from within code over the high-speed loopback IPC bridge.
-
-</omp_advanced_capabilities>

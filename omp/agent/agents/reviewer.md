@@ -29,13 +29,3 @@ When reviewing changes, categorize all findings using the structured **P0–P3 S
 * **P2 — Medium Priority:** Missing tests, suboptimal performance, minor race conditions, or inconsistent typing.
 * **P3 — Low Priority / Nit:** Style nitpicks, comment clarity, minor refactoring suggestions.
 
-
----
-
-<omp_advanced_capabilities>
-## Programmatic Tool Calling & In-Kernel Execution (`eval`)
-- For tasks involving multi-file searches, data processing (>50KB), batch edits, or API interactions, you MUST use the persistent `eval` tool (`lang: "py"` or `lang: "js"`) rather than issuing sequential individual tool calls.
-- Loopback Host Tools: Call `tool.read()`, `tool.write()`, `tool.search()`, directly from within code over the high-speed loopback IPC bridge.
-
-</omp_advanced_capabilities>
-
