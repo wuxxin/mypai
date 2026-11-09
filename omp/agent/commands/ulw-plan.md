@@ -8,4 +8,4 @@ Activate the `ulw-plan` skill to generate a structured implementation plan for: 
 2. Perform gap analysis against the current repository state.
 3. List explicit file deltas (`[NEW]`, `[MODIFY]`, `[DELETE]`).
 4. Define phased execution gates with automated verification commands.
-5. Present the plan for user review before proceeding.
+5. Submit the proposal for user approval using `write xd://propose`.
