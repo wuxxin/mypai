@@ -1,9 +1,9 @@
 /**
  * lifeos-hooks-bridge.ts — runs LifeOS Claude-Code hooks inside omp (Oh My Pi).
  *
- * omp does not execute ${LIFEOS_DIR}/settings.json hooks (Claude Code contract:
- * JSON on stdin, JSON on stdout). This extension shims that contract onto the
- * omp event bus:
+ * omp does not execute the merged hook registry in <configRoot>/settings.json
+ * (Claude Code contract: JSON on stdin, JSON on stdout). This extension shims
+ * that contract onto the omp event bus:
  *
  *   omp event              → Claude Code event
  *   ---------------------    -------------------
@@ -25,21 +25,36 @@
  *     injection). This is what carries memory/rule deltas to the model.
  *
  * Config:
- *   - LIFEOS_DIR env overrides the LifeOS config root (default ~/.claude)
+ *   - LIFEOS_CONFIG_ROOT is the harness settings root holding the merged hook
+ *     registry (default ~/.claude). v8 merges its slim registry into
+ *     <configRoot>/settings.json, so that is where this bridge reads it.
+ *   - LIFEOS_DIR is the payload dir (~/.claude/LIFEOS) — used as a legacy
+ *     settings location and never as the config root. The `lifeos` alias exports
+ *     it, which is why reading settings.json next to it silently found nothing.
+ *   - OMP_BRIDGE_SETTINGS pins the registry file explicitly.
  *   - OMP_BRIDGE_LOG overrides the audit log path (default ~/.omp/lifeos-bridge.log)
  *
  * Every invocation is logged to the audit log. Hook failures are logged and
  * never crash the session. Per-hook timeout 30s.
  */
 
-import { appendFileSync, readFileSync } from "fs";
+import { appendFileSync, existsSync, readFileSync } from "fs";
 import { homedir } from "os";
 import { join } from "path";
 import type { ExtensionAPI } from "@oh-my-pi/pi-coding-agent";
 
 const HOME = homedir();
-const LIFEOS_DIR = process.env.LIFEOS_DIR ?? join(HOME, ".claude");
-const SETTINGS_PATH = join(LIFEOS_DIR, "settings.json");
+// The payload dir (LIFEOS/) and the harness settings root are two different places.
+// v8 installs its registry into <configRoot>/settings.json; LIFEOS_DIR is exported by
+// the `lifeos` alias as the payload path, so it must never be treated as the config root.
+const PAYLOAD_DIR = process.env.LIFEOS_DIR ?? join(HOME, ".claude", "LIFEOS");
+const CONFIG_ROOT = process.env.LIFEOS_CONFIG_ROOT ?? join(HOME, ".claude");
+// Resolution order: explicit pin → v8 layout (configRoot/settings.json) → pre-v8 layout.
+const SETTINGS_CANDIDATES = [
+  process.env.OMP_BRIDGE_SETTINGS,
+  join(CONFIG_ROOT, "settings.json"),
+  join(PAYLOAD_DIR, "settings.json"),
+].filter((p): p is string => typeof p === "string" && p.length > 0);
 const LOG_PATH = process.env.OMP_BRIDGE_LOG;
 const PULSE_NOTIFY = "http://127.0.0.1:31337/notify";
 const VOICE_ID = process.env.OMP_VOICE_ID ?? "fTtv3eikoepIosk8dTZ5";
@@ -98,33 +113,51 @@ function hookName(command: string): string {
   return command.split("/").pop() ?? command;
 }
 
-/** Load the hook registry snapshot from ${LIFEOS_DIR}/settings.json. */
-function loadRegistry(): HookReg[] {
-  try {
-    const raw: unknown = JSON.parse(readFileSync(SETTINGS_PATH, "utf8"));
-    if (!raw || typeof raw !== "object" || !("hooks" in raw)) return [];
-    const hooksMap = raw.hooks;
-    if (!hooksMap || typeof hooksMap !== "object") return [];
-    const out: HookReg[] = [];
-    for (const [ev, entries] of Object.entries(hooksMap)) {
-      if (!Array.isArray(entries)) continue;
-      for (const entry of entries) {
-        if (!entry || typeof entry !== "object") continue;
-        const matcher = "matcher" in entry && typeof entry.matcher === "string" ? entry.matcher : "*";
-        if (!("hooks" in entry) || !Array.isArray(entry.hooks)) continue;
-        for (const hk of entry.hooks) {
-          if (!hk || typeof hk !== "object") continue;
-          if (!("type" in hk) || hk.type !== "command") continue;
-          if (!("command" in hk) || typeof hk.command !== "string" || !hk.command) continue;
-          out.push({ event: ev, matcher, command: expand(hk.command) });
-        }
+/** Load the hook registry from the first settings file that carries a `hooks` map. */
+let registrySource = "";
+function parseRegistry(raw: unknown): HookReg[] {
+  if (!raw || typeof raw !== "object" || !("hooks" in raw)) return [];
+  const hooksMap = raw.hooks;
+  if (!hooksMap || typeof hooksMap !== "object") return [];
+  const out: HookReg[] = [];
+  for (const [ev, entries] of Object.entries(hooksMap)) {
+    if (!Array.isArray(entries)) continue;
+    for (const entry of entries) {
+      if (!entry || typeof entry !== "object") continue;
+      // v8 writes `"matcher": ""` for non-tool events; Claude Code treats an empty
+      // matcher as match-all. Normalize it to "*" so forEvent() sees these registrations
+      // (empty matcher silently dropped every SessionStart/UserPromptSubmit/Stop hook).
+      const rawMatcher = "matcher" in entry && typeof entry.matcher === "string" ? entry.matcher.trim() : "";
+      const matcher = rawMatcher === "" ? "*" : rawMatcher;
+      if (!("hooks" in entry) || !Array.isArray(entry.hooks)) continue;
+      for (const hk of entry.hooks) {
+        if (!hk || typeof hk !== "object") continue;
+        // v8 also registers `type: "http"` guards (Pulse /hooks/skill-guard, /hooks/agent-guard);
+        // omp has no native http hook transport, so command hooks are all this bridge can run.
+        if (!("type" in hk) || hk.type !== "command") continue;
+        if (!("command" in hk) || typeof hk.command !== "string" || !hk.command) continue;
+        out.push({ event: ev, matcher, command: expand(hk.command) });
       }
     }
-    return out;
-  } catch (e) {
-    log({ err: "registry_load_failed", detail: String(e) });
-    return [];
   }
+  return out;
+}
+
+function loadRegistry(): HookReg[] {
+  for (const path of SETTINGS_CANDIDATES) {
+    try {
+      if (!existsSync(path)) continue;
+      const regs = parseRegistry(JSON.parse(readFileSync(path, "utf8")));
+      if (regs.length > 0) {
+        registrySource = path;
+        return regs;
+      }
+    } catch (e) {
+      log({ err: "registry_load_failed", detail: String(e), path });
+    }
+  }
+  log({ err: "registry_not_found", candidates: SETTINGS_CANDIDATES });
+  return [];
 }
 
 const registry: HookReg[] = loadRegistry();
@@ -134,7 +167,7 @@ async function runHook(reg: HookReg, payload: Record<string, unknown>): Promise<
   const t0 = Date.now();
   try {
     const proc = Bun.spawn(["sh", "-c", reg.command], {
-      cwd: LIFEOS_DIR,
+      cwd: CONFIG_ROOT,
       stdin: "pipe",
       stdout: "pipe",
       stderr: "pipe",
@@ -243,7 +276,8 @@ function readCtxUI(v: unknown): CtxWithUI | null {
 }
 
 function forEvent(event: string): HookReg[] {
-  return registry.filter((r) => r.event === event && r.matcher === "*");
+  // "*" and ".*" are both match-all; an empty matcher is normalized to "*" at parse time.
+  return registry.filter((r) => r.event === event && (r.matcher === "*" || r.matcher === ".*"));
 }
 
 function forTool(event: string, ccName: string): HookReg[] {
@@ -286,7 +320,7 @@ function assistantMessageText(msg: unknown): string {
 }
 
 export default function lifeosBridge(pi: ExtensionAPI): void {
-  log({ event: "bridge_init", hooks: registry.length, lifeosDir: LIFEOS_DIR });
+  log({ event: "bridge_init", hooks: registry.length, settings: registrySource || null, configRoot: CONFIG_ROOT });
 
   pi.on("session_start", async () => {
     log({ event: "session_start" });
