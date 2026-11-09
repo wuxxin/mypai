@@ -32,7 +32,11 @@
  *     settings location and never as the config root. The `lifeos` alias exports
  *     it, which is why reading settings.json next to it silently found nothing.
  *   - OMP_BRIDGE_SETTINGS pins the registry file explicitly.
- *   - OMP_BRIDGE_LOG overrides the audit log path (default ~/.omp/lifeos-bridge.log)
+ *   - Audit log: every line goes to stderr prefixed with `lifeos-bridge`, so the
+ *     sandbox-ctl sidecar's journal keeps it —
+ *     `journalctl --user -u omp.service | grep lifeos-bridge`. stdout stays clean
+ *     (in `omp -p` print mode it carries the model's answer). OMP_BRIDGE_LOG adds
+ *     an extra file sink for probes and tailing.
  *
  * Every invocation is logged to the audit log. Hook failures are logged and
  * never crash the session. Per-hook timeout 30s.
@@ -55,6 +59,10 @@ const SETTINGS_CANDIDATES = [
   join(CONFIG_ROOT, "settings.json"),
   join(PAYLOAD_DIR, "settings.json"),
 ].filter((p): p is string => typeof p === "string" && p.length > 0);
+// Audit log: stderr by default so the sidecar's journal keeps it
+// (`journalctl --user -u omp.service | grep 'lifeos-bridge'`). stdout is left alone —
+// in `omp -p` print mode stdout carries the model's answer. OMP_BRIDGE_LOG adds a file sink.
+const LOG_PREFIX = "lifeos-bridge";
 const LOG_PATH = process.env.OMP_BRIDGE_LOG;
 const PULSE_NOTIFY = "http://127.0.0.1:31337/notify";
 const VOICE_ID = process.env.OMP_VOICE_ID ?? "fTtv3eikoepIosk8dTZ5";
@@ -89,10 +97,15 @@ const TOOL_UP: Record<string, string> = {
 };
 
 function log(line: Record<string, unknown>): void {
-  if (!LOG_PATH) return;
+  const json = JSON.stringify({ ts: new Date().toISOString(), ...line });
   try {
-    appendFileSync(LOG_PATH, JSON.stringify({ ts: new Date().toISOString(), ...line }) + "\n");
+    process.stderr.write(`${LOG_PREFIX} ${json}\n`);
   } catch { /* never crash on logging */ }
+  if (LOG_PATH) {
+    try {
+      appendFileSync(LOG_PATH, json + "\n");
+    } catch { /* never crash on logging */ }
+  }
 }
 
 function expand(s: string): string {
