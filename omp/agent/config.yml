@@ -130,3 +130,25 @@ plan:
   autosave: true
 disabledExtensions:
   []
+retry:
+  enabled: true
+  modelFallback: true
+  fallbackChains:
+    default:
+      - llama.cpp/qwen3.8-flash-next:medium
+      - llama.cpp/qwen3.6-35B-A3B:medium
+    task:
+      - llama.cpp/qwen3.8-flash-next:medium
+      - llama.cpp/qwen3.6-35B-A3B:medium
+    slow:
+      - llama.cpp/qwen3.8-flash-next:xhigh
+      - llama.cpp/qwen3.6-35B-A3B:high
+    plan:
+      - llama.cpp/qwen3.8-flash-next:xhigh
+      - llama.cpp/qwen3.6-35B-A3B:high
+    review:
+      - llama.cpp/qwen3.8-flash-next:medium
+      - llama.cpp/qwen3.6-35B-A3B:medium
+    scout:
+      - llama.cpp/qwen3.8-flash-next:low
+      - llama.cpp/qwen3.6-35B-A3B:low

@@ -154,7 +154,7 @@ fi
 
 # Data safety invariant: Always force local model from LIFEOS_TOOLS_MODEL_NAME (default: llama.cpp/qwen3),
 # ignoring any --model argument passed by LifeOS scripts/hooks to guarantee personal context stays local.
-target_model="${LIFEOS_TOOLS_MODEL_NAME:-llama.cpp/qwen3}"
+target_model="${LIFEOS_TOOLS_MODEL_NAME:-llama.cpp/qwen3.8-flash-next}"
 
 raw_effort="${LIFEOS_TOOLS_MODEL_EFFORT:-${cli_effort:-high}}"
 case "$raw_effort" in

@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# lifeos - Launch LifeOS under Oh My Pi (omp)
+
+export OMP_VOICE="${OMP_VOICE:-0}"
+export LIFEOS_DIR="${LIFEOS_DIR:-$HOME/.claude/LIFEOS}"
+export LIFEOS_CWD="${LIFEOS_CWD:-$HOME/agent-private/lifeos}"
+
+if [[ ! -d "$LIFEOS_CWD" ]]; then
+    echo "Error: Mandatory LIFEOS_CWD directory not found: $LIFEOS_CWD" >&2
+    exit 1
+fi
+
+prompt_file="$LIFEOS_DIR/LIFEOS_SYSTEM_PROMPT.md"
+if [[ ! -f "$prompt_file" ]]; then
+    echo "Error: Mandatory LifeOS system prompt not found: $prompt_file" >&2
+    exit 1
+fi
+
+exec omp --cwd "$LIFEOS_CWD" --append-system-prompt "$prompt_file" "$@"

@@ -6,20 +6,6 @@ providers:
     headers:
       x-client-id: oh-my-pi
     models:
-      - id: qwen3.6-35B-A3B
-        name: qwen3.6-35B-A3B
-        reasoning: true
-        input: ["text", "image"]
-        cost:
-          input: 0.30
-          output: 1.20
-          cacheRead: 0.006
-          cacheWrite: 0
-        contextWindow: 120192
-        maxTokens: 16384
-        thinking:
-          mode: effort
-          efforts: ["minimal", "low", "medium", "high"]
       - id: qwen3.8-flash-next
         name: qwen3.8-flash-next
         reasoning: true
@@ -34,6 +20,20 @@ providers:
         thinking:
           mode: effort
           efforts: ["minimal", "low", "medium", "high", "xhigh"]
+      - id: qwen3.6-35B-A3B
+        name: qwen3.6-35B-A3B
+        reasoning: true
+        input: ["text", "image"]
+        cost:
+          input: 0.30
+          output: 1.20
+          cacheRead: 0.006
+          cacheWrite: 0
+        contextWindow: 120192
+        maxTokens: 16384
+        thinking:
+          mode: effort
+          efforts: ["minimal", "low", "medium", "high"]
       - id: qwen3
         name: qwen3
         reasoning: true

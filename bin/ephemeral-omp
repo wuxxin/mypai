@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# ephemeral-omp - Ephemeral OMP session without persistent history or session data
+
+tmpdir=$(mktemp -d /tmp/omp-ephemeral-XXXXXX 2>/dev/null || mktemp -d -t omp-ephemeral-XXXXXX)
+
+# shellcheck disable=SC2329
+cleanup() {
+    rm -rf "$tmpdir"
+}
+trap cleanup EXIT INT TERM HUP
+
+# Symlink static configs from ~/.omp/agent into ephemeral directory if available
+agent_dir="${HOME}/.omp/agent"
+if [[ -d "$agent_dir" ]]; then
+    for item in config.yml models.yml lsp.json mcp.json extensions skills tools commands prompts APPEND_SYSTEM.md; do
+        if [[ -e "$agent_dir/$item" ]]; then
+            ln -sf "$agent_dir/$item" "$tmpdir/$item"
+        fi
+    done
+fi
+
+export HISTFILE=/dev/null
+export PI_CODING_AGENT_DIR="$tmpdir"
+export OMP_EPHEMERAL="1"
+
+exit_code=0
+omp --no-session --no-title "$@" || exit_code=$?
+exit "$exit_code"

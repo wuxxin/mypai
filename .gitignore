@@ -19,3 +19,6 @@ coverage.xml
 # Ignore private seeds contents except .gitkeep
 submodules/private-seeds/*
 !submodules/private-seeds/.gitkeep
+
+# Local OMP runtime artifacts and plans
+.omp/
