@@ -68,6 +68,22 @@ IMAGE_MEDIA_EXT: dict[str, str] = {
     "image/webp": ".webp",
 }
 
+# LifeOS expects Claude Code's hook pipeline on calls that produce durable work. omp runs
+# every child with extension discovery off, so the bridge is offered per run instead: a
+# caller sets LIFEOS_BRIDGE=1 in its spawn environment and the shim appends an explicit
+# `-e <bridge>` (omp honors -e even with --no-extensions). Bulk judges and Pulse text calls
+# leave the gate unset and keep paying zero hook cost. $LIFEOS_BRIDGE_EXTENSION overrides
+# the path; a missing file degrades to isolated, never to a failed call.
+BRIDGE_REQUEST_ENV = "LIFEOS_BRIDGE"
+BRIDGE_PATH_ENV = "LIFEOS_BRIDGE_EXTENSION"
+DEFAULT_BRIDGE_EXTENSION = "~/.omp/agent/extensions/OmpHooksBridge.ts"
+TRUTHY_VALUES: frozenset[str] = frozenset({"1", "true", "yes", "on"})
+
+# Claude Code gives every run a session id and its hooks key state files on it. The bridge
+# reads OMP_SESSION_ID; without one it reports the literal "omp"/"unknown" and LifeOS writes
+# land under STATE/*/unknown.json, so the shim mints a uuid per child.
+SESSION_ID_ENV = "OMP_SESSION_ID"
+
 STOP_REASON_MAP: dict[str, str] = {
     "stop": "end_turn",
     "length": "max_tokens",
@@ -217,7 +233,14 @@ Options:
   --allowedTools <tools>                    Allowed tools list
   --disallowedTools <tools>                 Disallowed tools list
   -h, --help                                Show this help message and exit
-  -v, --version                             Show version and exit"""
+  -v, --version                             Show version and exit
+
+Environment:
+  LIFEOS_TOOLS_MODEL_NAME                   Model every call runs on (overrides --model)
+  LIFEOS_TOOLS_MODEL_EFFORT                 Effort override (overrides --effort)
+  LIFEOS_BRIDGE=1                           Load the LifeOS hook bridge for this run (-e);
+                                            hooks fire only for calls that opt in
+  LIFEOS_BRIDGE_EXTENSION                   Bridge path (default ~/.omp/agent/extensions/OmpHooksBridge.ts)"""
 
 
 def _apply_value_flag(config: CliConfig, flag: str, value: str) -> None:
@@ -308,6 +331,46 @@ def resolve_effort(
     env = os.environ if environ is None else environ
     raw = (env.get("LIFEOS_TOOLS_MODEL_EFFORT") or cli_effort or DEFAULT_EFFORT).strip().lower()
     return EFFORT_MAP.get(raw, DEFAULT_EFFORT)
+
+
+def resolve_bridge_extension(
+    environ: dict[str, str] | os._Environ[str] | None = None,
+) -> str | None:
+    """The bridge path to offer this run, or None when the gate is off.
+
+    A missing file degrades to an isolated run rather than failing the call: the caller asked
+    for hooks, not for a hard dependency on an installed extension.
+    """
+    env = os.environ if environ is None else environ
+    if (env.get(BRIDGE_REQUEST_ENV) or "").strip().lower() not in TRUTHY_VALUES:
+        return None
+    raw = (env.get(BRIDGE_PATH_ENV) or DEFAULT_BRIDGE_EXTENSION).strip()
+    path = Path(os.path.expanduser(raw))
+    return str(path) if path.is_file() else None
+
+
+def new_session_id() -> str:
+    """A Claude-shaped session id for the child, so hook state is attributable."""
+    return str(uuid.uuid4())
+
+
+def child_environment(
+    session_id: str,
+    environ: dict[str, str] | os._Environ[str] | None = None,
+) -> dict[str, str]:
+    """The caller's environment (scrubbed keys stay scrubbed) plus the run's session id.
+
+    The bridge gate is deliberately NOT inherited. Inference hooks (`PromptProcessing`) call
+    `Inference.ts`, which spawns `claude` again; inheriting the gate loads the bridge in every
+    nested child, and one 53-char prompt measured 85 SessionStart + 72 Stop dispatches across
+    ~85 processes — a self-amplifying queue. One bridged run per caller opt-in; everything it
+    spawns stays isolated.
+    """
+    env = dict(os.environ if environ is None else environ)
+    env.pop(BRIDGE_REQUEST_ENV, None)
+    env.pop(BRIDGE_PATH_ENV, None)
+    env[SESSION_ID_ENV] = session_id
+    return env
 
 
 def _split_tool_tokens(spec: str) -> list[str]:
@@ -748,6 +811,7 @@ def emit_error(
 def run_omp(
     cmd: list[str],
     prompt_text: str,
+    env: dict[str, str] | None = None,
 ) -> OmpRunResult:
     try:
         proc = subprocess.Popen(
@@ -758,6 +822,7 @@ def run_omp(
             text=True,
             encoding="utf-8",
             errors="replace",
+            env=env,
         )
     except OSError as exc:
         return OmpRunResult(returncode=127, stdout="", stderr=str(exc))
@@ -813,8 +878,9 @@ def build_omp_command(
     tool_args: list[str],
     prompt_flags: list[str],
     attachment_args: list[str],
+    bridge_extension: str | None = None,
 ) -> list[str]:
-    return [
+    args = [
         omp_bin,
         "-p",
         "--no-session",
@@ -827,10 +893,12 @@ def build_omp_command(
         "--mode=json",
         f"--model={target_model}",
         f"--thinking={target_effort}",
-        *tool_args,
-        *prompt_flags,
-        *attachment_args,
     ]
+    if bridge_extension:
+        # omp honors an explicit -e with --no-extensions, so a caller's opt-in restores hook
+        # dispatch for this run alone; skills, rules, context files and session state stay off.
+        args += ["-e", bridge_extension]
+    return [*args, *tool_args, *prompt_flags, *attachment_args]
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -876,6 +944,9 @@ def main(argv: list[str] | None = None) -> int:
                     "omp executable not found on PATH",
                     model_name=target_model,
                 )
+            # Opt-in hook bridge + a session id the bridge can attribute state to.
+            bridge_extension = resolve_bridge_extension()
+            child_env = child_environment(new_session_id())
             cmd = build_omp_command(
                 omp_bin,
                 target_model,
@@ -883,8 +954,9 @@ def main(argv: list[str] | None = None) -> int:
                 tool_args,
                 prompt_flags,
                 attachment_args,
+                bridge_extension,
             )
-            run_res = run_omp(cmd, prompt_text)
+            run_res = run_omp(cmd, prompt_text, child_env)
     except ShimError as exc:
         return emit_error(config.output_format, str(exc), model_name=target_model)
 

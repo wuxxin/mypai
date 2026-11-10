@@ -204,6 +204,18 @@ omp -p --no-session --no-skills --no-rules --no-title --no-extensions --no-conte
 ```
 This prevents session disk persistence, skill/rule injection, automatic title generation, user extension loading, and workspace `AGENTS.md`/`CLAUDE.md` discovery from polluting utility inference calls.
 
+Isolation is what silences LifeOS's hooks in these runs: the hook bridge is an omp **extension** (`~/.omp/agent/extensions/OmpHooksBridge.ts`), and both `--no-extensions` and `--profile=isolated` (its own config root, which has no extensions) drop it. Measured on this host: a bare `omp -p` logs `bridge_init hooks:60`; every shim-routed call logs nothing at all — ~357 calls/day with zero hook records, so Pulse and STATVS see only interactive sessions.
+
+### Hook Bridge Opt-In (`LIFEOS_BRIDGE`)
+- **Gate:** a caller sets `LIFEOS_BRIDGE=1` (also `true|yes|on`) in the environment of its `claude` spawn. The shim then appends `-e <bridge>` to the child command — `omp` honors an explicit `-e` even with `--no-extensions`, and `--profile=isolated` does not block it, because the bridge resolves its own config root (`~/.claude`).
+- **Path:** `$LIFEOS_BRIDGE_EXTENSION`, defaulting to `~/.omp/agent/extensions/OmpHooksBridge.ts`. A missing file degrades to an isolated run; it never fails the call.
+- **Non-recursive.** The gate is stripped from the child environment (`child_environment` pops `LIFEOS_BRIDGE`/`LIFEOS_BRIDGE_EXTENSION`). Inference hooks spawn `claude` again; an inherited gate loads the bridge in every nested child — measured 85 `SessionStart` + 72 `Stop` dispatches across ~85 processes for one prompt, which piled up the local inference queue. One bridged run per caller opt-in; everything it spawns stays isolated.
+- **Default off.** Judges, Pulse text jobs and Relay calls pay no hook cost. Gate the callers that produce durable work — `AgentJob.ts`, `HarvestExecutor.ts`, `MemoryReviewer.ts` — not the hot path.
+- **Cost:** measured +4.6 s on a one-shot call (1.94 s → 6.58 s) with all registrations loaded; blanket enablement is unusable, which is why the gate is per spawn.
+
+### Session Identity (`OMP_SESSION_ID`)
+Claude Code gives every run a session id and LifeOS hooks key their state files on it. The shim mints `uuid4` per child and exports `OMP_SESSION_ID`; the bridge reads it (falling back to `"omp"` for interactive sessions, which have no shim). Without this every headless run wrote into `STATE/*/unknown.json`, where parallel runs overwrote each other and records were unattributable.
+
 ### Inline Image Translation (`stream-json`)
 When `--input-format stream-json` is active:
 1. Each non-empty JSONL line on `stdin` is parsed; `user` messages (`type == "user"` or `message.role == "user"`) extract text blocks (`type == "text"` or string content) and base64 image blocks (`type == "image"`, `source.type == "base64"` for `image/png`, `image/jpeg`, `image/gif`, `image/webp`).

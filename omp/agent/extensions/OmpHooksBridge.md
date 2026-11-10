@@ -39,7 +39,12 @@ Configuration:
 - `LIFEOS_CONFIG_ROOT` — harness settings root holding the merged hook registry (default `~/.claude`)
 - `LIFEOS_DIR` — payload dir (`~/.claude/LIFEOS`); legacy settings location only, never the config root
 - `OMP_BRIDGE_SETTINGS` — pins the registry file explicitly
+- `OMP_SESSION_ID` — the run's Claude-shaped session id, exported per child by `bin/claude-shim.py` (uuid4). Every dispatch payload carries it, so hook state files (`STATE/isa-nudge/<id>.json`, `memory-inject/<id>.queue.json`…) are attributable and parallel runs stop overwriting one file. Interactive sessions have no shim and keep the historical `"omp"` key.
 - Audit logging is off by default. `OMP_BRIDGE_STDERR=1` writes every line to stderr prefixed `lifeos-bridge` (captured by the sidecar unit's journal: `journalctl --user -u omp.service | grep lifeos-bridge`). `OMP_BRIDGE_LOG=<path>` appends JSON lines to a file for probes and tailing.
+
+## Loading in headless runs
+
+Shim-routed inference (`claude` → `omp`) runs isolated, where neither extension discovery nor the profile's config root offers this bridge — so those calls fire no hooks at all. A caller opts its run in with `LIFEOS_BRIDGE=1`; the shim appends `-e <this file>` (honored even under `--no-extensions` and `--profile=isolated`). Gate is per spawn, default off: judges and Pulse text jobs keep paying nothing. Mechanics and measured cost: `bin/claude-shim.md` § Hook Bridge Opt-In.
 
 ## Verification evidence
 
@@ -72,6 +77,7 @@ Per-event hook execution in the same run: SessionStart 5 · UserPromptSubmit 24 
 
 - `transcript_path` is filled for **Stop and SessionEnd** dispatches: the bridge converts the live session branch (`ctx.sessionManager.getBranch()`) into Claude-format JSONL via `branchToTranscriptLines()` and writes a per-session mirror to `$TMPDIR/lifeos-bridge-transcripts/<sessionId>.jsonl`, so the transcript-evidence gates (IsaDeployMarkerGate, ISAFoldGate, DeployRegistrationGate…) judge real evidence instead of failing open. Tool names are mapped through `TOOL_UP` in the mirror because the gate readers match Claude names. Other events (PreToolUse/UserPromptSubmit) still receive an empty path — hooks parsing the transcript there degrade gracefully; extending the mirror to them is a per-tool-call file rewrite and intentionally not done.
 - The voice line is handled by the omp-native path instead of `VoiceCompletion` (see Voice above); the mirror does not change that.
-- UserPromptSubmit receives a placeholder prompt (the omp `input` event is not yet wired) — prompt-text analysis hooks run with reduced signal.
-- Hooks run sequentially; heavy prompt-side hooks (inference) add ~1–2s per turn.
+- UserPromptSubmit carries the **real** submitted text: omp's `turn_start` event is payload-less (`{ type: "turn_start" }` in `agent/src/types.ts`), so the bridge dispatches on `message_start` with `role === "user"` and reads the content there. One submission per prompt; assistant and toolResult messages are ignored. The placeholder shipped for two months, during which PromptProcessing judged a constant string.
+- Hooks run sequentially; heavy prompt-side hooks (inference) add ~1–2s per turn. **In a gated headless run this compounds:** `PromptProcessing.hook.ts` calls `Inference.ts`, which spawns `claude` → the shim → another isolated `omp`; measured on 2026-11-10 that path hit its 30 s hook timeout (`ok:false`) inside one 53-char prompt. Gate only callers whose work justifies it, and expect to exclude inference-heavy registrations from headless runs — the interactive session is where those hooks belong.
+- The bridge must not be loaded into an already-loaded session expecting new behavior: extension load happens at startup, and a live interactive session that loads the full registry can balloon (observed `Extension "…/OmpHooksBridge.ts" error: handler timed out after 30000ms` in `prompt-processing.jsonl`). Keep it disabled there; use the per-run gate.
 - Changes take effect from the next session start.

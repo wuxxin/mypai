@@ -8,7 +8,8 @@
  *   omp event              → Claude Code event
  *   ---------------------    -------------------
  *   session_start          → SessionStart
- *   turn_start             → UserPromptSubmit
+ *   message_start (user)   → UserPromptSubmit  (turn_start carries no payload, so the real
+ *                                              prompt is read from the user message)
  *   tool_call              → PreToolUse         (permissionDecision → block/allow)
  *   tool_result            → PostToolUse        (isError → PostToolUseFailure)
  *   turn_end               → Stop
@@ -69,6 +70,12 @@ const LOG_PATH = process.env.OMP_BRIDGE_LOG;
 const PULSE_NOTIFY = "http://127.0.0.1:31337/notify";
 const VOICE_ID = process.env.OMP_VOICE_ID ?? "fTtv3eikoepIosk8dTZ5";
 const HOOK_TIMEOUT_MS = 30_000;
+// Claude Code gives every run a session id, and LifeOS hooks key their state files on it
+// (STATE/isa-nudge/<id>.json, memory-inject/<id>.queue.json …). The shim exports
+// OMP_SESSION_ID per child so headless runs are attributable; an interactive omp session
+// has none and keeps the historical "omp" key. Hardcoded "unknown" put every run's writes
+// in one shared file, where parallel sessions overwrote each other. (2026-11-10)
+const SESSION_ID = process.env.OMP_SESSION_ID || "omp";
 
 interface HookReg {
   event: string;
@@ -384,6 +391,10 @@ function toolCcName(name: string): string {
 
 let pendingContext: string[] = [];
 
+// Last dispatched UserPromptSubmit text, so omp's per-turn re-emission of the same user
+// message fires Claude Code's contract once per submission, not once per model call.
+let lastUserPrompt = "";
+
 /** omp-native voice line: the VoiceCompletion hook needs a Claude transcript,
  *  which omp doesn't have — extract the 🗣️ closer from the message that just
  *  completed the turn instead. */
@@ -400,7 +411,9 @@ function extractVoiceLine(text: string): string | null {
   return null;
 }
 
-function assistantMessageText(msg: unknown): string {
+/** Extracts plain text from any AgentMessage content shape (string, or blocks with .text).
+ *  Role-agnostic: the assistant voice line and a submitted user prompt read the same way. */
+function messageText(msg: unknown): string {
   if (!msg || typeof msg !== "object") return "";
   if (!("content" in msg)) return "";
   const content = msg.content;
@@ -420,7 +433,7 @@ export default function lifeosBridge(pi: ExtensionAPI): void {
     log({ event: "session_start" });
     for (const reg of forEvent("SessionStart")) {
       const res = await runHook(reg, {
-        session_id: process.env.OMP_SESSION_ID ?? "omp",
+        session_id: SESSION_ID,
         source: "startup",
         cwd: process.cwd(),
         hook_event_name: "SessionStart",
@@ -431,12 +444,31 @@ export default function lifeosBridge(pi: ExtensionAPI): void {
     }
   });
 
+  // turn_start carries no payload (agent/src/types.ts declares `{ type: "turn_start" }`), so
+  // the prompt text is not available there — it was a placeholder for two months and every
+  // UserPromptSubmit consumer judged a constant. The user message that follows carries the
+  // real text, so dispatch on message_start(role=user): one Claude-shaped submission per
+  // submitted prompt, assistant/toolResult messages ignored. (2026-11-10)
   pi.on("turn_start", async () => {
     log({ event: "turn_start" });
+  });
+
+  pi.on("message_start", async (event: unknown) => {
+    const msg = (event && typeof event === "object" ? (event as Record<string, unknown>).message : null) as Record<string, unknown> | undefined;
+    if (!msg || msg.role !== "user") return;
+    const prompt = messageText(msg);
+    // omp re-emits the pending user messages on every turn of a tool loop, so an
+    // unguarded handler fires once per model call (measured: 16 dispatches for one
+    // 53-char prompt, which starved PromptProcessing into its 30s timeout). Claude Code
+    // fires UserPromptSubmit once per submitted prompt, so repeats of the same text are
+    // skipped; a genuinely new submission always differs. (2026-11-10)
+    if (!prompt || prompt === lastUserPrompt) return;
+    lastUserPrompt = prompt;
+    log({ event: "user_message", chars: prompt.length });
     for (const reg of forEvent("UserPromptSubmit")) {
       const res = await runHook(reg, {
-        prompt: "(omp turn_start; input payload unavailable)",
-        session_id: "unknown",
+        prompt,
+        session_id: SESSION_ID,
         cwd: process.cwd(),
         hook_event_name: "UserPromptSubmit",
       });
@@ -455,7 +487,7 @@ export default function lifeosBridge(pi: ExtensionAPI): void {
       const res = await runHook(reg, {
         tool_name: ccName,
         tool_input: info.input ?? {},
-        session_id: "unknown",
+        session_id: SESSION_ID,
         transcript_path: "",
         cwd: process.cwd(),
         hook_event_name: "PreToolUse",
@@ -494,7 +526,7 @@ export default function lifeosBridge(pi: ExtensionAPI): void {
             tool_name: toolCcName(info.name),
             tool_input: info.input ?? {},
             tool_response_error: info.content,
-            session_id: "unknown",
+            session_id: SESSION_ID,
             cwd: process.cwd(),
             hook_event_name: "PostToolUseFailure",
             tool_use_id: info.toolCallId,
@@ -504,7 +536,7 @@ export default function lifeosBridge(pi: ExtensionAPI): void {
             tool_input: info.input ?? {},
             tool_response: info.content,
             tool_response_error: null,
-            session_id: "unknown",
+            session_id: SESSION_ID,
             cwd: process.cwd(),
             hook_event_name: "PostToolUse",
             permission_mode: "default",
@@ -526,7 +558,7 @@ export default function lifeosBridge(pi: ExtensionAPI): void {
         transcript_path: mirror,
         cwd: process.cwd(),
         hook_event_name: "Stop",
-        session_id: "unknown",
+        session_id: SESSION_ID,
       });
       const parsed = parseOutput(res.out);
       if (parsed.context) pendingContext.push(parsed.context);
@@ -537,7 +569,7 @@ export default function lifeosBridge(pi: ExtensionAPI): void {
     // newest session log globally, so with parallel sessions it picked the
     // wrong session's line (or none) and voice silently died. (2026-08-22)
     if (process.env.OMP_VOICE === "0") return;
-    const line = extractVoiceLine(assistantMessageText(event?.message));
+    const line = extractVoiceLine(messageText(event?.message));
     if (!line) return;
     const t0 = Date.now();
     try {
@@ -558,7 +590,7 @@ export default function lifeosBridge(pi: ExtensionAPI): void {
     const mirror = transcriptMirror(ctx);
     for (const reg of forEvent("SessionEnd")) {
       const res = await runHook(reg, {
-        session_id: "unknown",
+        session_id: SESSION_ID,
         transcript_path: mirror,
         cwd: process.cwd(),
         hook_event_name: "SessionEnd",

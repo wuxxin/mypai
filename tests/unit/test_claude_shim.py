@@ -10,6 +10,7 @@ import signal
 import subprocess
 import sys
 import time
+import uuid as uuidlib
 from pathlib import Path
 from types import ModuleType
 
@@ -529,3 +530,111 @@ time.sleep(30)
         if proc.poll() is None:
             proc.kill()
             proc.wait()
+
+
+# --- Hook bridge opt-in (LIFEOS_BRIDGE) and session identity ---------------------
+# The shim runs every child isolated, which drops the LifeOS hook bridge (an omp
+# extension). A caller opts in per spawn; the gate must be exact, a missing bridge file
+# must degrade to an isolated run, and every child must carry a real session id so hook
+# state stops landing in STATE/*/unknown.json.
+
+
+def test_bridge_gate_units(tmp_path: Path) -> None:
+    ext = tmp_path / "OmpHooksBridge.ts"
+    ext.write_text("// bridge stub", encoding="utf-8")
+
+    # Gate off by default; only truthy spellings opt in.
+    assert shim.resolve_bridge_extension({}) is None
+    for value in ("0", "", "false", "off"):
+        assert shim.resolve_bridge_extension({"LIFEOS_BRIDGE": value, "LIFEOS_BRIDGE_EXTENSION": str(ext)}) is None
+
+    # Opted in: the explicit path wins.
+    assert shim.resolve_bridge_extension({"LIFEOS_BRIDGE": "1", "LIFEOS_BRIDGE_EXTENSION": str(ext)}) == str(ext)
+    assert shim.resolve_bridge_extension({"LIFEOS_BRIDGE": "TRUE", "LIFEOS_BRIDGE_EXTENSION": str(ext)}) == str(ext)
+
+    # A missing bridge degrades to isolated, never to a failed inference call.
+    missing = tmp_path / "absent.ts"
+    assert shim.resolve_bridge_extension({"LIFEOS_BRIDGE": "yes", "LIFEOS_BRIDGE_EXTENSION": str(missing)}) is None
+
+    # The gate is never inherited: an inference hook spawns `claude` again, and an inherited
+    # gate loads the bridge in every nested child (measured 85 SessionStart + 72 Stop
+    # dispatches from one prompt). The session id is set; the caller's other keys survive.
+    sid = shim.new_session_id()
+    child = shim.child_environment(
+        sid,
+        {shim.BRIDGE_REQUEST_ENV: "1", shim.BRIDGE_PATH_ENV: str(ext), "PATH": "/usr/bin"},
+    )
+    assert child[shim.SESSION_ID_ENV] == sid
+    assert child["PATH"] == "/usr/bin"
+    assert shim.BRIDGE_REQUEST_ENV not in child
+    assert shim.BRIDGE_PATH_ENV not in child
+
+
+def test_build_omp_command_appends_bridge_flag() -> None:
+    base = shim.build_omp_command("omp", "llama.cpp/x", "high", [], [], [])
+    assert "-e" not in base
+
+    gated = shim.build_omp_command("omp", "llama.cpp/x", "high", [], [], [], "/ext/OmpHooksBridge.ts")
+    idx = gated.index("-e")
+    assert gated[idx + 1] == "/ext/OmpHooksBridge.ts"
+    # Isolation is untouched: the opt-in adds one extension, not discovery.
+    assert "--no-extensions" in gated and "--profile=isolated" in gated
+
+
+def test_gated_run_loads_bridge_and_exports_session_id(tmp_path: Path) -> None:
+    bin_dir = tmp_path / "bin"
+    bin_dir.mkdir()
+    capture_file = tmp_path / "captured.json"
+    ext = tmp_path / "OmpHooksBridge.ts"
+    ext.write_text("// bridge stub", encoding="utf-8")
+
+    _write_fake_omp(
+        bin_dir,
+        f"""#!/usr/bin/env python3
+import json, os, pathlib, sys
+pathlib.Path({str(capture_file)!r}).write_text(json.dumps({{
+    "args": sys.argv[1:],
+    "session_id": os.environ.get("OMP_SESSION_ID"),
+}}))
+print(json.dumps({{
+    "type": "message_end",
+    "message": {{
+        "role": "assistant",
+        "provider": "llama.cpp",
+        "model": "qwen3.8-flash-next",
+        "content": [{{"type": "text", "text": "ok"}}],
+        "usage": {{"input": 1, "cacheRead": 0, "cacheWrite": 0, "output": 1}},
+        "stopReason": "stop",
+    }},
+}}))
+""",
+    )
+
+    def run(extra_env: dict[str, str]) -> dict:
+        env = os.environ.copy()
+        env["PATH"] = f"{bin_dir}:{env.get('PATH', '')}"
+        env["LIFEOS_TOOLS_MODEL_NAME"] = "llama.cpp/qwen3.8-flash-next"
+        env.update(extra_env)
+        res = subprocess.run(
+            [sys.executable, str(SHIM_PATH), "--print", "--output-format", "text"],
+            input="ping",
+            capture_output=True,
+            text=True,
+            env=env,
+        )
+        assert res.returncode == 0, res.stderr
+        return json.loads(capture_file.read_text(encoding="utf-8"))
+
+    plain = run({})
+    assert "-e" not in plain["args"], "default path must stay hook-free"
+    # Every child carries a session id, gated or not: hooks key state on it.
+    uuidlib.UUID(plain["session_id"])
+
+    gated = run({"LIFEOS_BRIDGE": "1", "LIFEOS_BRIDGE_EXTENSION": str(ext)})
+    idx = gated["args"].index("-e")
+    assert gated["args"][idx + 1] == str(ext)
+    uuidlib.UUID(gated["session_id"])
+
+    # Missing bridge file: call succeeds, no -e appended.
+    absent = run({"LIFEOS_BRIDGE": "1", "LIFEOS_BRIDGE_EXTENSION": str(tmp_path / "gone.ts")})
+    assert "-e" not in absent["args"]
