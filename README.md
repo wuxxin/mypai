@@ -18,7 +18,7 @@
    - Private user vault in `~/agent-private/lifeos` (`USER/`, `MEMORY/`, `TELOS/`).
    - Pulse dashboard and sidecar server on port `:31337` (`bun run pulse.ts`).
    - `OmpHooksBridge.ts` translating Claude Code hook events (`SessionStart`, `UserPromptSubmit`, `PostToolExecution`, `SessionEnd`) for OMP.
-   - Utility inference compatibility via `bin/claude-shim`.
+   - Utility inference compatibility via [`bin/claude-shim.py`](bin/claude-shim.py) (documented in [`bin/claude-shim.md`](bin/claude-shim.md)).
 
 2. **Agent Harness (`omp/agent/`)**:
    - Base configuration (`config.yml`, `models.yml`, `lsp.json`).
