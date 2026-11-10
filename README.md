@@ -11,18 +11,6 @@
 
 ---
 
-## Architectural Trajectory & Evolution
-
-The system has transitioned through three architectural generations:
-
-| Generation | Primary Architecture | Status |
-| :--- | :--- | :--- |
-| **Gen 1 (Legacy-Legacy)** | `omp-mypai` monolithic FastAPI daemon (`:52080`), single serialized RPC queue, custom FastMCP signal tools. | **Retired / Fully Removed** |
-| **Gen 2 (Transitional)** | `omp-aoe-amux-hindsight` multi-session mesh (`aoe` on `:28080`, `amux-server` on `:28824`, `cc-connect` on `:9810`, `mypai-channel`/`mypai-main`/`mypai-cron`). | **Retired / Inactive** *(Preserved for reference only)* |
-| **Gen 3 (Active Trajectory)** | Direct **`oh-my-pi` (`omp`)** + **`LifeOS`** (`~/.omp/LIFEOS` with Pulse dashboard on `:31337`, `OmpHooksBridge.ts`), backed by **`submodules/agents-shared`** local inference and **Hindsight** memory. | **Active Target Architecture** |
-
----
-
 ## Core System Components
 
 1. **Active Focus — LifeOS Integration (`~/.omp/LIFEOS` via `~/.claude` symlink)**:
