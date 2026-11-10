@@ -14,6 +14,18 @@
  *   tool_result            → PostToolUse        (isError → PostToolUseFailure)
  *   turn_end               → Stop
  *   session_shutdown       → SessionEnd
+ *   tool_approval_requested→ PermissionRequest  + Notification (notification_type
+ *                                              "permission_prompt" — Claude Code fires both for
+ *                                              one approval prompt; TabState stamps ⏳ and
+ *                                              BlockerText keys on that type)
+ *   (synthesized)          → StopFailure        (emitted when a mapped Stop hook exits non-zero;
+ *                                              omp has no such event, and the v8 registry's
+ *                                              consumers — EventLogger, TabState ❌ stamp — want
+ *                                              exactly this signal)
+ *   —                      ✗ ConfigChange      (no source: the extension event union in
+ *                                              agent/src/extensibility/extensions/types.ts has no
+ *                                              settings-change event; `mode_changed` is a harness
+ *                                              mode switch, not a config edit. Left unmapped.)
  *
  * Hook output contract:
  *   { "hookSpecificOutput": { "permissionDecision": "allow|deny|ask",
@@ -88,6 +100,9 @@ interface HookResult {
   out: string;
   err: string;
   ms: number;
+  /** The hook process's exit code, null on timeout. Claude Code reads non-zero as failure —
+   *  `ok` used to be "not a timeout", so every failing hook logged success (2026-11-11). */
+  exit: number | null;
 }
 
 interface HookOutput {
@@ -203,14 +218,19 @@ async function runHook(reg: HookReg, payload: Record<string, unknown>): Promise<
     const exited = await Promise.race([proc.exited, Bun.sleep(HOOK_TIMEOUT_MS).then(() => "timeout" as const)]);
     if (exited === "timeout") proc.kill();
     const [out, err] = await Promise.all([outP, errP]);
+    // Claude Code's contract: a non-zero exit is a failed hook (exit 2 blocks). `ok` reported
+    // success for any process that exited at all, so a stop hook crashing on a missing file
+    // logged ok:true and StopFailure never fired. (2026-11-11)
+    const code = typeof exited === "number" ? exited : null;
     return {
-      ok: exited !== "timeout",
+      ok: code === 0,
       out,
-      err: exited === "timeout" ? "timeout" : err.slice(0, 300),
+      err: code === null ? "timeout" : code !== 0 && !err.trim() ? `exit ${code}` : err.slice(0, 300),
       ms: Date.now() - t0,
+      exit: code,
     };
   } catch (e) {
-    return { ok: false, out: "", err: String(e).slice(0, 300), ms: Date.now() - t0 };
+    return { ok: false, out: "", err: String(e).slice(0, 300), ms: Date.now() - t0, exit: null };
   }
 }
 
@@ -563,6 +583,20 @@ export default function lifeosBridge(pi: ExtensionAPI): void {
       const parsed = parseOutput(res.out);
       if (parsed.context) pendingContext.push(parsed.context);
       log({ hook: hookName(reg.command), cc: "Stop", ok: res.ok, ms: res.ms, err: res.err || null, context: !!parsed.context });
+      // Claude Code's StopFailure = a stop hook failed. omp emits no such event, so synthesize it
+      // from the failure this bridge observed; the v8 consumers (EventLogger, TabState's ❌ stamp)
+      // read `error` as a string and `session_id`. Guarded on res.ok so a clean Stop never fires.
+      if (!res.ok) {
+        for (const failReg of forEvent("StopFailure")) {
+          const fres = await runHook(failReg, {
+            session_id: SESSION_ID,
+            cwd: process.cwd(),
+            hook_event_name: "StopFailure",
+            error: `${hookName(reg.command)} (exit ${res.exit ?? "?"}): ${res.err.trim().split("\n")[0] || "no stderr"}`,
+          });
+          log({ hook: hookName(failReg.command), cc: "StopFailure", ok: fres.ok, ms: fres.ms, err: fres.err || null, cause: hookName(reg.command) });
+        }
+      }
     }
     // omp-native voice: VoiceCompletion.hook.ts needs a Claude transcript omp
     // doesn't have. Speak the turn's OWN final message — the old path read the
@@ -598,6 +632,39 @@ export default function lifeosBridge(pi: ExtensionAPI): void {
       const parsed = parseOutput(res.out);
       if (parsed.context) pendingContext.push(parsed.context);
       log({ hook: hookName(reg.command), cc: "SessionEnd", ok: res.ok, ms: res.ms, err: res.err || null, context: !!parsed.context });
+    }
+  });
+
+  // One omp approval prompt is two Claude Code events: PermissionRequest (TabState stamps the tab
+  // ⏳ / "APPROVE: <tool>") and Notification with notification_type "permission_prompt" — which is
+  // the only shape BlockerText accepts as a blocker. tool_input has no equivalent in
+  // ToolApprovalRequestedEvent, so TabState's permissionDetail() falls back to the tool name; that
+  // is its documented behavior for an unknown input, not a degraded stamp. (2026-11-11)
+  pi.on("tool_approval_requested", async (event: unknown) => {
+    const e = event as Record<string, unknown> | undefined;
+    const toolName = typeof e?.toolName === "string" ? toolCcName(e.toolName) : "tool";
+    log({ event: "tool_approval_requested", tool: toolName });
+    for (const reg of forEvent("PermissionRequest")) {
+      const res = await runHook(reg, {
+        session_id: SESSION_ID,
+        cwd: process.cwd(),
+        hook_event_name: "PermissionRequest",
+        tool_name: toolName,
+        tool_input: {},
+        tool_use_id: typeof e?.toolCallId === "string" ? e.toolCallId : undefined,
+      });
+      log({ hook: hookName(reg.command), cc: "PermissionRequest", tool: toolName, ok: res.ok, ms: res.ms, err: res.err || null });
+    }
+    const message = typeof e?.reason === "string" && e.reason.trim() ? e.reason.trim() : `Approve ${toolName}?`;
+    for (const reg of forEvent("Notification")) {
+      const res = await runHook(reg, {
+        session_id: SESSION_ID,
+        cwd: process.cwd(),
+        hook_event_name: "Notification",
+        notification_type: "permission_prompt",
+        message,
+      });
+      log({ hook: hookName(reg.command), cc: "Notification", type: "permission_prompt", ok: res.ok, ms: res.ms, err: res.err || null });
     }
   });
 

@@ -11,11 +11,14 @@ version: 1.0.1
 | omp event | Claude Code event | Effect |
 |---|---|---|
 | `session_start` | `SessionStart` | startup maintenance hooks |
-| `turn_start` | `UserPromptSubmit` | prompt-side hooks |
+| `message_start` (role=user) | `UserPromptSubmit` | prompt-side hooks, with the **real** submitted text — `turn_start` is payload-less, so it only logs. Repeats of identical text are skipped: omp re-emits the pending user message on every turn of a tool loop. |
 | `tool_call` | `PreToolUse` | `permissionDecision: deny` → tool blocked; `ask` → UI confirm (fail-closed headless) |
 | `tool_result` | `PostToolUse` | result-side hooks (isError → `PostToolUseFailure`) |
 | `turn_end` | `Stop` | per-turn stop hooks |
 | `session_shutdown` | `SessionEnd` | end-of-session maintenance |
+| `tool_approval_requested` | `PermissionRequest` **+** `Notification` | one approval prompt is both events in Claude Code's contract: the tab stamp (`TabState`) and `notification_type:"permission_prompt"` (the only shape `BlockerText` accepts). `tool_input` has no field in `ToolApprovalRequestedEvent`, so `permissionDetail()` falls back to the tool name. |
+| *(synthesized)* | `StopFailure` | emitted when a mapped `Stop` hook exits non-zero, carrying `error: "<hook> (exit N): <first stderr line>"`. omp emits no such event; the v8 consumers are `EventLogger` and TabState's ❌ stamp. Guarded on the observed failure — a clean Stop never fires it. |
+| — | ✗ `ConfigChange` | **no source.** The extension event union (`packages/coding-agent/src/extensibility/extensions/types.ts`) has no settings-change event; `mode_changed` is a harness mode switch, not a config edit. Left unmapped on purpose. |
 
 Hooks are invoked exactly as Claude Code invokes them: `sh -c <command>` with the Claude Code JSON payload on stdin. The registry (event → matcher → command) is read live from `${LIFEOS_DIR}/settings.json`, so there is no duplicated configuration.
 
@@ -23,7 +26,7 @@ Hooks are invoked exactly as Claude Code invokes them: `sh -c <command>` with th
 
 **Voice.** The `VoiceCompletion` hook requires a Claude transcript, which omp doesn't produce, so the bridge adds an omp-native voice path: at `turn_end` it reads the turn's own final assistant message and extracts the final `🗣️ <DA>:` closer (angle brackets optional — both `🗣️ <ZEN>:` and `🗣️ ZEN:` are accepted), and speaks it through Pulse's `/notify` (ElevenLabs). Same semantics as Claude Code — no `🗣️` line means silence. Disable with `OMP_VOICE=0`; override the voice id with `OMP_VOICE_ID`.
 
-**Safety.** A hook returning `deny` blocks the tool. `ask` shows a UI confirm; headless runs fail closed (deny). Hook failures are logged, never crash the session. Per-hook timeout 30s.
+**Safety.** A hook returning `deny` blocks the tool. `ask` shows a UI confirm; headless runs fail closed (deny). Hook failures are logged, never crash the session. Per-hook timeout 30s. **A non-zero exit is a failure:** `ok` follows the process exit code and every result carries `exit`. It used to mean "not a timeout", so any hook that exited 1 logged `ok:true` — the audit trail said all was well while stop gates silently stopped running, and no synthesized `StopFailure` could ever fire. (2026-11-11)
 
 ## Install
 
