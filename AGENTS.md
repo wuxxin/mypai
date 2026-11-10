@@ -12,7 +12,7 @@ The primary active focus is layering and stabilizing **LifeOS** (https://github.
 - **Harness Layering:** `~/.omp/LIFEOS` (with `~/.claude` symlinked to `~/.omp`).
 - **Setup & Lifecycle:** Scaffolded via `bin/install-lifeos` (idempotent installation and updates).
 - **Bridge Extension:** `omp/agent/extensions/OmpHooksBridge.ts` translates Claude Code hooks for OMP.
-- **Launch Command:** `OMP_VOICE=0 LIFEOS_DIR=~/.claude/LIFEOS omp --append-system-prompt ~/.claude/LIFEOS/LIFEOS_SYSTEM_PROMPT.md` (or `lifeos` alias).
+- **Launch Command:** `lifeos`
 - Detailed setup notes: `references/lifeos-setup.md`.
 
 ### Target Trajectory & Submodules
@@ -24,10 +24,6 @@ The primary active focus is layering and stabilizing **LifeOS** (https://github.
 ### `mypai_runtime` Status
 - `src/mypai_runtime/` will be used in the target setup, but is **not currently used or ported to be used correctly** in the active harness yet. Its refactoring and adaptation to OMP + LifeOS is deferred until LifeOS integration adjustments are complete.
 ## Harness Usage
-
-- **Internal Tools First:** Discover and use internal tools before shelling out to do the same
-- if running under oh-my-pi/omp: Discover and use `xd://` devices and tools and propose plans via `xd://` (`write xd://propose`, `write xd://resolve`, `write xd://reject`, `read xd://`).
-
 
 ## Code Style & Verification Commands
 
@@ -48,10 +44,4 @@ The primary active focus is layering and stabilizing **LifeOS** (https://github.
 ## Workspace & Sandboxing Discipline
 
 - **Workspace:** `mypai` and `submodules/` form a single workspace. Temporary files go in `scratch/`. Check root and submodules before creating new files.
-- **Bubblewrap (`bwrap`) Check:** `[ -S "${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/systemd/private" ] || echo "bwrapped"`
-- **When bwrapped:** Do **NOT** run `systemctl`. Inspect processes via `journalctl --user`, `ps`, `/proc`, `pgrep`.
-
-## Agent Delegation Rules & Specialist Roster
-
-**Operating Role:** As a user-facing agent, assume the **`@orchestrator`** role.
-
+- **Sandbox (`sandbox-ctl`) Check:** if env `SANDBOX_NAME` or `SANDBOX` is set read `submodules/agents-shared/scripts/sandbox-ctl.md how to behave and use.
