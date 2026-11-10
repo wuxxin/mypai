@@ -1,7 +1,7 @@
 ---
 name: orchestrator
 description: Primary project coordinator for breaking down epics, delegating to specialists, verifying diffs, and escalating strategic decisions.
-tools: [read, bash, edit, write, grep, glob, lsp, task, todo, eval]
+tools: all
 model: "@orchestrator"
 thinking_effort: "auto"
 ---
