@@ -43,8 +43,8 @@
  * never crash the session. Per-hook timeout 30s.
  */
 
-import { appendFileSync, existsSync, readFileSync } from "fs";
-import { homedir } from "os";
+import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
+import { homedir, tmpdir } from "os";
 import { join } from "path";
 import type { ExtensionAPI } from "@oh-my-pi/pi-coding-agent";
 
@@ -292,6 +292,83 @@ function readCtxUI(v: unknown): CtxWithUI | null {
   return v && typeof v === "object" ? (v as CtxWithUI) : null;
 }
 
+// ── transcript mirror ───────────────────────────────────────────────────────
+/**
+ * Claude Code hands every hook a `transcript_path` — the session's JSONL in CC format.
+ * omp has no such file, and its own session JSONL is a different entry model (toolCall
+ * blocks inside assistant messages; toolResult entries as siblings). The Stop gates
+ * (StopGates → IsaDeployMarkerGate, ISAFoldGate, DeployRegistrationGate) judge deploy
+ * and edit evidence from that transcript: with an empty path every one of them fails
+ * open, and Vigil fills with "failed open" events.
+ *
+ * This converts the live branch (`ctx.sessionManager.getBranch()`) into CC-format JSONL
+ * under tmpdir and hands its path to Stop/SessionEnd dispatches. The mapping follows
+ * the reader contract in hooks/lib (ISAFoldGate.transcriptToolCalls): toolCall →
+ * tool_use block on an assistant line; toolResult → user line with a tool_result
+ * block; entry-level ISO timestamps (`entryMs` parses `e.timestamp`).
+ *
+ * Best-effort: returns "" on any failure and the dispatch proceeds as before.
+ */
+interface BridgeSessionManager {
+  getSessionId?: () => string;
+  getBranch?: () => unknown[];
+}
+
+export function branchToTranscriptLines(branch: unknown[], cwd: string): string[] {
+  const lines: string[] = [];
+  for (const raw of branch) {
+    if (!raw || typeof raw !== "object") continue;
+    const e = raw as Record<string, any>;
+    if (e.type !== "message" || !e.message || typeof e.message !== "object") continue;
+    const role = e.message.role;
+    // The entry carries the ISO timestamp the readers parse; fall back to the message's ms.
+    const ts = typeof e.timestamp === "string" ? e.timestamp
+      : typeof e.message.timestamp === "number" ? new Date(e.message.timestamp).toISOString() : null;
+    if (role === "assistant" && Array.isArray(e.message.content)) {
+      // toolCall is a content-block type: rename to CC's tool_use, keep id/arguments, and
+      // map the tool name through TOOL_UP — the gate readers match on Claude tool names.
+      const content = e.message.content.map((b: Record<string, any>) =>
+        b && b.type === "toolCall"
+          ? { type: "tool_use", id: b.id, name: TOOL_UP[b.name] ?? b.name, input: b.arguments && typeof b.arguments === "object" ? b.arguments : {} }
+          : b);
+      lines.push(JSON.stringify({ type: "assistant", timestamp: ts, cwd, message: { role: "assistant", content } }));
+    } else if (role === "user") {
+      const content = e.message.content;
+      if (typeof content !== "string" && !Array.isArray(content)) continue;
+      lines.push(JSON.stringify({ type: "user", timestamp: ts, cwd, message: { role: "user", content } }));
+    } else if (role === "toolResult") {
+      // Claude carries results on user entries; the reader pairs them by tool_use_id.
+      const id = typeof e.message.toolCallId === "string" ? e.message.toolCallId : "";
+      if (!id) continue;
+      const content = Array.isArray(e.message.content) ? e.message.content
+        : typeof e.message.content === "string" ? e.message.content : [];
+      lines.push(JSON.stringify({
+        type: "user", timestamp: ts, cwd,
+        message: { role: "user", content: [{ type: "tool_result", tool_use_id: id, content, is_error: e.message.isError === true }] },
+      }));
+    }
+    // developer / bashExecution / compaction / custom entries have no CC transcript
+    // counterpart the readers consume; they are skipped.
+  }
+  return lines;
+}
+
+function transcriptMirror(ctx: unknown): string {
+  try {
+    const sm = (ctx as { sessionManager?: BridgeSessionManager } | null | undefined)?.sessionManager;
+    if (!sm || typeof sm.getBranch !== "function") return "";
+    const lines = branchToTranscriptLines(sm.getBranch(), process.cwd());
+    const dir = join(tmpdir(), "lifeos-bridge-transcripts");
+    mkdirSync(dir, { recursive: true });
+    const sid = typeof sm.getSessionId === "function" ? String(sm.getSessionId() || "") : "";
+    const path = join(dir, `${(sid || "session").replace(/[^A-Za-z0-9._-]/g, "_")}.jsonl`);
+    writeFileSync(path, lines.length ? lines.join("\n") + "\n" : "");
+    return path;
+  } catch {
+    return "";
+  }
+}
+
 function forEvent(event: string): HookReg[] {
   // "*" and ".*" are both match-all; an empty matcher is normalized to "*" at parse time.
   return registry.filter((r) => r.event === event && (r.matcher === "*" || r.matcher === ".*"));
@@ -440,12 +517,13 @@ export default function lifeosBridge(pi: ExtensionAPI): void {
     }
   });
 
-  pi.on("turn_end", async (event: { message?: unknown }) => {
+  pi.on("turn_end", async (event: { message?: unknown }, ctx: unknown) => {
     log({ event: "turn_end" });
+    const mirror = transcriptMirror(ctx);
     for (const reg of forEvent("Stop")) {
       const res = await runHook(reg, {
         stop_hook_active: true,
-        transcript_path: "",
+        transcript_path: mirror,
         cwd: process.cwd(),
         hook_event_name: "Stop",
         session_id: "unknown",
@@ -475,12 +553,13 @@ export default function lifeosBridge(pi: ExtensionAPI): void {
     }
   });
 
-  pi.on("session_shutdown", async () => {
+  pi.on("session_shutdown", async (_event: unknown, ctx: unknown) => {
     log({ event: "session_shutdown" });
+    const mirror = transcriptMirror(ctx);
     for (const reg of forEvent("SessionEnd")) {
       const res = await runHook(reg, {
         session_id: "unknown",
-        transcript_path: "",
+        transcript_path: mirror,
         cwd: process.cwd(),
         hook_event_name: "SessionEnd",
       });

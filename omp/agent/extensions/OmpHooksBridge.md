@@ -70,7 +70,8 @@ Per-event hook execution in the same run: SessionStart 5 · UserPromptSubmit 24 
 
 ## Known limitations
 
-- `transcript_path` is empty — hooks that parse the Claude transcript (e.g. LastResponseCache, StopGates) degrade gracefully (they log, don't crash); the voice line is handled by the omp-native path instead of `VoiceCompletion`.
+- `transcript_path` is filled for **Stop and SessionEnd** dispatches: the bridge converts the live session branch (`ctx.sessionManager.getBranch()`) into Claude-format JSONL via `branchToTranscriptLines()` and writes a per-session mirror to `$TMPDIR/lifeos-bridge-transcripts/<sessionId>.jsonl`, so the transcript-evidence gates (IsaDeployMarkerGate, ISAFoldGate, DeployRegistrationGate…) judge real evidence instead of failing open. Tool names are mapped through `TOOL_UP` in the mirror because the gate readers match Claude names. Other events (PreToolUse/UserPromptSubmit) still receive an empty path — hooks parsing the transcript there degrade gracefully; extending the mirror to them is a per-tool-call file rewrite and intentionally not done.
+- The voice line is handled by the omp-native path instead of `VoiceCompletion` (see Voice above); the mirror does not change that.
 - UserPromptSubmit receives a placeholder prompt (the omp `input` event is not yet wired) — prompt-text analysis hooks run with reduced signal.
 - Hooks run sequentially; heavy prompt-side hooks (inference) add ~1–2s per turn.
 - Changes take effect from the next session start.
