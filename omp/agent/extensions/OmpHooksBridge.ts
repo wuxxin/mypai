@@ -67,12 +67,19 @@ const HOME = homedir();
 // the `lifeos` alias as the payload path, so it must never be treated as the config root.
 const PAYLOAD_DIR = process.env.LIFEOS_DIR ?? join(HOME, ".claude", "LIFEOS");
 const CONFIG_ROOT = process.env.LIFEOS_CONFIG_ROOT ?? join(HOME, ".claude");
-// Resolution order: explicit pin → v8 layout (configRoot/settings.json) → pre-v8 layout.
-const SETTINGS_CANDIDATES = [
-  process.env.OMP_BRIDGE_SETTINGS,
-  join(CONFIG_ROOT, "settings.json"),
-  join(PAYLOAD_DIR, "settings.json"),
-].filter((p): p is string => typeof p === "string" && p.length > 0);
+const RAW_SETTINGS_PIN = process.env.OMP_BRIDGE_SETTINGS?.trim();
+const BRIDGE_DISABLED =
+  RAW_SETTINGS_PIN === "/dev/null" ||
+  RAW_SETTINGS_PIN === "none" ||
+  RAW_SETTINGS_PIN === "off" ||
+  RAW_SETTINGS_PIN === "0" ||
+  RAW_SETTINGS_PIN === "disabled";
+// Resolution order: explicit pin (authoritative when set) → v8 layout (configRoot/settings.json) → pre-v8 layout.
+const SETTINGS_CANDIDATES = BRIDGE_DISABLED
+  ? []
+  : RAW_SETTINGS_PIN
+    ? [RAW_SETTINGS_PIN]
+    : [join(CONFIG_ROOT, "settings.json"), join(PAYLOAD_DIR, "settings.json")];
 // Audit log: off by default (interactive TUIs must stay clean). OMP_BRIDGE_STDERR=1
 // enables the stderr sink for journal capture under the sidecar unit; OMP_BRIDGE_LOG
 // adds a file sink. stdout is left alone — in `omp -p` print mode it carries the answer.
@@ -447,6 +454,10 @@ function messageText(msg: unknown): string {
 }
 
 export default function lifeosBridge(pi: ExtensionAPI): void {
+  if (BRIDGE_DISABLED) {
+    log({ event: "bridge_disabled", reason: `OMP_BRIDGE_SETTINGS=${RAW_SETTINGS_PIN}` });
+    return;
+  }
   log({ event: "bridge_init", hooks: registry.length, settings: registrySource || null, configRoot: CONFIG_ROOT });
 
   pi.on("session_start", async () => {

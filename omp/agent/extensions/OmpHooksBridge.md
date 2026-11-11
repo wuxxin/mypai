@@ -41,7 +41,7 @@ Configuration:
 
 - `LIFEOS_CONFIG_ROOT` — harness settings root holding the merged hook registry (default `~/.claude`)
 - `LIFEOS_DIR` — payload dir (`~/.claude/LIFEOS`); legacy settings location only, never the config root
-- `OMP_BRIDGE_SETTINGS` — pins the registry file explicitly
+- `OMP_BRIDGE_SETTINGS` — pins the registry file explicitly. Pass `/dev/null`, `none`, or `off` to **completely disable the bridge** (registers zero event handlers, skips voice/transcript mirroring, and leaves `tools.speculativeExecution` unlocked for benchmarks or non-LifeOS runs).
 - `OMP_SESSION_ID` — the run's Claude-shaped session id, exported per child by `bin/claude-shim.py` (uuid4). Every dispatch payload carries it, so hook state files (`STATE/isa-nudge/<id>.json`, `memory-inject/<id>.queue.json`…) are attributable and parallel runs stop overwriting one file. Interactive sessions have no shim and keep the historical `"omp"` key.
 - Audit logging is off by default. `OMP_BRIDGE_STDERR=1` writes every line to stderr prefixed `lifeos-bridge` (captured by the sidecar unit's journal: `journalctl --user -u omp.service | grep lifeos-bridge`). `OMP_BRIDGE_LOG=<path>` appends JSON lines to a file for probes and tailing.
 
