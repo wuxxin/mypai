@@ -103,7 +103,10 @@ bashInterceptor:
       tool: bash
       message: "Use `bash` with `name` for watch mode so its output, input, and lifecycle stay managed."
 shellMinimizer:
-  sourceOutlineLevel: default
+  sourceOutlineLevel: aggressive
+read:
+  summarize:
+    prose: true
 astGrep:
   enabled: true
 checkpoint:
@@ -139,7 +142,15 @@ composer:
   shape: borderless
 tools:
   intentTracing: false
-  xdevDocs: builtins
+  xdevDocs: catalog
+  speculativeExecution:
+    enabled: true
+    maxInFlight: 2
+  artifactSpillThreshold: 25
+  artifactHeadBytes: 8
+  artifactTailBytes: 12
+  artifactTailLines: 200
+  outputMaxColumns: 512
 contextPromotion:
   enabled: false
 extendedContext: false
