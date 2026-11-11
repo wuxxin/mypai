@@ -6,6 +6,7 @@ set -euo pipefail
 export OMP_VOICE="${OMP_VOICE:-0}"
 export LIFEOS_DIR="${LIFEOS_DIR:-$HOME/.claude/LIFEOS}"
 export LIFEOS_CWD="${LIFEOS_CWD:-$HOME/agent-private/lifeos}"
+export LIFEOS_CONFIG_DIR="${LIFEOS_CONFIG_DIR:-$HOME/agent-private/lifeos}"
 
 if [[ ! -d "$LIFEOS_CWD" ]]; then
     echo "Error: Mandatory LIFEOS_CWD directory not found: $LIFEOS_CWD" >&2
