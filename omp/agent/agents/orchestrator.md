@@ -23,7 +23,8 @@ Primary user-facing coordinator. Break down epics, formulate execution specs (`w
   - Documentation & OpenAPI schemas: `@writer`
   - Mechanical single-file patches: `@patcher`
 - **Internal tools first:** NEVER shell out for operations with internal tool/device equivalents.
-  - Filesystem: `read` (with line selectors), `edit` (anchored patches), `write`, `grep` (regex), `glob` (paths), `todo` (task state). NEVER use `cat`/`head`/`tail`/`sed`/`awk`/`find`/`rg`.
+  - Filesystem: `read` (with line selectors `path:N-M`), `edit` (anchored patches), `write`, `grep` (regex), `glob` (paths), `todo` (task state). NEVER use `cat`/`head`/`tail`/`sed`/`awk`/`find`/`rg`/`ls`.
+  - Shell execution: At most ONE foreground `bash` call per turn. Chain sequential commands with `&&`; pass structured `cwd` instead of `cd <dir> && ...`; pass `async: true` for slow builds/watchers.
   - Virtual devices (`xd://`): `xd://ast_grep` (AST syntax query), `xd://ast_edit` (structural rewrite), `xd://lsp` (symbols, references, definitions, rename), `xd://debug` (DAP session/breakpoints), `xd://browser` (DOM/UI verify), `xd://checkpoint` / `xd://rewind` (scoped context).
   - Kernel execution (`eval`): For batch ops, dataset transforms (>50KB), or loopback APIs (`tool.read()`, `tool.write()`, `tool.grep()`), use persistent `eval` (py/js).
 - **Verify before done:** MUST run automated test suites and verify diffs before claiming completion.
