@@ -146,14 +146,14 @@ def test_model_and_effort_precedence() -> None:
         == "llama.cpp/qwen3.6-35B-A3B"
     )
 
-    assert shim.resolve_effort("", {}) == "high"
-    assert shim.resolve_effort("min", {}) == "minimal"
+    assert shim.resolve_effort("", {}) == "medium"
+    assert shim.resolve_effort("min", {}) == "low"
     assert shim.resolve_effort("MED", {}) == "medium"
-    assert shim.resolve_effort("highest", {}) == "max"
+    assert shim.resolve_effort("highest", {}) == "xhigh"
     assert shim.resolve_effort("xhigh", {}) == "xhigh"
     assert shim.resolve_effort("0", {}) == "off"
-    assert shim.resolve_effort("bogus", {}) == "high"
-    assert shim.resolve_effort("low", {"LIFEOS_TOOLS_MODEL_EFFORT": "max"}) == "max"
+    assert shim.resolve_effort("bogus", {}) == "medium"
+    assert shim.resolve_effort("low", {"LIFEOS_TOOLS_MODEL_EFFORT": "xhigh"}) == "xhigh"
 
 
 def test_resolve_tool_args_mapping_and_rules() -> None:
