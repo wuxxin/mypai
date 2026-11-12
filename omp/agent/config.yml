@@ -30,7 +30,7 @@ modelRoles:
 symbolPreset: unicode
 theme:
   dark: titanium
-setupVersion: 2
+setupVersion: 3
 statusLine:
   preset: default
   separator: powerline-thin
@@ -48,9 +48,7 @@ compaction:
     - soft
   experimentalContextManagement: true
 memory:
-  backend: none
-autolearn:
-  enabled: false
+  backend: mnemopi
 hindsight:
   apiUrl: http://localhost:28888
   bankId: oh-my-pi
@@ -60,46 +58,73 @@ hindsight:
   autoRetain: false
   mentalModelsEnabled: true
   mentalModelAutoSeed: true
+mnemopi:
+  # Recommended default scoping: project-local writes + global recall visibility
+  scoping: per-project-tagged
+
+  # Normal operation stays free of automatic memory activity
+  autoRetain: false
+  autoRecall: false          # set true later once you want turn-1 <memories> injection
+
+  # Richer retrieval using the entity/triple graph + facts
+  polyphonicRecall: true
+  proactiveLinking: true
+
+  # Local OpenAI-compatible embedding service (no local ONNX daemon spawned)
+  embeddingApiUrl: http://127.0.0.1:21080/v1
+  embeddingModel: qwen3-embedding
+
+  # Local LLM for fact/entity extraction & sleep consolidation
+  # Option A: use your configured `memory`/`tiny`/`smol` model role:
+  llmMode: smol
+  # Option B: or pin explicitly to :21080 instead of role resolution:
+  # llmMode: remote
+  # llmBaseUrl: http://127.0.0.1:21080/v1
+  # llmModel: qwen3.8-flash-next
+
+autolearn:
+  enabled: true              # exposes `learn` when you explicitly want to save lessons/skills
+  autoContinue: false        # no automatic post-turn capture runs
 bash:
   autoBackground:
     enabled: true
 bashInterceptor:
   enabled: true
   patterns:
-    - pattern: "^\\s*(?:(?:head|tail|less|more)\\s+|cat\\s+(?!\\s|(?:[02-9]>{1,2}\\|?\\s*[^\\s>|]\\S*\\s+)*(?:<<|1?>(?!&)|&>)))"
+    - pattern: '^\s*(?:(?:head|tail|less|more)\s+|cat\s+(?!\s|(?:[02-9]>{1,2}\|?\s*[^\s>|]\S*\s+)*(?:<<|1?>(?!&)|&>)))'
       tool: read
       message: "Use the `read` tool instead of cat/head/tail. It provides better context and handles binary files."
-    - pattern: "^\\s*(grep|rg|ripgrep|ag|ack)\\s+"
+    - pattern: '^\s*(grep|rg|ripgrep|ag|ack)\s+'
       tool: grep
       message: "Use the `grep` tool instead of grep/rg. It respects .gitignore and provides structured output."
-    - pattern: "^\\s*(find|fd|locate)\\s+.*(-name|-iname|-type|--type|-glob)"
+    - pattern: '^\s*(find|fd|locate)\s+.*(-name|-iname|-type|--type|-glob)'
       tool: glob
       message: "Use the `glob` tool instead of find/fd. It respects .gitignore and is faster for glob patterns."
-    - pattern: "^\\s*sed\\s+(-i|--in-place)"
+    - pattern: '^\s*sed\s+(-i|--in-place)'
       tool: edit
       message: "Use the `edit` tool instead of sed -i. It provides diff preview and fuzzy matching."
-    - pattern: "^\\s*sed\\s+(?:-n|--quiet|--silent)"
+    - pattern: '^\s*sed\s+(?:-n|--quiet|--silent)'
       tool: read
       message: "Use the `read` tool with line selectors (e.g. `read path:10-50`) instead of sed -n."
-    - pattern: "^\\s*ls(?:\\s+.*)?$"
+    - pattern: '^\s*ls(?:\s+.*)?$'
       tool: read
       message: "Use the `read` tool to inspect directories (or `glob` for matching patterns) instead of ls."
-    - pattern: "^\\s*perl\\s+.*-[pn]?i"
+    - pattern: '^\s*perl\s+.*-[pn]?i'
       tool: edit
       message: "Use the `edit` tool instead of perl -i. It provides diff preview and fuzzy matching."
-    - pattern: "^\\s*awk\\s+.*-i\\s+inplace"
+    - pattern: '^\s*awk\s+.*-i\s+inplace'
       tool: edit
       message: "Use the `edit` tool instead of awk -i inplace. It provides diff preview and fuzzy matching."
-    - pattern: "^\\s*(?:(?:echo|printf)\\s+|cat\\s*<<|cat(?=\\s+(?:\\d+|&)?>)\\s+)(?:(?:\\\\[\\s\\S]|\\$\\((?:[^()\"']|\"[^\"]*\"|'[^']*'|`[^`]*`|\\([^()]*\\))*\\)|\\$\\{[^{}]*\\}|`[^`]*`|\\$(?!\\((?:[^()\"']|\"[^\"]*\"|'[^']*'|`[^`]*`|\\([^()]*\\))*\\)|\\{[^{}]*\\})|`(?![^`]*`)|[^\"'>;&|\\n\\\\$`]|(?<=[<>])&|(?<![<>])&(?=>)|(?<=(?:^|\\s)[02-9])>{1,2}\\|?|\"[^\"]*\"|'[^']*')|(?<!\\||>|(?:^|\\s)[02-9])>{1,2}\\|?\\s*(?:\"/dev/(?:null|tty|stdout|stderr)\"|'/dev/(?:null|tty|stdout|stderr)'|/dev/(?:null|tty|stdout|stderr))(?=[\\s;&|]|$))*(?<!\\||>|(?:^|\\s)[02-9])>{1,2}\\|?\\s*(?!(?:\"/dev/(?:null|tty|stdout|stderr)\"|'/dev/(?:null|tty|stdout|stderr)'|/dev/(?:null|tty|stdout|stderr))(?:[\\s;&|]|$))[$\\w./~\"'-]"
+    - pattern: '^\s*(?:(?:echo|printf)\s+|cat\s*<<|cat(?=\s+(?:\d+|&)?>)\s+)(?:(?:\\[\s\S]|\$\((?:[^()"'']|"[^"]*"|''[^'']*''|`[^`]*`|\([^()]*\))*\)|\$\{[^{}]*\}|`[^`]*`|\$(?!\((?:[^()"'']|"[^"]*"|''[^'']*''|`[^`]*`|\([^()]*\))*\)|\{[^{}]*\})|`(?![^`]*`)|[^"''>;&|\n\\$`]|(?<=[<>])&|(?<![<>])&(?=>)|(?<=(?:^|\s)[02-9])>{1,2}\|?|"[^"]*"|''[^'']*'')|(?<!\||>|(?:^|\s)[02-9])>{1,2}\|?\s*(?:"/dev/(?:null|tty|stdout|stderr)"|''/dev/(?:null|tty|stdout|stderr)''|/dev/(?:null|tty|stdout|stderr))(?=[\s;&|]|$))*(?<!\||>|(?:^|\s)[02-9])>{1,2}\|?\s*(?!(?:"/dev/(?:null|tty|stdout|stderr)"|''/dev/(?:null|tty|stdout|stderr)''|/dev/(?:null|tty|stdout|stderr))(?:[\s;&|]|$))[$\w./~"''-]'
       tool: write
       message: "Use the `write` tool instead of echo/cat redirection. It handles encoding and provides confirmation. `write` replaces the whole file; to append to an existing file, use `edit` to insert after its last line."
-    - pattern: "^\\s*nohup\\s+|(?<!&)\\&\\s*$"
+    - pattern: '^\s*nohup\s+|(?<!&)\&\s*$'
       tool: bash
       message: "Use `bash` with `name` instead of nohup or background shell syntax so the service stays observable and managed."
-    - pattern: "^\\s*(?:(?:bun|npm|pnpm|yarn)\\s+(?:run\\s+)?(?:dev|start)(?:\\s|$)|(?:vite|next\\s+dev|nuxt\\s+dev|nodemon|lldb|gdb|tail\\s+-f)(?:\\s|$)|docker\\s+compose\\s+up(?!.*(?:\\s-d(?:\\s|$)|--detach))(?:\\s|$))"
+    - pattern: '^\s*(?:(?:bun|npm|pnpm|yarn)\s+(?:run\s+)?(?:dev|start)(?:\s|$)|(?:vite|next\s+dev|nuxt\s+dev|nodemon|lldb|gdb|tail\s+-f)(?:\s|$)|docker\s+compose\s+up(?!.*(?:\s-d(?:\s|$)|--detach))(?:\s|$))'
       tool: bash
       message: "Use `bash` with `name` for services, watchers, and debuggers; inspect with `read proc://<name>`."
-    - pattern: "^\\s*(?:(?:bun|npm|pnpm|yarn)\\s+(?:run\\s+)?\\S+|cargo\\s+watch|watchexec|pytest|vitest|jest|tsc)(?:.|\\n)*(?:--watch|-w)(?:\\s|$)"
+    - pattern: '^\s*(?:(?:bun|npm|pnpm|yarn)\s+(?:run\s+)?\S+|cargo\s+watch|watchexec|pytest|vitest|jest|tsc)(?:.|\n)*(?:--watch|-w)(?:\s|$)'
       tool: bash
       message: "Use `bash` with `name` for watch mode so its output, input, and lifecycle stay managed."
 shellMinimizer:
@@ -140,6 +165,11 @@ secrets:
   enabled: true
 composer:
   shape: borderless
+update:
+  auto: false
+spotlight:
+  experiment:
+    enabled: true
 tools:
   intentTracing: false
   xdevDocs: catalog
