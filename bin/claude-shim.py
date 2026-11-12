@@ -22,7 +22,7 @@ from typing import Any
 VERSION = "1.0.0"
 VERSION_BANNER = f"{VERSION} (claude-shim omp backend)"
 DEFAULT_MODEL = "llama.cpp/qwen3.8-flash-next"
-DEFAULT_EFFORT = "high"
+DEFAULT_EFFORT = "medium"
 MINIMAL_SYSTEM_PROMPT = "Follow the user prompt."
 MAX_INLINE_PROMPT_BYTES = 65_536
 
@@ -30,15 +30,15 @@ EFFORT_MAP: dict[str, str] = {
     "off": "off",
     "none": "off",
     "0": "off",
-    "minimal": "minimal",
-    "min": "minimal",
+    "minimal": "low",
+    "min": "low",
     "low": "low",
     "medium": "medium",
     "med": "medium",
-    "high": "high",
+    "high": "medium",
     "xhigh": "xhigh",
-    "max": "max",
-    "highest": "max",
+    "max": "xhigh",
+    "highest": "xhigh",
     "auto": "auto",
 }
 
