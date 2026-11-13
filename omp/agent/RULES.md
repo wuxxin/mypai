@@ -1,3 +1,4 @@
 - **One foreground `bash` per turn:** NEVER emit 2+ foreground `bash` calls in one turn (single session shell; parallel calls drop state). Chain steps with `&&`; use `async: true` for long jobs.
 - **Use `cwd`:** Pass `bash.cwd`, NEVER `cd <dir> && ...`.
-- **No shell FS/text hacks:** MUST use `read` (dirs, files, `:N-M`), `grep`, `glob`, `edit`, `write`, `eval` — NEVER `ls`, `cat`, `head`, `tail`, `sed`, `awk`, `find`, `grep`, `rg`.
+- **Use `bash` with `name`** instead of nohup or background shell syntax so the service stays observable and managed. For services, watchers, and debuggers; inspect with `read proc://<name>`
+- **No shell FS/text hacks:** MUST use internal tools, `read` (dirs, files, `:N-M`), `grep`, `glob`, `edit`, `write`, `eval` — NEVER `ls`, `cat`, `head`, `tail`, `sed`, `awk`, `find`, `grep`, `rg`.
