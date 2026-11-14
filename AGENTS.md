@@ -44,4 +44,8 @@ The primary active focus is layering and stabilizing **LifeOS** (https://github.
 ## Workspace & Sandboxing Discipline
 
 - **Workspace:** `mypai` and `submodules/` form a single workspace. Temporary files go in `scratch/`. Check root and submodules before creating new files.
+- **Submodule Agent Spawning & Boundaries:**
+  - Because subagents inherit the root workspace context and cannot have arbitrary session `cwd` set at spawn time, any agent or subagent assigned work in a submodule or subdirectory (`submodules/aur-packages`, `submodules/agents-shared`, etc.) **MUST read that subdirectory's `AGENTS.md`** (e.g. `read submodules/aur-packages/AGENTS.md`) and any domain skills it mandates (e.g. `skill://archlinux-pkgbuild`) before running commands.
+  - All shell commands executing submodule work MUST explicitly pass `bash.cwd` targeting the submodule border (e.g. `cwd: "submodules/aur-packages/libggml-git-hip"`), keeping execution and file paths isolated and readable.
+  - Real major work splits with complex tasks across submodules MUST use the `orchestrator` role instead of the `task` role.
 - **Sandbox (`sandbox-ctl`) Check:** if env `SANDBOX_NAME` or `SANDBOX` is set read `submodules/agents-shared/scripts/sandbox-ctl.md how to behave and use.
