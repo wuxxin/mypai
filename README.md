@@ -1,43 +1,31 @@
-# mypai — Personal AI Harness (OMP + LifeOS)
+# mypai — a private, local-first **Personal Artificial Intelligence (PAI) infrastructure**
 
-**mypai** is a private, local-first **Personal Artificial Intelligence (PAI)** infrastructure integrating:
-
-- **Oh-My-Pi (`omp`)** — High-performance agent execution harness with native tool orchestration, subagents, and capability discovery.
+- **Oh-My-Pi (`omp`)** — High-performance agent execution harness with native tool orchestration, subagents, and extensibility.
 - **LifeOS** — Intent engineering platform and DA (Digital Assistant) system that articulates done, hill-climbs from current state to ideal state, and verifies claims via tool evidence.
-- **Submodules Ecosystem**:
-  - `submodules/agents-shared` — Local inference service wrappers (`local-router`, chat, embeddings, reranking, STT, TTS, image generation) and `sandbox-ctl` environment isolation.
-  - `submodules/aur-packages` — Arch Linux PKGBUILDs and local packages.
-- **Hindsight Memory** — Long-term vector memory, temporal observations, and auto-synthesized mental models via `bin/membank-ctl` on `:28888`.
+- **Local inference service wrappers** `submodules/agents-shared` (local-router, chat, embeddings, reranking, STT, TTS, image generation) and `sandbox-ctl` environment isolation.
+- **Arch Linux PKGBUILDs** for local inference and agents `submodules/aur-packages`
 
 ---
 
 ## Core System Components
 
-1. **Active Focus — LifeOS Integration (`~/.omp/LIFEOS` via `~/.claude` symlink)**:
-   - Primary immediate engineering effort: layering LifeOS into OMP (basically working, actively undergoing adjustments).
-   - Private user vault in `~/agent-private/lifeos` (`USER/`, `MEMORY/`, `TELOS/`).
-   - Pulse dashboard and sidecar server on port `:31337` (`bun run pulse.ts`).
-   - `OmpHooksBridge.ts` translating Claude Code hook events (`SessionStart`, `UserPromptSubmit`, `PostToolExecution`, `SessionEnd`) for OMP.
-   - Utility inference compatibility via [`bin/claude-shim.py`](bin/claude-shim.py) (documented in [`bin/claude-shim.md`](bin/claude-shim.md)).
+1. **Local Inference & Sandboxing (`submodules/agents-shared/`)**:
+   - `local-router` on port `:21080` (OpenAI-compatible unified router for chat, embedding, rerank, vision, stt, tts, imagegen).
+   - `sandbox-ctl` script for bubblewrap / systemd cgroup sandboxing and launcher generation using `omp.env`.
 
 2. **Agent Harness (`omp/agent/`)**:
    - Base configuration (`config.yml`, `models.yml`, `lsp.json`).
    - Specialist agent roster (`agents/orchestrator.md`, `scout.md`, `debugger.md`, `reviewer.md`, `security-reviewer.md`, `task.md`, `writer.md`, `patcher.md`, `librarian.md`, `designer.md`).
    - Engineering skills (`skills/ulw-plan`, `systematic-debugging`, `git-master`, `review-work`, `test-driven-development`, `lilac`, `archlinux-pkgbuild`, `system-prompts`).
    - Claude Code hooks bridge extension (`extensions/OmpHooksBridge.ts`).
-   - Memory bank seeds (`memorybanks/oh-my-pi.yaml`, `memorybanks/mypai.yaml`).
 
-3. **Local Inference & Sandboxing (`submodules/agents-shared/`)**:
-   - `local-router` on port `:21080` (OpenAI-compatible unified router for chat, embedding, rerank, vision, stt, tts, imagegen).
-   - `sandbox-ctl` script for bubblewrap / systemd cgroup sandboxing and launcher generation using `omp.env`.
+4. **LifeOS Integration (`~/.omp/LIFEOS` via `~/.claude` symlink)**:
+   - Primary immediate engineering effort: layering LifeOS into OMP (basically working, actively undergoing adjustments).
+   - Private user vault in `~/agent-private/lifeos` (`USER/`, `MEMORY/`, `TELOS/`).
+   - Pulse dashboard and sidecar server on port `:31337` (`bun run pulse.ts`).
+   - `OmpHooksBridge.ts` translating Claude Code hook events (`SessionStart`, `UserPromptSubmit`, `PostToolExecution`, `SessionEnd`) for OMP.
+   - Utility inference compatibility via [`bin/claude-shim.py`](bin/claude-shim.py) (documented in [`bin/claude-shim.md`](bin/claude-shim.md)).
 
-4. **Hindsight Long-Term Memory (`:28888`)**:
-   - REST API on port `:28888`.
-   - `bin/membank-ctl` management CLI for bank configuration updates and mental model synchronization.
-
-5. **`mypai_runtime` (`src/mypai_runtime/`) [Target Component — Pending Port]**:
-   - In-kernel Python runtime library planned for the target architecture.
-   - **Current Status:** Not currently used or ported to work with the active OMP + LifeOS setup yet; porting is scheduled once LifeOS integration adjustments are stabilized.
 ---
 
 ## Setup & Installation
@@ -54,6 +42,8 @@
 git clone --recursive https://github.com/wuxxin/mypai.git
 cd mypai
 ```
+
++ install arch and aur packages, build local packages
 
 ### 2. Download Local AI Models
 
@@ -75,20 +65,9 @@ cd mypai
 
 ### 5. Install & Layer LifeOS into OMP
 
-```bash
-./bin/install-lifeos install
-```
 
 ### 6. Launch LifeOS under OMP
 
-Launch using the dedicated launcher script (`bin/lifeos`, installed to `~/.local/bin/lifeos` via `omp.env`):
-```bash
-lifeos
-```
-Or directly via OMP:
-```bash
-OMP_VOICE=0 LIFEOS_DIR=~/.claude/LIFEOS omp --cwd ~/agent-private/lifeos --append-system-prompt ~/.claude/LIFEOS/LIFEOS_SYSTEM_PROMPT.md
-```
 
 ---
 
@@ -186,6 +165,4 @@ When any of `lifeos`, `ephemeral-omp`, or `ephemeral-lifeos` is called on the ho
 - [**`AGENTS.md`**](AGENTS.md) — System realities, agent operating guidelines, and code style.
 - [**`references/lifeos-setup.md`**](references/lifeos-setup.md) — LifeOS topology, harness execution, and inference diagnostic reference.
 - [**`references/omp-runtime-config.md`**](references/omp-runtime-config.md) — OMP runtime configuration, prompt layering, and subagent resolution.
-- [**`references/omp-hindsight.md`**](references/omp-hindsight.md) — Hindsight memory bank integration and auto-learn distillation.
-- [**`references/hindsight-memorybank.md`**](references/hindsight-memorybank.md) — Exhaustive Hindsight bank schema reference.
 
