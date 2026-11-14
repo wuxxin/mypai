@@ -7,6 +7,11 @@ tools:
   - write
   - grep
   - glob
+  - retain
+  - recall
+  - reflect
+  - memory_edit
+  - learn
   - yield
   - eval
 model: "@smol"

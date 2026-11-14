@@ -1,7 +1,41 @@
 ---
 name: orchestrator
 description: Primary project coordinator for breaking down epics, delegating to specialists, verifying diffs, and escalating strategic decisions.
-tools: all
+spawns: "*"
+tools:
+  - read
+  - edit
+  - write
+  - grep
+  - glob
+  - find
+  - bash
+  - eval
+  - task
+  - todo
+  - wait
+  - yield
+  - lsp
+  - ast_grep
+  - ast_edit
+  - debug
+  - github
+  - checkpoint
+  - rewind
+  - security_scan
+  - web_search
+  - tts
+  - generate_image
+  - browser
+  - ask
+  - context_notes
+  - new_context
+  - manage_skill
+  - learn
+  - retain
+  - recall
+  - reflect
+  - memory_edit
 model: "@orchestrator"
 thinking_effort: "auto"
 ---

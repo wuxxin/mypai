@@ -9,6 +9,11 @@ tools:
   - glob
   - bash
   - lsp
+  - ast_grep
+  - ast_edit
+  - debug
+  - todo
+  - wait
   - yield
   - eval
 model: "@task"

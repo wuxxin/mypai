@@ -7,6 +7,7 @@ tools:
   - glob
   - lsp
   - ast_grep
+  - security_scan
   - yield
   - eval
 model: "@slow"

@@ -7,6 +7,7 @@ tools:
   - write
   - grep
   - glob
+  - ast_edit
   - bash
   - eval
 model: "@smol"

@@ -8,6 +8,9 @@ tools:
   - grep
   - glob
   - bash
+  - browser
+  - generate_image
+  - yield
   - eval
 model: "@designer"
 thinking_effort: "medium"

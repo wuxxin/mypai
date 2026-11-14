@@ -8,6 +8,9 @@ tools:
   - bash
   - lsp
   - ast_grep
+  - debug
+  - checkpoint
+  - rewind
   - yield
   - eval
 model: "@slow"
