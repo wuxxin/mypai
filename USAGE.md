@@ -1,6 +1,6 @@
 # MyPAI & Oh-My-Pi (OMP) + LifeOS Operational Guide
 
-This guide explains how to operate, develop with, and configure **MyPAI** using **Oh-My-Pi (`omp`)**, **LifeOS**, and **Hindsight Memory**.
+This guide explains how to operate, develop with, and configure **MyPAI** using **Oh-My-Pi (`omp`)**, **LifeOS**.
 
 ---
 
@@ -28,7 +28,6 @@ MyPAI combines **Oh-My-Pi (`omp`)** as the high-performance agent execution harn
 │     ├── agents/ (@orchestrator, @scout, @debugger, @reviewer, @task, ...)   │
 │     ├── skills/ (ulw-plan, systematic-debugging, git-master, review-work)   │
 │     ├── extensions/ (OmpHooksBridge.ts -> LifeOS Hooks)                     │
-│     └── memorybanks/ (oh-my-pi.yaml, mypai.yaml)                            │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -38,7 +37,6 @@ MyPAI combines **Oh-My-Pi (`omp`)** as the high-performance agent execution harn
 2. **LifeOS (`~/.omp/LIFEOS`)**: Intent engineering platform running the Algorithm, TELOS alignment, and Pulse dashboard on port `:31337`.
 3. **`OmpHooksBridge.ts`**: Extension bridging Claude Code hook events (`SessionStart`, `UserPromptSubmit`, `PostToolExecution`, `SessionEnd`) to OMP native extension hooks.
 4. **Local Inference Services (`submodules/agents-shared/`)**: Local model routing (`local-router` on `:21080`), chat, embeddings, reranking, STT, and TTS.
-5. **Hindsight Memory (`:28888`)**: Long-term vector memory, observation consolidation, and mental models synced via `bin/membank-ctl`.
 
 ---
 
