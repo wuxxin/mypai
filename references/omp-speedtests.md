@@ -68,4 +68,23 @@ google-antigravity/gemini-3.8-flash (gemini-3.8-flash)
 
 model                                TTFT p50  p95   tok/s  cost/run
 google-antigravity/gemini-3.8-flash  2.6s      7.1s  73.6   $0.0032
+
+## 14 Nov 2026 - Qwen 3.8 Flash Next (Local Strata ROCm/HIP)
+
+```
+❯ omp bench "llama.cpp/qwen3.8-flash-next" --profile mix --par=1
+llama.cpp/qwen3.8-flash-next
+  ✓ run 1/9 chat       TTFT 712ms tok/s 65.8 gen 72.4/s in 69 out 512 total 7.8s
+  ✓ run 2/9 prefill    TTFT 3.2s prefill 1928/s in 6.1K out 25 total 3.5s
+  ✓ run 3/9 generation TTFT 897ms tok/s 71.7 gen 74.0/s in 79 out 2K total 28.6s
+  ✓ run 4/9 chat       TTFT 1.0s tok/s 65.3 gen 75.2/s in 70 out 512 total 7.8s
+  ✓ run 5/9 prefill    TTFT 3.2s prefill 1926/s in 6.1K out 30 total 3.6s
+  ✓ run 6/9 generation TTFT 861ms tok/s 71.9 gen 74.1/s in 78 out 2K total 28.5s
+  ✓ run 7/9 chat       TTFT 23.7s tok/s 16.5 gen 70.1/s in 69 out 512 total 31.0s
+  ✓ run 8/9 prefill    TTFT 8.8s prefill 694/s in 6.1K out 29 total 9.2s
+  ✓ run 9/9 generation TTFT 915ms tok/s 73.0 gen 75.5/s in 78 out 2K total 28.1s
+
+model                         TTFT p50  p95    tok/s  prefill  decode  cost/run
+llama.cpp/qwen3.8-flash-next  1.0s      23.7s  65.3   1926     71.9    $0.0017
+```
 ❯ date
