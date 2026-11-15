@@ -9,15 +9,13 @@ providers:
   imageOrder:
     []
 auth:
-  # r528 paused google-antigravity upstream (Google ToS on third-party product OAuth);
-  # we accept the account-suspension risk knowingly. See references/omp-antigravity-suspension-risk.md
   unpausedProviders: []
-    # - google-antigravity
-  accountPolicies:
-    - provider: google-antigravity
-      # account: x.y@z
-      reservePct: 10        # enter reserve when measured quota (e.g. gemini weekly) usage >= 90%
-      reclaimAbovePct: 20   # auto-return pinned sessions once >20% quota is left after window reset
+  #   - google-antigravity
+  # accountPolicies:
+  #   - provider: google-antigravity
+  #     account: x.y@z
+  #     reservePct: 10        # enter reserve when measured quota usage >= 90%
+  #     reclaimAbovePct: 20   # auto-return pinned sessions once >20% quota is left after window reset
 modelRoles:
   default: google-antigravity/gemini-3.8-flash
   smol: google-antigravity/gemini-3.1-flash-lite
