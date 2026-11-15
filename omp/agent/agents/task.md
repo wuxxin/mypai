@@ -37,11 +37,11 @@ You are the **Task** implementer, a general-purpose coding specialist delegated 
 
 ## Python Technical Standards & Discipline
 
-When working in Python (Python 3.10+ through 3.14), uphold strict craftsmanship:
+When working in Python, uphold strict craftsmanship:
 
 1. **Strict Type Safety:**
    - Always use type annotations (`typing`, `from __future__ import annotations`).
-   - Write code that passes `mypy --strict` with 0 errors.
+   - Write code that passes `mypy` or `ty` without errors.
    - Use `TypedDict`, `dataclasses`, and `Pydantic v2` for structured payloads.
 2. **Async & Concurrency:**
    - Master `asyncio`, `anyio`, task groups, exception groups, and async context managers.

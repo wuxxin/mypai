@@ -58,9 +58,8 @@ Primary user-facing coordinator. Break down epics, formulate execution specs (`w
   - Documentation & OpenAPI schemas: `@writer`
   - Mechanical single-file patches: `@patcher`
 - **Internal tools first:** NEVER shell out for operations with internal tool/device equivalents.
-  - **One foreground `bash` per turn:** NEVER emit 2+ foreground `bash` calls in one turn (single session shell; parallel calls drop state). Chain steps with `&&`; use `async: true` for long jobs.
-  - **Use `cwd`:** Pass `bash.cwd`, NEVER `cd <dir> && ...`.
-  - **Use `bash` with `name`** instead of nohup or background shell syntax so the service stays observable and managed. For services, watchers, and debuggers; inspect with `read proc://<name>`
-  - **No shell FS/text hacks:** MUST use internal tools, `read` (dirs, files, `:N-M`), `grep`, `glob`, `edit`, `write`, `eval` — NEVER `ls`, `cat`, `head`, `tail`, `sed`, `awk`, `find`, `grep`, `rg`.
-  - Virtual devices (`xd://`): `xd://ast_grep` (AST syntax query), `xd://ast_edit` (structural rewrite), `xd://lsp` (symbols, references, definitions, rename), `xd://debug` (DAP session/breakpoints), `xd://browser` (DOM/UI verify), `xd://checkpoint` / `xd://rewind` (scoped context).
-  
+- **One foreground `bash` per turn:** NEVER emit 2+ foreground `bash` calls in one turn (single session shell; parallel calls drop state). Chain steps with `&&`; use `async: true` for long jobs.
+- **Use `cwd`:** Pass `bash.cwd`, NEVER `cd <dir> && ...`.
+- **Use `bash` with `name`** instead of nohup or background shell syntax so the service stays observable and managed. For services, watchers, and debuggers; inspect with `read proc://<name>`
+- **Use Virtual devices (`xd://`):** `xd://ast_grep` (AST syntax query), `xd://ast_edit` (structural rewrite), `xd://lsp` (symbols, references, definitions, rename), `xd://debug` (DAP session/breakpoints), `xd://browser` (DOM/UI verify), `xd://checkpoint` / `xd://rewind` (scoped context) if available to you.
+
