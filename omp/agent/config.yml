@@ -32,7 +32,7 @@ modelRoles:
   vision: google-antigravity/gemini-3.8-flash
   tiny: google-antigravity/gemini-3.1-flash-lite
   image: llama.cpp/z-image-turbo
-  speech: llama.cpp/qwen3-tts
+  speech: llama.cpp/kokoro
   dictation: llama.cpp/whisper-1
   judge: google-antigravity/gemini-3.8-flash
 symbolPreset: unicode

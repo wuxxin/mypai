@@ -52,8 +52,8 @@ providers:
         name: z-image-turbo
         api: openai-images
         kind: image
-      - id: qwen3-tts
-        name: qwen3-tts
+      - id: kokoro
+        name: kokoro
         api: openai-speech
         kind: tts
       - id: whisper-1
