@@ -1,6 +1,6 @@
 # LifeOS on Claude Code vs. LifeOS on omp — the real differences
 
-Reference doc for running LifeOS under Oh My Pi (omp) on this host. It records where the two harnesses genuinely differ, what `OmpHooksBridge.ts` shims, what is shimmed with reduced fidelity, and what has no equivalent at all. AGENTS.md §1 points here; per-version upgrade mechanics live in `references/omp-hooks-bridge-upgrade-notes.md`; bridge implementation details in `omp/agent/extensions/OmpHooksBridge.md`. Verified state: 2026-11-16, omp 18.20.3.r60.g77fcce9, v8 hook layer.
+Reference doc for running LifeOS under Oh My Pi (omp) on this host. It records where the two harnesses genuinely differ, what `OmpHooksBridge.ts` shims, what is shimmed with reduced fidelity, and what has no equivalent at all. AGENTS.md §1 points here; per-version upgrade mechanics live in `references/omp-hooks-bridge-upgrade-notes.md`; bridge implementation details in `omp/agent/extensions/OmpHooksBridge.md`. Verified state: 2026-11-16, omp 18.20.3.r60.g77fcce9, v8 hook layer; scheduling + web-verification sections added same day from live probes (Vigil tick ported and running).
 
 ## Conceptual model
 
@@ -55,6 +55,24 @@ One inference call per user prompt: `PromptProcessing.hook.ts` (~6–12s through
 - Launch: `lifeos` = `exec omp --cwd "$LIFEOS_CWD" --append-system-prompt "$prompt_file" "$@"` — flags pass through (`--offline`, `--no-judge` from 18.20.3 are usable for router-contention-free runs).
 - Headless probe/CI: `make bridge-test` (bun suite, 15 tests) and `make bridge-smoke` (full event sequence + zero-failure gate) in mypai.
 
+## Scheduling: launchd vs Pulse job runner
+
+- Stock LifeOS keeps its clocks in launchd: ~23 `com.lifeos.*` plist templates (`Services.ts` registry + per-service `Install*.ts`); the 2026-10-22 reorganization moved the scheduled-job set (Conduit capture, iMessage reader, derived sync, model sync, Socrates/Achilles ticks…) into Workflows.
+- Upstream v8 **already speaks systemd on Linux**: each `Install*.ts` materializes a `systemd --user` unit and `Services.ts status/doc` branches on `process.platform` (`Services.ts:22-29`). The gap here is host topology, not upstream code.
+- This host's session scope sets `TemporaryFileSystem=/run/user/1000` binding only named sockets — no user bus inside a session, so `systemctl --user` fails there; and the settled topology keeps LifeOS **inside** the session scope (a standalone unit would run outside the containment). The upstream systemd path is therefore not usable for LifeOS services here. No cron daemon exists (`systemctl is-active cron|crond` → inactive), no launchd semantics exist at all.
+- Replacement mechanism, one per class: daemons = launcher sidecars (`LAUNCHER_SIDECARS="pulse"` in `mypai/omp.env`, Pulse on :31337); periodic scripts = `[[job]]` entries in `USER/CONFIG/PULSE.user.toml`. Pulse's runner executes them with `bash -c` via `spawnScript` (`PULSE/lib.ts:614-620`) **inside the session scope, inheriting Pulse's env** (launcher exports like `LIFEOS_CONFIG_DIR` are present). Consequence that must never be papered over: all scheduled LifeOS work runs only while a live session owns the scope.
+- Ported 2026-11-16: `[[job]] vigil-tick */5` → `VIGIL_SEND=off bun …/VIGIL/Tick.ts`. The first run seeds the baseline cursor from the outbox (no flood) and writes `last-tick.json {baseline:true}`; verified live — healthz cron row `vigil-tick ok, failures 0`, `/api/vigil/status` `stale:false`, clock `next_at = last+300s`.
+- Vigil's text channel: `sendText` resolves a RELAY bridge line (`VIGIL/Tick.ts:93-99`); RELAY is not used on this host (Trusted channels = none), so the job sets `VIGIL_SEND=off` — decisions are recorded, sends are explicit-not-sent until an outbound channel exists. Policy file is the shipped template (`USER/VIGIL/policy.json`, `decider_mode: "shadow"`, ceiling 4/24h); tuning is a principal decision, not part of the port.
+- Roster classification (from live `bun TOOLS/Services.ts status`, 29 rows): **ported** = pulse (sidecar), conduit-capture, vigil-tick; Pulse's built-in system jobs already carry cost-aggregation, memory-consolidation, proposal-gc. **Portable opt-ins, stand up on demand**: interviewdue, worksweep, atlas (Atlas ships a Systemd collector), commitmentsweep, lifelogideasweep, conveyor-watcher/runner, derivedsync, velocity, synthesis, distill, coach, socrates, usage-aggregator, orphanreaper, pegwatch, bunkermonitor. **Never ported** (macOS-only): pulse-menubar, messages reader (iMessage DB), healthsync, herdr-bridge; **declined with notes**: deriver, conduit(.insight), modelsync, codexupdate — all recorded in `USER/CONFIG/services.json` `_declined`.
+- Registration discipline: every clock stood up gets a `services.json` entry so `Services.ts status`, the Pulse dashboard, and the Workflows inventory report reality with no hand-kept lists.
+- Pulse lifecycle facts (probed 2026-11-16): `pulse.ts` **ignores SIGTERM and SIGINT** — stopping it needs SIGKILL; a second instance refuses ("Another pulse.ts is already running", exit 1), so a restart must confirm the old pid gone / port free before launching the replacement.
+
+## Web verification: Interceptor vs omp's internal browser
+
+- Stock LifeOS verifies web output through **Interceptor** (macOS `.pkg` app + CLI) driving real Chrome in the user's real profile — the ONLY sanctioned browser automation; modality fidelity depends on a logged-in, real-browser session. It has no Linux build; ticket `ERR-20261110-234334-2330` stands (upstream PR owed).
+- Here: **omp's internal browser tool is the standing verifier class** (principal directive 2026-11-16). It is the eval `browser` namespace (`await browser.open(...)` → managed headless shared tabs); there is no `xd://browser` device. Verified live against the Pulse dashboard (tab titled "Pulse | Home", DOM observed, clean close).
+- Fidelity: DOM/state/screenshot/console probe class only — headless, no real user profile or login state. Appearance/pixel/login claims stay `[DEFERRED-VERIFY]`. The `openadapt` skill (headless Playwright) was **deleted 2026-11-16**; `/usr/bin/chromium` remains for raw headless probes (`--dump-dom`, `--screenshot`) via bash.
+
 ## Known gaps summary (accepted on this host)
 
 1. ConfigChange never fires (no upstream event).
@@ -62,6 +80,36 @@ One inference call per user prompt: `PromptProcessing.hook.ts` (~6–12s through
 3. PermissionRequest lacks `tool_input` (omp event has no field).
 4. No BlockerText announcement text for approvals (Fix A, deliberate — native blocked-reporting is the single stamp source).
 5. Interactive sessions share session key `"omp"` for per-session hook state.
+6. No scheduler in scope: launchd absent, cron daemon inactive, systemd --user has no bus inside the sandbox → all periodic LifeOS work runs as Pulse `[[job]]`s **only while a live session owns the scope**. Pattern settled 2026-11-16 (conduit-capture, vigil-tick); the portable launchd roster is classified in § Scheduling.
+7. No full-fidelity browser verifier: Interceptor is macOS-only; omp's internal browser is the standing probe class with reduced fidelity (§ Web verification). Appearance/pixel/login claims stay `[DEFERRED-VERIFY]`.
+8. `pulse.ts` ignores SIGTERM/SIGINT — stop needs SIGKILL, and restarts must confirm port free (duplicate guard exits 1).
+
+## Inactive stock features (Claude Code + macOS): status here, potential replacement
+
+Live sources: `bun TOOLS/Doctor.ts` rows (declined set persists in gitignored `USER/MEMORY/STATE/capabilities.json`), `services.json` `_declined`, OPERATIONAL_PREFERENCES § Trusted channels (none/disabled by decision 2026-11-11), voice directive 2026-11-11.
+
+| Stock feature | Why inert here | Potential replacement on this host |
+|---|---|---|
+| Pulse menu-bar app `com.lifeos.pulse-menubar` | macOS menubar app; declined (macOS-only) | Pulse dashboard + statusline chips — already the surface here ✅ |
+| iMessage reader / Messages inbox (`com.lifeos.messages`, TextingGuard channel) | Reads the macOS Messages DB; no Messages.app on Linux | Any inbound channel is a deliberate none today. Path: RELAY bridge, or Slack DM mirror (Vigil policy `dm_mirror_user_id` + `VIGIL_SLACK_BOT_TOKEN`) — both plumbed, none enabled |
+| Voice **output** (VoiceServer → Fish-SaaS; 🗣️ voice mode) | `FISH_ONLY_PREFIX`, no `FISH_API_KEY`; Doctor voice row `off` | Local Qwen3-TTS unit exists (:20095), deliberately not started; upstream ask = local/openai-speech provider in VoiceServer. STT/dictation side is fully live (whisper :21080→:20090) ✅ |
+| Interceptor browser verification | macOS `.pkg` only, no Linux build (`ERR-20261110-234334-2330`) | omp internal browser = DOM/state/screenshot class (§ Web verification); upstream port owed |
+| Conduit `appFocus` source (frontmost-app capture) | macOS-only poller; source off (`ERR-20261110-171607-768b`) | Linux active-window poller (X11/Wayland); sandbox currently sets DISABLE_X11/DISABLE_WAYLAND=true, so needs a socket pass-through first |
+| launchd service fleet + Workflows clocks | No launchd/cron; systemd --user bus not in scope (§ Scheduling) | Pulse `[[job]]`s — established; 16 portable opt-ins listed there; `gh` workrepo filing: works once `gh auth login`/`GH_TOKEN` is set (currently unauthenticated → degrades to a recorded failure row, non-fatal) |
+| CC permission layer (167 allow / 86 deny) + Seatbelt sandbox | omp has no CC-permissions reader; no Seatbelt on Linux | **Replaced, not inert**: ported `bash.patterns` (18 rules), omp tool policy + native critical-command refusals, loop guards, LoopGuard extension. `tools.restrictedFolders` left unset by explicit decision |
+| Keychain for secrets | No macOS Keychain | `.env` under config root + omp `secrets.enabled` value redaction — in use ✅ |
+| fabric CLI (`fabric -y` transcript fetch) | fixCmd is macOS-only (`ERR-20261110-234334-a83c`) | Fabric patterns run natively via bun already; only the `-y` fetch wants the CLI — a Linux branch upstream fixes it |
+| codex row (Astra-style audits) | Not installed, needs OpenAI login; declined 2026-11-10 | `bun install -g @openai/codex` + login if wanted; local models carry audit roles meanwhile |
+| cloudflare row (`CfEnv.ts`, P6 deploy teeth) | Needs `CLOUDFLARE_API_TOKEN` in `<configRoot>/.env`; declined | Set the token → full cf path works on Linux (it's bun, not macOS-bound) |
+| healthsync (HealthKit export) | No HealthKit; no wearable pipeline mounted | No clean equivalent; manual file drops into `USER/` state paths remain possible |
+| pbcopy / osascript / launchctl plumbing | macOS APIs | Not used by core paths here; Linux equivalents exist per need — no gap observed |
+| Workflows engine (incl. a `vigil-tick` workflow definition) | Definitions dir empty on this install; upstream prefers it over a second clock | Adopting WORKFLOWS as the scheduler is the upstream-aligned end state; Pulse jobs are the sanctioned interim (InstallVigil refuses to add a clock beside an existing vigil-tick workflow — keep exactly one) |
+| ISA-code-sync + done-claim Stop gates | `{decision:"block"}` verdict discarded by bridge (no stop-block in omp); retired from StopGates v1.3.2 2026-11-12 | Advisor subsystem + `.omp/WATCHDOG.md` roster — built, parked (`advisor.enabled: false`, principal's call) |
+| Hermes gateway sidecar (`ai.hermes.gateway`) | No Hermes home mounted; not applicable to this install | Mount a Hermes home if a second front door is ever wanted |
+| Pulse healthcheck job (public-site probes) | `checks/health.ts` exits 78 — no sites configured; disabled by decision 2026-11-10 | Set `LIFEOS_PULSE_HEALTH_SITES` in the sidecar env + delete the disable block → system job runs as shipped |
+| CORPUS / HOUSE Pulse pages | Need a deployed Corpus Worker endpoint / home-device poller (`MEMORY/_HOUSE/latest.json`) — not macOS-bound, just unconfigured | Deploy the worker (Cloudflare row above) / run a home poller; both are config, not porting |
+
+Rule of thumb for anything on this table: the replacement is always an **observable mechanism already present on Linux** (Pulse job, sidecar, omp policy, local model, env token) — never a new daemon outside the session scope, and never a prose promise.
 
 ## omp 18.20.2 → 18.20.3.r60 impact on this system (checked 2026-11-16)
 
