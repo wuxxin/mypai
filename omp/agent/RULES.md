@@ -1,4 +1,5 @@
 - **Internal tools first:** NEVER shell out for operations with internal tool/device equivalents.
+- **Inline eval:** use internal `eval` tool (`js`/`py`), not `bun -e` or `python -c` in `bash`.
 - **One foreground `bash` per turn:** NEVER emit 2+ foreground `bash` calls in one turn (single session shell; parallel calls drop state). Chain steps with `&&`; use `async: true` for long jobs.
 - **Use `cwd`:** Pass `bash.cwd`, NEVER `cd <dir> && ...`.
 - **Use `bash` with `name`** instead of nohup or background shell syntax so the service stays observable and managed. For services, watchers, and debuggers; inspect with `read proc://<name>`
