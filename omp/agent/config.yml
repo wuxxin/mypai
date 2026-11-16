@@ -82,6 +82,11 @@ mnemopi:
   embeddingApiUrl: http://127.0.0.1:21080/v1
   embeddingModel: qwen3-embedding
 
+  # Qwen3-Embedding is instruction-tuned: recall queries embed with an instruct prefix,
+  # stored memories stay unchanged (omp >=18.20.3). Keep inputType off — llama.cpp's
+  # OpenAI endpoint ignores it; it exists for NVIDIA NIM-style APIs.
+  embeddingQueryPrefix: "Instruct: Given a personal-memory recall query, retrieve stored facts relevant to answering it\nQuery: "
+
   # Local LLM for fact/entity extraction & sleep consolidation
   # Option A: use your configured `memory`/`tiny`/`smol` model role:
   llmMode: smol
