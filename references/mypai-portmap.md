@@ -18,10 +18,10 @@ All services use unprivileged non-ephemeral ports in the **`20000`–`29000`** r
 ├─────────┬───────────────────────────────┬────────────┬──────────────────────────────────────┤
 │ Port    │ Service / Process             │ Status     │ Role & Protocol Description          │
 ├─────────┼───────────────────────────────┼────────────┼──────────────────────────────────────┤
-│         │ ─── LifeOS & Observability ───│            │                                      │
+│         │ ─── LifeOS & Observability    │            │                                      │
 │ 31337   │ Pulse Dashboard (bun)         │ Active     │ LifeOS dashboard, hooks & metrics    │
 │         │                               │            │                                      │
-│         │ ─── Local Inference (20xxx) ──│            │                                      │
+│         │ ─── Local Inference (20xxx)   │            │                                      │
 │ 20080   │ local-chat                    │ Active     │ llama-server (Chat & Vision GGUF)    │
 │ 20082   │ local-embedding               │ Active     │ llama-server (Qwen3-Embedding-0.6B)  │
 │ 20086   │ local-rerank                  │ Active     │ llama-server / TEI (Reranker 0.6B)   │
@@ -30,13 +30,18 @@ All services use unprivileged non-ephemeral ports in the **`20000`–`29000`** r
 │ 20100   │ local-image                   │ Active     │ sd-server (Stable Diffusion)         │
 │ 21080   │ local-router                  │ Active     │ Unified OpenAI-compatible Gateway    │
 │         │                               │            │                                      │
-│         │ ─── Memory & Cognitive Plane ─│            │                                      │
-│ 28888   │ Hindsight                     │ Active     │ Persistent Vector Memory & Models    │
-│ 28889   │ Hindsight Worker              │ Active     │ Background worker control plane      │
+│         │ ─── Memory & Cognitive Plane  │            │                                      │
+│ 28888   │ Hindsight                     │ Inactive   │ Persistent Vector Memory & Models    │
+│ 28889   │ Hindsight Worker              │ Inactive   │ Background worker control plane      │
 │         │                               │            │                                      │
-│         │ ─── Storage & Sync ───────────│            │                                      │
+│         │ ─── Storage & Sync            │            │                                      │
 │ 8384    │ Syncthing Web UI              │ Active     │ Local file synchronization UI        │
 │ 22000   │ Syncthing Sync Protocol       │ Active     │ Peer-to-peer sync data transfer      │
+│         │                               │            │                                      │
+│         │ ─── Chat
+│ 20887   │ signal-cli (TCP RPC)          │ Active     │ Low-level JSON-RPC TCP endpoint      │
+│ 20888   │ signal-cli (HTTP RPC)         │ Active     │ Low-level JSON-RPC HTTP endpoint     │
+│ 20889   │ signal-cli REST Wrapper       │ Active     │ HTTP REST API wrapper for Signal     │
 │         │                               │            │                                      │
 │         │ ─── Gen-2 Transitional (Ret) ─│            │                                      │
 │ 28080   │ aoe serve (Release mode)      │ Retired    │ Agent of Empires Web PWA & ACP REST  │
@@ -44,28 +49,6 @@ All services use unprivileged non-ephemeral ports in the **`20000`–`29000`** r
 │ 28824   │ amux-server                   │ Retired    │ HTTPS REST API & Kanban Board        │
 │ 28823   │ amux-server (Redirect)        │ Retired    │ Plain-HTTP to HTTPS redirect port    │
 │ 9810    │ cc-connect                    │ Retired    │ Multi-channel chat bridge            │
-│ 20887   │ signal-cli (TCP RPC)          │ Retired    │ Low-level JSON-RPC TCP endpoint      │
-│ 20888   │ signal-cli (HTTP RPC)         │ Retired    │ Low-level JSON-RPC HTTP endpoint     │
-│ 20889   │ signal-cli REST Wrapper       │ Retired    │ HTTP REST API wrapper for Signal     │
 └─────────┴───────────────────────────────┴────────────┴──────────────────────────────────────┘
 ```
 
----
-
-## Active Environment Exports
-
-```bash
-# LifeOS Configuration
-export LIFEOS_DIR="$HOME/.claude/LIFEOS"
-export OMP_VOICE=0
-
-# Memory Bank (Hindsight)
-export HINDSIGHT_API_URL="http://localhost:28888"
-
-# Local Inference (local-router.py)
-export OPENAI_BASE_URL="http://localhost:21080/v1"
-export LLAMA_CPP_BASE_URL="http://localhost:21080/v1"
-
-# oh-my-pi Python VENV
-export OMP_PYTHON_VENV="$HOME/.omp/python-env"
-```

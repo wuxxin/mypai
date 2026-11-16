@@ -45,12 +45,9 @@ LifeOS runs as a hybrid system with the core framework located in the OMP profil
 | Port | Service | Status | Process / Command | Responsibility |
 |---|---|---|---|---|
 | `:31337` | **Pulse** | **Active** | `bun run --cwd ~/.claude/LIFEOS/PULSE pulse.ts` | LifeOS dashboard, background hooks, voice server, and metrics. |
-| `:28888` | **Hindsight** | **Active** | `hindsight-server` | Long-term vector/lexical memory bank sync and mental model recall. |
 | `:21080` | **local-router / Local LLM** | **Active** | `local-router.py` (or `llama-server`) | Unified OpenAI-compatible local inference gateway (`http://localhost:21080/v1`). |
 | `:20080`–`:20100` | **Local Inference Engines** | **Active** | `llama-server`, `whisper-server`, etc. | Dedicated engines for chat, embeddings, reranking, STT, TTS, image generation. |
-| `:28080` | **Agent of Empires (AoE)** | *Retired (Gen-2)* | `aoe serve --port 28080` | Legacy ACP execution host and TUI cockpit (superseded by direct OMP harness). |
-| `:28824` | **amux-server** | *Retired (Gen-2)* | `amux-server` | Legacy cognitive state store, Kanban board, and cron bus (superseded by LifeOS + OMP). |
-| `:9810` | **cc-connect** | *Retired (Gen-2)* | `cc-connect` | Legacy chat ingress bridge (superseded by direct OMP channels / Pulse). |
+
 ---
 
 ## 2. Harness Execution vs. Utility Inference

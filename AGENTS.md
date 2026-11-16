@@ -11,7 +11,7 @@ The primary active focus is layering and stabilizing **LifeOS** (https://github.
 - **Integration Status:** Basically working, but actively undergoing adjustments.
 - **Harness Layering:** `~/.omp/LIFEOS` (with `~/.claude` symlinked to `~/.omp`).
 - **Setup & Lifecycle:** currently not automated.
-- **Bridge Extension:** `omp/agent/extensions/OmpHooksBridge.ts` translates Claude Code hooks for OMP.
+- **Bridge Extension:** `omp/agent/extensions/OmpHooksBridge.ts` and corresponing `.md` translates Claude Code hooks for OMP.
 - **Launch Command:** `lifeos`
 - Detailed setup notes: `references/lifeos-setup.md`.
 - Upgrade-path notes for the hooks bridge: `references/omp-hooks-bridge-upgrade-notes.md`.
