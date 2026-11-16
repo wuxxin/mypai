@@ -88,6 +88,7 @@ const LOG_STDERR = process.env.OMP_BRIDGE_STDERR === "1";
 const LOG_PATH = process.env.OMP_BRIDGE_LOG;
 const PULSE_NOTIFY = "http://127.0.0.1:31337/notify";
 const VOICE_ID = process.env.OMP_VOICE_ID ?? "fTtv3eikoepIosk8dTZ5";
+// Fallback cap for hooks with no settings.json `timeout` field; registered hooks carry their own.
 const HOOK_TIMEOUT_MS = 30_000;
 // Claude Code gives every run a session id, and LifeOS hooks key their state files on it
 // (STATE/isa-nudge/<id>.json, memory-inject/<id>.queue.json …). The shim exports
@@ -100,6 +101,8 @@ interface HookReg {
   event: string;
   matcher: string;
   command: string;
+  /** Per-hook wall-clock cap in ms, from the settings.json `timeout` field (seconds). */
+  timeoutMs: number;
 }
 
 interface HookResult {
@@ -182,7 +185,10 @@ function parseRegistry(raw: unknown): HookReg[] {
         // omp has no native http hook transport, so command hooks are all this bridge can run.
         if (!("type" in hk) || hk.type !== "command") continue;
         if (!("command" in hk) || typeof hk.command !== "string" || !hk.command) continue;
-        out.push({ event: ev, matcher, command: expand(hk.command) });
+        // Claude Code honors a per-hook `timeout` (seconds); MicroIntegrity runs 180, MemoryIndexRefresh 60.
+        // The bridge capped everything at HOOK_TIMEOUT_MS, so long-but-legal hooks died with err:"timeout".
+        const timeoutS = "timeout" in hk && typeof hk.timeout === "number" && hk.timeout > 0 ? hk.timeout : null;
+        out.push({ event: ev, matcher, command: expand(hk.command), timeoutMs: (timeoutS ?? HOOK_TIMEOUT_MS / 1000) * 1000 });
       }
     }
   }
@@ -222,7 +228,7 @@ async function runHook(reg: HookReg, payload: Record<string, unknown>): Promise<
     proc.stdin.end();
     const outP = new Response(proc.stdout).text();
     const errP = new Response(proc.stderr).text();
-    const exited = await Promise.race([proc.exited, Bun.sleep(HOOK_TIMEOUT_MS).then(() => "timeout" as const)]);
+    const exited = await Promise.race([proc.exited, Bun.sleep(reg.timeoutMs).then(() => "timeout" as const)]);
     if (exited === "timeout") proc.kill();
     const [out, err] = await Promise.all([outP, errP]);
     // Claude Code's contract: a non-zero exit is a failed hook (exit 2 blocks). `ok` reported
@@ -418,6 +424,25 @@ function toolCcName(name: string): string {
 
 let pendingContext: string[] = [];
 
+interface Dispatched { reg: HookReg; res: HookResult; parsed: HookOutput }
+
+/** Run every hook registered for one event concurrently — Claude Code's dispatch semantics.
+ *  The per-event serial loop made each caller pay the SUM of its hooks' latencies: one prompt
+ *  queued 11 UserPromptSubmit children back-to-back (PromptProcessing's naming inference alone
+ *  measures 9-12s on a loaded router), and turn_end serialized 12 Stop hooks, multiplied by the
+ *  per-subagent session fan-out. Logs land in registration order as calls complete; queued
+ *  additionalContext is drained in registration order after all calls finish. */
+async function dispatch(cc: string, regs: HookReg[], payload: Record<string, unknown>, extra?: Record<string, unknown>): Promise<Dispatched[]> {
+  const out = await Promise.all(regs.map(async (reg): Promise<Dispatched> => {
+    const res = await runHook(reg, payload);
+    const parsed = parseOutput(res.out);
+    log({ hook: hookName(reg.command), cc, ...extra, ok: res.ok, ms: res.ms, err: res.err || null, decision: parsed.decision ?? null, context: !!parsed.context });
+    return { reg, res, parsed };
+  }));
+  for (const d of out) if (d.parsed.context) pendingContext.push(d.parsed.context);
+  return out;
+}
+
 // Last dispatched UserPromptSubmit text, so omp's per-turn re-emission of the same user
 // message fires Claude Code's contract once per submission, not once per model call.
 let lastUserPrompt = "";
@@ -462,17 +487,12 @@ export default function lifeosBridge(pi: ExtensionAPI): void {
 
   pi.on("session_start", async () => {
     log({ event: "session_start" });
-    for (const reg of forEvent("SessionStart")) {
-      const res = await runHook(reg, {
-        session_id: SESSION_ID,
-        source: "startup",
-        cwd: process.cwd(),
-        hook_event_name: "SessionStart",
-      });
-      const parsed = parseOutput(res.out);
-      if (parsed.context) pendingContext.push(parsed.context);
-      log({ hook: hookName(reg.command), cc: "SessionStart", ok: res.ok, ms: res.ms, err: res.err || null, context: !!parsed.context });
-    }
+    await dispatch("SessionStart", forEvent("SessionStart"), {
+      session_id: SESSION_ID,
+      source: "startup",
+      cwd: process.cwd(),
+      hook_event_name: "SessionStart",
+    });
   });
 
   // turn_start carries no payload (agent/src/types.ts declares `{ type: "turn_start" }`), so
@@ -496,17 +516,12 @@ export default function lifeosBridge(pi: ExtensionAPI): void {
     if (!prompt || prompt === lastUserPrompt) return;
     lastUserPrompt = prompt;
     log({ event: "user_message", chars: prompt.length });
-    for (const reg of forEvent("UserPromptSubmit")) {
-      const res = await runHook(reg, {
-        prompt,
-        session_id: SESSION_ID,
-        cwd: process.cwd(),
-        hook_event_name: "UserPromptSubmit",
-      });
-      const parsed = parseOutput(res.out);
-      if (parsed.context) pendingContext.push(parsed.context);
-      log({ hook: hookName(reg.command), cc: "UserPromptSubmit", ok: res.ok, ms: res.ms, err: res.err || null, context: !!parsed.context });
-    }
+    await dispatch("UserPromptSubmit", forEvent("UserPromptSubmit"), {
+      prompt,
+      session_id: SESSION_ID,
+      cwd: process.cwd(),
+      hook_event_name: "UserPromptSubmit",
+    });
   });
 
   pi.on("tool_call", async (event: unknown, ctx: unknown) => {
@@ -514,35 +529,34 @@ export default function lifeosBridge(pi: ExtensionAPI): void {
     if (!info) return;
     log({ event: "tool_call", tool: info.name });
     const ccName = toolCcName(info.name);
-    for (const reg of forTool("PreToolUse", ccName)) {
-      const res = await runHook(reg, {
-        tool_name: ccName,
-        tool_input: info.input ?? {},
-        session_id: SESSION_ID,
-        transcript_path: "",
-        cwd: process.cwd(),
-        hook_event_name: "PreToolUse",
-        permission_mode: "default",
-        source: "omp",
-        tool_use_id: info.toolCallId,
-      });
-      const parsed = parseOutput(res.out);
-      if (parsed.context) pendingContext.push(parsed.context);
-      log({ hook: hookName(reg.command), cc: "PreToolUse", tool: info.name, ok: res.ok, ms: res.ms, err: res.err || null, decision: parsed.decision || null, context: !!parsed.context });
-      if (parsed.decision === "deny") {
-        return { block: true, reason: parsed.reason || `blocked by LifeOS hook ${hookName(reg.command)}` };
-      }
-      if (parsed.decision === "ask") {
-        const ui = readCtxUI(ctx);
-        if (ui?.ui?.confirm) {
-          const allow = await ui.ui.confirm("LifeOS hook", parsed.reason ?? "allow this tool call?");
-          if (!allow) return { block: true, reason: parsed.reason ?? "denied by user" };
-        } else {
-          // Claude Code headless behavior: ask → deny (fail closed)
-          log({ hook: hookName(reg.command), cc: "PreToolUse", tool: info.name, note: "ask→deny (headless)" });
-          return { block: true, reason: parsed.reason ?? "ask denied (headless)" };
-        }
-      }
+    const regs = forTool("PreToolUse", ccName);
+    if (regs.length === 0) return;
+    // All PreToolUse hooks run concurrently (Claude Code semantics); a deny from any of them
+    // wins, an ask is honored only when nothing denied. The serial loop blocked every tool call
+    // on the sum of its guards' latencies for no added safety — none of them sees shared state.
+    const results = await dispatch("PreToolUse", regs, {
+      tool_name: ccName,
+      tool_input: info.input ?? {},
+      session_id: SESSION_ID,
+      transcript_path: "",
+      cwd: process.cwd(),
+      hook_event_name: "PreToolUse",
+      permission_mode: "default",
+      source: "omp",
+      tool_use_id: info.toolCallId,
+    }, { tool: info.name });
+    const denied = results.find((d) => d.parsed.decision === "deny");
+    if (denied) return { block: true, reason: denied.parsed.reason || `blocked by LifeOS hook ${hookName(denied.reg.command)}` };
+    const ask = results.find((d) => d.parsed.decision === "ask");
+    if (!ask) return;
+    const ui = readCtxUI(ctx);
+    if (ui?.ui?.confirm) {
+      const allow = await ui.ui.confirm("LifeOS hook", ask.parsed.reason ?? "allow this tool call?");
+      if (!allow) return { block: true, reason: ask.parsed.reason ?? "denied by user" };
+    } else {
+      // Claude Code headless behavior: ask → deny (fail closed)
+      log({ hook: hookName(ask.reg.command), cc: "PreToolUse", tool: info.name, note: "ask→deny (headless)" });
+      return { block: true, reason: ask.parsed.reason ?? "ask denied (headless)" };
     }
   });
 
@@ -551,62 +565,53 @@ export default function lifeosBridge(pi: ExtensionAPI): void {
     if (!info) return;
     const ccEvent = info.isError ? "PostToolUseFailure" : "PostToolUse";
     log({ event: "tool_result", tool: info.name, isError: info.isError });
-    for (const reg of forTool(ccEvent, toolCcName(info.name))) {
-      const res = await runHook(reg, info.isError
-        ? {
-            tool_name: toolCcName(info.name),
-            tool_input: info.input ?? {},
-            tool_response_error: info.content,
-            session_id: SESSION_ID,
-            cwd: process.cwd(),
-            hook_event_name: "PostToolUseFailure",
-            tool_use_id: info.toolCallId,
-          }
-        : {
-            tool_name: toolCcName(info.name),
-            tool_input: info.input ?? {},
-            tool_response: info.content,
-            tool_response_error: null,
-            session_id: SESSION_ID,
-            cwd: process.cwd(),
-            hook_event_name: "PostToolUse",
-            permission_mode: "default",
-            source: "omp",
-            tool_use_id: info.toolCallId,
-          });
-      const parsed = parseOutput(res.out);
-      if (parsed.context) pendingContext.push(parsed.context);
-      log({ hook: hookName(reg.command), cc: ccEvent, tool: info.name, ok: res.ok, ms: res.ms, err: res.err || null, context: !!parsed.context });
-    }
+    await dispatch(ccEvent, forTool(ccEvent, toolCcName(info.name)), info.isError
+      ? {
+          tool_name: toolCcName(info.name),
+          tool_input: info.input ?? {},
+          tool_response_error: info.content,
+          session_id: SESSION_ID,
+          cwd: process.cwd(),
+          hook_event_name: "PostToolUseFailure",
+          tool_use_id: info.toolCallId,
+        }
+      : {
+          tool_name: toolCcName(info.name),
+          tool_input: info.input ?? {},
+          tool_response: info.content,
+          tool_response_error: null,
+          session_id: SESSION_ID,
+          cwd: process.cwd(),
+          hook_event_name: "PostToolUse",
+          permission_mode: "default",
+          source: "omp",
+          tool_use_id: info.toolCallId,
+        }, { tool: info.name });
   });
 
   pi.on("turn_end", async (event: { message?: unknown }, ctx: unknown) => {
     log({ event: "turn_end" });
     const mirror = transcriptMirror(ctx);
-    for (const reg of forEvent("Stop")) {
-      const res = await runHook(reg, {
-        stop_hook_active: true,
-        transcript_path: mirror,
-        cwd: process.cwd(),
-        hook_event_name: "Stop",
-        session_id: SESSION_ID,
-      });
-      const parsed = parseOutput(res.out);
-      if (parsed.context) pendingContext.push(parsed.context);
-      log({ hook: hookName(reg.command), cc: "Stop", ok: res.ok, ms: res.ms, err: res.err || null, context: !!parsed.context });
-      // Claude Code's StopFailure = a stop hook failed. omp emits no such event, so synthesize it
-      // from the failure this bridge observed; the v8 consumers (EventLogger, TabState's ❌ stamp)
-      // read `error` as a string and `session_id`. Guarded on res.ok so a clean Stop never fires.
-      if (!res.ok) {
-        for (const failReg of forEvent("StopFailure")) {
-          const fres = await runHook(failReg, {
-            session_id: SESSION_ID,
-            cwd: process.cwd(),
-            hook_event_name: "StopFailure",
-            error: `${hookName(reg.command)} (exit ${res.exit ?? "?"}): ${res.err.trim().split("\n")[0] || "no stderr"}`,
-          });
-          log({ hook: hookName(failReg.command), cc: "StopFailure", ok: fres.ok, ms: fres.ms, err: fres.err || null, cause: hookName(reg.command) });
-        }
+    const results = await dispatch("Stop", forEvent("Stop"), {
+      stop_hook_active: true,
+      transcript_path: mirror,
+      cwd: process.cwd(),
+      hook_event_name: "Stop",
+      session_id: SESSION_ID,
+    });
+    // Claude Code's StopFailure = a stop hook failed. omp emits no such event, so synthesize it
+    // from the failure this bridge observed; the v8 consumers (EventLogger, TabState's ❌ stamp)
+    // read `error` as a string and `session_id`. Guarded on res.ok so a clean Stop never fires.
+    for (const d of results) {
+      if (d.res.ok) continue;
+      for (const failReg of forEvent("StopFailure")) {
+        const fres = await runHook(failReg, {
+          session_id: SESSION_ID,
+          cwd: process.cwd(),
+          hook_event_name: "StopFailure",
+          error: `${hookName(d.reg.command)} (exit ${d.res.exit ?? "?"}): ${d.res.err.trim().split("\n")[0] || "no stderr"}`,
+        });
+        log({ hook: hookName(failReg.command), cc: "StopFailure", ok: fres.ok, ms: fres.ms, err: fres.err || null, cause: hookName(d.reg.command) });
       }
     }
     // omp-native voice: VoiceCompletion.hook.ts needs a Claude transcript omp
@@ -633,17 +638,12 @@ export default function lifeosBridge(pi: ExtensionAPI): void {
   pi.on("session_shutdown", async (_event: unknown, ctx: unknown) => {
     log({ event: "session_shutdown" });
     const mirror = transcriptMirror(ctx);
-    for (const reg of forEvent("SessionEnd")) {
-      const res = await runHook(reg, {
-        session_id: SESSION_ID,
-        transcript_path: mirror,
-        cwd: process.cwd(),
-        hook_event_name: "SessionEnd",
-      });
-      const parsed = parseOutput(res.out);
-      if (parsed.context) pendingContext.push(parsed.context);
-      log({ hook: hookName(reg.command), cc: "SessionEnd", ok: res.ok, ms: res.ms, err: res.err || null, context: !!parsed.context });
-    }
+    await dispatch("SessionEnd", forEvent("SessionEnd"), {
+      session_id: SESSION_ID,
+      transcript_path: mirror,
+      cwd: process.cwd(),
+      hook_event_name: "SessionEnd",
+    });
   });
 
   // One omp approval prompt is two Claude Code events: PermissionRequest (TabState stamps the tab
@@ -655,28 +655,22 @@ export default function lifeosBridge(pi: ExtensionAPI): void {
     const e = event as Record<string, unknown> | undefined;
     const toolName = typeof e?.toolName === "string" ? toolCcName(e.toolName) : "tool";
     log({ event: "tool_approval_requested", tool: toolName });
-    for (const reg of forEvent("PermissionRequest")) {
-      const res = await runHook(reg, {
-        session_id: SESSION_ID,
-        cwd: process.cwd(),
-        hook_event_name: "PermissionRequest",
-        tool_name: toolName,
-        tool_input: {},
-        tool_use_id: typeof e?.toolCallId === "string" ? e.toolCallId : undefined,
-      });
-      log({ hook: hookName(reg.command), cc: "PermissionRequest", tool: toolName, ok: res.ok, ms: res.ms, err: res.err || null });
-    }
+    await dispatch("PermissionRequest", forEvent("PermissionRequest"), {
+      session_id: SESSION_ID,
+      cwd: process.cwd(),
+      hook_event_name: "PermissionRequest",
+      tool_name: toolName,
+      tool_input: {},
+      tool_use_id: typeof e?.toolCallId === "string" ? e.toolCallId : undefined,
+    }, { tool: toolName });
     const message = typeof e?.reason === "string" && e.reason.trim() ? e.reason.trim() : `Approve ${toolName}?`;
-    for (const reg of forEvent("Notification")) {
-      const res = await runHook(reg, {
-        session_id: SESSION_ID,
-        cwd: process.cwd(),
-        hook_event_name: "Notification",
-        notification_type: "permission_prompt",
-        message,
-      });
-      log({ hook: hookName(reg.command), cc: "Notification", type: "permission_prompt", ok: res.ok, ms: res.ms, err: res.err || null });
-    }
+    await dispatch("Notification", forEvent("Notification"), {
+      session_id: SESSION_ID,
+      cwd: process.cwd(),
+      hook_event_name: "Notification",
+      notification_type: "permission_prompt",
+      message,
+    }, { type: "permission_prompt" });
   });
 
   // Inject queued additionalContext (delta blocks, rules) as a system message
