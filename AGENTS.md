@@ -7,25 +7,20 @@
 **UPDATE:** System architecture is currently in major restructuring.
 
 ### Current Architectural Focus: LifeOS Integration
-The primary active focus is layering and stabilizing **LifeOS** (https://github.com/danielmiessler/LifeOS) into the OMP sandbox:
-- **Integration Status:** Basically working, but actively undergoing adjustments.
-- **Harness Layering:** `~/.omp/LIFEOS` (with `~/.claude` symlinked to `~/.omp`).
-- **Setup & Lifecycle:** currently not automated.
-- **Bridge Extension:** `omp/agent/extensions/OmpHooksBridge.ts` and corresponing `.md` translates Claude Code hooks for OMP.
-- **Launch Command:** `lifeos`
-- Detailed setup notes: `references/lifeos-setup.md`.
-- Upgrade-path notes for the hooks bridge: `references/omp-hooks-bridge-upgrade-notes.md`.
-- **LifeOS-on-Claude-Code vs. LifeOS-on-omp differences** (event map fidelity, registry merge mechanics, permission-system split, accepted gaps): `references/lifeos-omp-difference.md`. This section is the index; that file is the authority on harness deltas.
 
-### Target Trajectory & Submodules
-- **`submodules/agents-shared`**: Local inference wrappers (`local-router` on `:21080` for chat, embedding, rerank, stt, tts, imagegen) and `sandbox-ctl` environment isolation.
-- **`submodules/aur-packages`**: Arch Linux AUR packages and private PKGBUILD forks.
-- **`omp/agent`**: Base profile configuration (`config.yml`, `models.yml`, `agents/`, `skills/`, `extensions/`, `memorybanks/`).
+Layering and stabilizing **LifeOS** (https://github.com/danielmiessler/LifeOS) into the OMP sandbox: basically working, under active adjustment. This file is an index — the knowledge lives in `references/`:
 
-### `mypai_runtime` Status
-- `src/mypai_runtime/` is **not currently used or ported to be used correctly** in the active harness yet. Its removal or refactoring and adaptation to OMP + LifeOS is deferred until LifeOS integration adjustments are complete.
+- Topology, mounts, data-home contract, OS translation, model & voice plumbing: `references/lifeos-host-linux.md`
+- Claude Code vs. omp harness deltas (event-map fidelity, registry merge, permission split, scheduling, guard enforcement, accepted gaps): `references/lifeos-omp-difference.md` — the authority on harness deltas; §1 is only an index.
+- LifeOS distro upgrade procedure & version semantics: `references/lifeos-upgrade-runbook.md`
+- Bridge (`omp/agent/extensions/OmpHooksBridge.ts` + `.md`) per-version mechanics: `references/omp-lifeos-OmpHooksBridge-changelog.md`; implementation doc: `omp/agent/extensions/OmpHooksBridge.md`.
+- Launch command: `lifeos`. Headless bridge checks: `make bridge-test` / `make bridge-smoke`.
 
-## Harness Usage
+### Repository Areas & Submodules
+
+**Source of truth:** this repo's `omp/agent/*` profile, `bin/` launchers and `omp.env` are canonical for omp + LifeOS host config; the live files under `~/.omp` are derived copies. Make config changes here, then apply/sync — never hand-edit only in `~/.omp`.
+
+Layout map (what lives in `omp/agent`, `submodules/agents-shared`, `submodules/aur-packages`, `bin/`, and the deferred status of `src/mypai_runtime/`): **`references/mypai-layout.md`**. `mypai_runtime` removal/refactoring is deferred until LifeOS integration adjustments are complete.
 
 ## Code Style & Verification Commands
 

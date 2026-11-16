@@ -1,5 +1,7 @@
 # LifeOS Setup Reference & Harness Architecture
 
+> **Superseded 2026-11-16.** Live topology, config plumbing and OS translation are now in `lifeos-host-linux.md`; harness deltas in `lifeos-omp-difference.md`. Kept for history: §1's topology predates v8's MEMORY-under-USER move, and the §3–4 inference failure is resolved by claude-shim (`~/.local/bin/claude`).
+
 > [!IMPORTANT]
 > **Current Focus & Status**:
 > - **LifeOS Integration:** The primary active engineering focus is layering and stabilizing LifeOS into OMP. The integration is currently basically working, but actively undergoing adjustments.

@@ -1,4 +1,4 @@
-# omp-hooks-bridge-upgrade-notes
+# OmpHooksBridge upgrade notes (formerly `omp-hooks-bridge-upgrade-notes.md`)
 
 `omp/agent/extensions/OmpHooksBridge.ts` shims Claude Code hooks onto omp's event bus; it is the load-bearing piece of the LifeOS layering. This note records the 18.18.8 → 18.20.2 upgrade path, what it changed for the bridge, and the timeout incident that followed. The plan this supersedes (`OMPHOOKSBRIDGE_UPGRADE_NOTES_PLAN.md`) was written against v18.20.0 as a future target; the upgrade has since been executed — installed is `omp/18.20.2` (`oh-my-pi-git-tag 18.20.2.r0.g7c49c1-1`, i.e. exactly tag v18.20.2), so its rebuild prompt is moot and the facts below are recomputed against `9369103…v18.20.2` on 2026-11-16.
 

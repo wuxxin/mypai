@@ -163,6 +163,6 @@ When any of `lifeos`, `ephemeral-omp`, or `ephemeral-lifeos` is called on the ho
 
 - [**`USAGE.md`**](USAGE.md) — Complete operational guide for OMP, LifeOS, subagents, and skills.
 - [**`AGENTS.md`**](AGENTS.md) — System realities, agent operating guidelines, and code style.
-- [**`references/lifeos-setup.md`**](references/lifeos-setup.md) — LifeOS topology, harness execution, and inference diagnostic reference.
+- [**`references/lifeos-host-linux.md`**](references/lifeos-host-linux.md) — LifeOS topology, config plumbing, OS translation on this host (supersedes `old-lifeos-setup.md`). Companion harness-delta reference: [`references/lifeos-omp-difference.md`](references/lifeos-omp-difference.md); upgrade procedure: [`references/lifeos-upgrade-runbook.md`](references/lifeos-upgrade-runbook.md).
 - [**`references/omp-runtime-config.md`**](references/omp-runtime-config.md) — OMP runtime configuration, prompt layering, and subagent resolution.
 
