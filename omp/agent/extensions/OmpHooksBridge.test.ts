@@ -172,6 +172,18 @@ describe("dispatch semantics", () => {
     expect(s.events().length).toBe(2);
   });
 
+  test("session_clear resets the dedup guard: identical text post-clear dispatches again", async () => {
+    const s = fixture((ev) => ({ UserPromptSubmit: [{ matcher: "", hooks: [{ type: "command", command: ev }] }] }));
+    const pi = await bootAndLoad(s);
+    const msg = (t: string) => ({ message: { role: "user", content: [{ type: "text", text: t }] } });
+    await fire(pi, "message_start", msg("restart probe"));
+    expect(s.events().length).toBe(1);
+    expect(pi.handlers.has("session_clear")).toBe(true); // v18.20.2 event
+    await fire(pi, "session_clear", { type: "session_clear" });
+    await fire(pi, "message_start", msg("restart probe"));
+    expect(s.events().length).toBe(2);
+  });
+
   test("PermissionRequest + Notification both dispatch with the approval payload shapes", async () => {
     const s = fixture((ev) => ({
       PermissionRequest: [{ matcher: "", hooks: [{ type: "command", command: ev }] }],

@@ -22,6 +22,8 @@
  *                                              omp has no such event, and the v8 registry's
  *                                              consumers — EventLogger, TabState ❌ stamp — want
  *                                              exactly this signal)
+ *   session_clear          → (bridge hygiene) resets the UserPromptSubmit dedup guard;
+ *                                              Claude Code has no /clear hook, this is omp-native.
  *   —                      ✗ ConfigChange      (no source: the extension event union in
  *                                              agent/src/extensibility/extensions/types.ts has no
  *                                              settings-change event; `mode_changed` is a harness
@@ -53,7 +55,8 @@
  *     stdout is never touched (in `omp -p` print mode it carries the model's answer).
  *
  * Every invocation is logged to the audit log. Hook failures are logged and
- * never crash the session. Per-hook timeout 30s.
+ * never crash the session. Per-hook timeout comes from the registry's `timeout` field (seconds);
+ * 30s is only the fallback for registrations without one.
  */
 
 import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
@@ -644,6 +647,15 @@ export default function lifeosBridge(pi: ExtensionAPI): void {
       cwd: process.cwd(),
       hook_event_name: "SessionEnd",
     });
+  });
+
+  // v18.20.2 added session_clear (in-place /clear reset). The dedup guard must forget the last
+  // prompt on a clear: post-clear, resubmitting identical text is a genuine new submission and
+  // must dispatch UserPromptSubmit exactly like any first prompt. pendingContext intentionally
+  // survives — queued memory/rule deltas belong in the fresh context. (2026-11-16)
+  pi.on("session_clear", async () => {
+    log({ event: "session_clear" });
+    lastUserPrompt = "";
   });
 
   // One omp approval prompt is two Claude Code events: PermissionRequest (TabState stamps the tab
