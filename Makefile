@@ -12,7 +12,7 @@ PYTEST = $(if $(wildcard $(VENV_BIN)/pytest),$(VENV_BIN)/pytest,pytest)
 RUFF = $(if $(wildcard $(VENV_BIN)/ruff),$(VENV_BIN)/ruff,ruff)
 MYPY = $(if $(wildcard $(VENV_BIN)/mypy),$(VENV_BIN)/mypy,mypy)
 
-.PHONY: help buildenv test test-unit test-e2e coverage lint format typecheck clean cleanenv all
+.PHONY: help buildenv test test-unit test-e2e bridge-test bridge-smoke coverage lint format typecheck clean cleanenv all
 
 ## Help & Target Reconstruction
 help: ## Show this help message and reconstruct all primary targets
@@ -50,6 +50,23 @@ test-unit: ## Run fast unit tests only
 test-e2e: ## Run end-to-end multi-session and protocol integration tests
 	@echo "==> Running end-to-end integration tests..."
 	@PYTHONPATH="src:.:$${PYTHONPATH:-}" $(PYTEST) tests/e2e -v
+
+bridge-test: ## Run the OmpHooksBridge behavior suite (bun test, hermetic fixtures only)
+	@echo "==> Running OmpHooksBridge behavior tests..."
+	@bun test omp/agent/extensions/OmpHooksBridge.test.ts
+
+bridge-smoke: ## Probe the live LifeOS hooks bridge end-to-end via its audit log (needs omp + registry)
+	@echo "==> Running OmpHooksBridge headless probe..."
+	@log=$$(mktemp /tmp/bridge-smoke.XXXXXX.jsonl); \
+	trap 'rm -f $$log' EXIT; \
+	OMP_BRIDGE_LOG=$$log timeout 120 omp --cwd $${LIFEOS_CWD:-$$HOME/agent-private/lifeos} -p --auto-approve "run: echo bridge-test" >/dev/null 2>&1 || true; \
+	jq -r '.event // .cc' $$log | sort | uniq -c; \
+	for want in bridge_init user_message tool_call Stop SessionEnd; do \
+		jq -e --arg w "$$want" 'select((.event // .cc) == $$w)' $$log >/dev/null || { echo "==> FAIL: no $$want in audit log"; exit 1; }; \
+	done; \
+	jq -e 'select(.event=="bridge_init") | select(.hooks > 0)' $$log >/dev/null || { echo "==> FAIL: bridge_init with zero hooks"; exit 1; }; \
+	jq -e 'select((.err == "timeout") or (.ok == false))' $$log >/dev/null && { echo "==> FAIL: hook timeout/failure in audit log"; exit 1; }; \
+	echo "==> PASS: full event sequence, non-zero registry, zero hook failures"
 
 coverage: ## Run test suite with line-level code coverage report
 	@echo "==> Running test suite with coverage..."

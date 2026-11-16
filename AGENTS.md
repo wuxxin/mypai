@@ -14,6 +14,7 @@ The primary active focus is layering and stabilizing **LifeOS** (https://github.
 - **Bridge Extension:** `omp/agent/extensions/OmpHooksBridge.ts` translates Claude Code hooks for OMP.
 - **Launch Command:** `lifeos`
 - Detailed setup notes: `references/lifeos-setup.md`.
+- Upgrade-path notes for the hooks bridge: `references/omp-hooks-bridge-upgrade-notes.md`.
 
 ### Target Trajectory & Submodules
 - **`submodules/agents-shared`**: Local inference wrappers (`local-router` on `:21080` for chat, embedding, rerank, stt, tts, imagegen) and `sandbox-ctl` environment isolation.
