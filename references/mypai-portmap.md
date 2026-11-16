@@ -26,7 +26,7 @@ All services use unprivileged non-ephemeral ports in the **`20000`–`29000`** r
 │ 20082   │ local-embedding               │ Active     │ llama-server (Qwen3-Embedding-0.6B)  │
 │ 20086   │ local-rerank                  │ Active     │ llama-server / TEI (Reranker 0.6B)   │
 │ 20090   │ local-speech-to-text          │ Active     │ whisper-server (large-v3-turbo)      │
-│ 20095   │ local-text-to-speech          │ Active     │ qwen3-tts-server (voice synthesis)   │
+│ 20095   │ local-text-to-speech          │ Active     │ kokoro-onnx (default); qwen3 switch  │
 │ 20100   │ local-image                   │ Active     │ sd-server (Stable Diffusion)         │
 │ 21080   │ local-router                  │ Active     │ Unified OpenAI-compatible Gateway    │
 │         │                               │            │                                      │
@@ -51,4 +51,11 @@ All services use unprivileged non-ephemeral ports in the **`20000`–`29000`** r
 │ 9810    │ cc-connect                    │ Retired    │ Multi-channel chat bridge            │
 └─────────┴───────────────────────────────┴────────────┴──────────────────────────────────────┘
 ```
+
+## TTS engines behind the router (:21080 → :20095)
+
+- Default engine since 2026-11-16: **kokoro-onnx** FastAPI on `:20095` (unit `local-text-to-speech.service`, agents-shared `scripts/local-text-to-speech.sh`); voices en-US `af_heart`, de-DE `df_victoria`.
+- `qwen3-tts` stays switchable via the `TTS_ENGINE` env var in that script. The router's `/v1/audio/speech` answers any model string and proxies to whichever engine is current — the engine is invisible above the router; omp's role string only names a provider alias.
+- Consumer chain: omp role `speech:` → :21080 → :20095. Host-side prose: `lifeos-host-linux.md` § Voice.
+
 

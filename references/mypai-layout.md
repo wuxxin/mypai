@@ -11,6 +11,7 @@ Reference for what lives where in `~/agent-shared/code/mypai` and how it relates
 | `submodules/aur-packages` | Arch Linux AUR packages and private PKGBUILD forks (source-of-truth rule in AGENTS.md). |
 | `bin/` | Host launchers: `lifeos` (omp wrapper with LifeOS prompt/profile), `ephemeral-*`, dispatcher entry points. |
 | `src/mypai_runtime/`, `tests/` | Python runtime package — **not currently used, not ported**; removal/refactoring deferred until LifeOS integration adjustments complete. CI targets (`make all/test/lint/typecheck`) are its legacy gate. |
+| `src/omp-lifeos-overlay/` | Shadow overlay of the host-owned LifeOS source modifications (8 files + `MANIFEST.md` inventory incl. rendered-only personalizations; `tools/` regenerates from a release tarball). Prose: `lifeos-omp-difference.md` § Local LifeOS overlay. Diff live tree vs tarball after every upgrade. |
 | `references/` | This directory: durable host/reference docs (see index below). |
 
 ## Runtime relationship (summary)
