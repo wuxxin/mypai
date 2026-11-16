@@ -1,5 +1,5 @@
 ---
-version: 1.0.1
+version: 1.0.2
 ---
 
 # OmpHooksBridge — LifeOS hooks in omp (Oh My Pi)
@@ -16,7 +16,7 @@ version: 1.0.1
 | `tool_result` | `PostToolUse` | result-side hooks (isError → `PostToolUseFailure`) |
 | `turn_end` | `Stop` | per-turn stop hooks |
 | `session_shutdown` | `SessionEnd` | end-of-session maintenance |
-| `tool_approval_requested` | `PermissionRequest` **+** `Notification` | one approval prompt is both events in Claude Code's contract: the tab stamp (`TabState`) and `notification_type:"permission_prompt"` (the only shape `BlockerText` accepts). `tool_input` has no field in `ToolApprovalRequestedEvent`, so `permissionDetail()` falls back to the tool name. |
+| `tool_approval_requested` | `PermissionRequest` | tab stamp (`TabState`). The paired `Notification{notification_type:"permission_prompt"}` dispatch — the only shape `BlockerText` accepted as an announcement — was **suppressed 2026-11-16 (Fix A)**: omp ≥18.20.x natively reports dialogs as blocked with what they ask (#15107/#18868), so the text announcement double-stamped. `tool_input` has no field in `ToolApprovalRequestedEvent`, so `permissionDetail()` falls back to the tool name. |
 | *(synthesized)* | `StopFailure` | emitted when a mapped `Stop` hook exits non-zero, carrying `error: "<hook> (exit N): <first stderr line>"`. omp emits no such event; the v8 consumers are `EventLogger` and TabState's ❌ stamp. Guarded on the observed failure — a clean Stop never fires it. |
 | — | ✗ `ConfigChange` | **no source.** The extension event union (`packages/coding-agent/src/extensibility/extensions/types.ts`) has no settings-change event; `mode_changed` is a harness mode switch, not a config edit. Left unmapped on purpose. |
 

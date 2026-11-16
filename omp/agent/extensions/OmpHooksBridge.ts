@@ -658,11 +658,15 @@ export default function lifeosBridge(pi: ExtensionAPI): void {
     lastUserPrompt = "";
   });
 
-  // One omp approval prompt is two Claude Code events: PermissionRequest (TabState stamps the tab
-  // ⏳ / "APPROVE: <tool>") and Notification with notification_type "permission_prompt" — which is
-  // the only shape BlockerText accepts as a blocker. tool_input has no equivalent in
+  // One omp approval prompt was originally mapped to two Claude Code events: PermissionRequest
+  // (TabState stamps the tab ⏳ / "APPROVE: <tool>") and Notification{notification_type:
+  // "permission_prompt"} — the shape BlockerText accepted as a blocker announcement. Since
+  // #15107/#18868 (v18.20.x) every TUI dialog natively reports state `blocked` with what it asks
+  // until answered, so the LifeOS-side text announcement double-stamps: Fix A (2026-11-16)
+  // suppresses the Notification dispatch and keeps PermissionRequest — the tab stamp and the
+  // clear-on-resolve pairing stay intact. tool_input has no equivalent in
   // ToolApprovalRequestedEvent, so TabState's permissionDetail() falls back to the tool name; that
-  // is its documented behavior for an unknown input, not a degraded stamp. (2026-11-11)
+  // is its documented behavior for an unknown input, not a degraded stamp.
   pi.on("tool_approval_requested", async (event: unknown) => {
     const e = event as Record<string, unknown> | undefined;
     const toolName = typeof e?.toolName === "string" ? toolCcName(e.toolName) : "tool";
@@ -675,14 +679,6 @@ export default function lifeosBridge(pi: ExtensionAPI): void {
       tool_input: {},
       tool_use_id: typeof e?.toolCallId === "string" ? e.toolCallId : undefined,
     }, { tool: toolName });
-    const message = typeof e?.reason === "string" && e.reason.trim() ? e.reason.trim() : `Approve ${toolName}?`;
-    await dispatch("Notification", forEvent("Notification"), {
-      session_id: SESSION_ID,
-      cwd: process.cwd(),
-      hook_event_name: "Notification",
-      notification_type: "permission_prompt",
-      message,
-    }, { type: "permission_prompt" });
   });
 
   // Inject queued additionalContext (delta blocks, rules) as a system message

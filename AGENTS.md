@@ -15,6 +15,7 @@ The primary active focus is layering and stabilizing **LifeOS** (https://github.
 - **Launch Command:** `lifeos`
 - Detailed setup notes: `references/lifeos-setup.md`.
 - Upgrade-path notes for the hooks bridge: `references/omp-hooks-bridge-upgrade-notes.md`.
+- **LifeOS-on-Claude-Code vs. LifeOS-on-omp differences** (event map fidelity, registry merge mechanics, permission-system split, accepted gaps): `references/lifeos-omp-difference.md`. This section is the index; that file is the authority on harness deltas.
 
 ### Target Trajectory & Submodules
 - **`submodules/agents-shared`**: Local inference wrappers (`local-router` on `:21080` for chat, embedding, rerank, stt, tts, imagegen) and `sandbox-ctl` environment isolation.

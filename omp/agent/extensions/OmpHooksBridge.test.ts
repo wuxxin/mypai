@@ -184,7 +184,7 @@ describe("dispatch semantics", () => {
     expect(s.events().length).toBe(2);
   });
 
-  test("PermissionRequest + Notification both dispatch with the approval payload shapes", async () => {
+  test("Fix A: approval dispatches PermissionRequest only; no Notification double-stamp", async () => {
     const s = fixture((ev) => ({
       PermissionRequest: [{ matcher: "", hooks: [{ type: "command", command: ev }] }],
       Notification: [{ matcher: "", hooks: [{ type: "command", command: ev }] }],
@@ -192,13 +192,11 @@ describe("dispatch semantics", () => {
     const pi = await bootAndLoad(s);
     await fire(pi, "tool_approval_requested", { toolName: "bash", toolCallId: "tc-1", reason: "approve rm?" });
     const evs = s.events();
-    expect(evs.length).toBe(2);
-    const perm = evs.find((e) => e.hook_event_name === "PermissionRequest")!;
-    const notif = evs.find((e) => e.hook_event_name === "Notification")!;
+    expect(evs.length).toBe(1); // #15107 native blocked-reporting makes the text announcement redundant
+    const perm = evs[0];
+    expect(perm.hook_event_name).toBe("PermissionRequest");
     expect(perm.tool_name).toBe("Bash"); // TOOL_UP mapping reaches the hook payload
     expect(perm.tool_use_id).toBe("tc-1");
-    expect(notif.notification_type).toBe("permission_prompt");
-    expect(notif.message).toBe("approve rm?");
   });
 });
 
