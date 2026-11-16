@@ -16,11 +16,16 @@ Layering and stabilizing **LifeOS** (https://github.com/danielmiessler/LifeOS) i
 - Bridge (`omp/agent/extensions/OmpHooksBridge.ts` + `.md`) per-version mechanics: `references/omp-lifeos-OmpHooksBridge-changelog.md`; implementation doc: `omp/agent/extensions/OmpHooksBridge.md`.
 - Launch command: `lifeos`. Headless bridge checks: `make bridge-test` / `make bridge-smoke`.
 
-### Repository Areas & Submodules
+### Repository Areas, Submodules and Sandboxing Discipline
 
-**Source of truth:** this repo's `omp/agent/*` profile, `bin/` launchers and `omp.env` are canonical for omp + LifeOS host config; the live files under `~/.omp` are derived copies. Make config changes here, then apply/sync — never hand-edit only in `~/.omp`.
+- **Workspace:** `mypai` and `submodules/` form a single workspace. Temporary files go in `scratch/`. 
+- **Source of truth:** this repo's `omp/agent/*` profile, `bin/` launchers and `omp.env` are canonical for omp + LifeOS host config; the live files under `~/.omp` are derived copies. Make config changes here, then apply/sync — never hand-edit only in `~/.omp`.
+- Layout map (what lives in `omp/agent`, `submodules/agents-shared`, `submodules/aur-packages`, `bin/`, and the deferred status of `src/mypai_runtime/`): **`references/mypai-layout.md`**. `mypai_runtime` removal/refactoring is deferred until LifeOS integration adjustments are complete.
+- **Submodule Boundaries:**
+  - Because subagents inherit the root workspace context and cannot have arbitrary session `cwd` set at spawn time, any agent or subagent assigned work in a submodule or subdirectory (`submodules/aur-packages`, `submodules/agents-shared`, etc.) **MUST read that subdirectory's `AGENTS.md`** (e.g. `read submodules/aur-packages/AGENTS.md`) and any domain skills it mandates (e.g. `skill://archlinux-pkgbuild`) before running commands.
+- **Source-of-truth for built packages:** Questions about the sources of packages we build on this system (many in `submodules/aur-packages/*`) MUST be answered from the makepkg source checkouts under `submodules/aur-packages/<pkg>/src/` — they match exactly what is installed (e.g. `oh-my-pi-git-tag/src/oh-my-pi/`). Never fetch upstream GitHub trees, raw files, or release pages for these questions when the local src checkout covers them.
+- **Sandbox (`sandbox-ctl`) Check:** if env `SANDBOX_NAME` or `SANDBOX` is set read `submodules/agents-shared/scripts/sandbox-ctl.md` how to behave and use.
 
-Layout map (what lives in `omp/agent`, `submodules/agents-shared`, `submodules/aur-packages`, `bin/`, and the deferred status of `src/mypai_runtime/`): **`references/mypai-layout.md`**. `mypai_runtime` removal/refactoring is deferred until LifeOS integration adjustments are complete.
 
 ## Code Style & Verification Commands
 
@@ -37,10 +42,3 @@ Layout map (what lives in `omp/agent`, `submodules/agents-shared`, `submodules/a
 - **`httpx` Only:** Pure `httpx` in `mypai_runtime`. No defensive `urllib` fallbacks.
 - **Explicit Errors:** Never use empty `except: pass`. Capture stack traces in `_LAST_ERROR` and raise typed domain exceptions.
 
-## Workspace & Sandboxing Discipline
-
-- **Workspace:** `mypai` and `submodules/` form a single workspace. Temporary files go in `scratch/`. 
-- **Submodule Boundaries:**
-  - Because subagents inherit the root workspace context and cannot have arbitrary session `cwd` set at spawn time, any agent or subagent assigned work in a submodule or subdirectory (`submodules/aur-packages`, `submodules/agents-shared`, etc.) **MUST read that subdirectory's `AGENTS.md`** (e.g. `read submodules/aur-packages/AGENTS.md`) and any domain skills it mandates (e.g. `skill://archlinux-pkgbuild`) before running commands.
-- **Source-of-truth for built packages:** Questions about the sources of packages we build on this system (many in `submodules/aur-packages/*`) MUST be answered from the makepkg source checkouts under `submodules/aur-packages/<pkg>/src/` — they match exactly what is installed (e.g. `oh-my-pi-git-tag/src/oh-my-pi/`). Never fetch upstream GitHub trees, raw files, or release pages for these questions when the local src checkout covers them.
-- **Sandbox (`sandbox-ctl`) Check:** if env `SANDBOX_NAME` or `SANDBOX` is set read `submodules/agents-shared/scripts/sandbox-ctl.md` how to behave and use.
