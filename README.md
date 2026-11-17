@@ -21,9 +21,9 @@
 
 4. **LifeOS Integration (`~/.omp/LIFEOS` via `~/.claude` symlink)**:
    - Primary immediate engineering effort: layering LifeOS into OMP (basically working, actively undergoing adjustments).
-   - Private user vault in `~/agent-private/lifeos` (`USER/`, `MEMORY/`, `TELOS/`).
-   - Pulse dashboard and sidecar server on port `:31337` (`bun run pulse.ts`).
-   - `OmpHooksBridge.ts` translating Claude Code hook events (`SessionStart`, `UserPromptSubmit`, `PostToolExecution`, `SessionEnd`) for OMP.
+   - Private data repo of record in `~/agent-private/lifeos` (v8 layout: `USER/` with `MEMORY/` under it, single-file `TELOS.md`; `LIFEOS_CONFIG_DIR` exported by the launcher).
+   - Pulse dashboard on port `:31337`, supervised as the primary service of the systemd user unit `~/.config/systemd/user/omp.service` (`LAUNCHER_SERVICE_CMD` in `omp.env`; sidecars retired 2026-11-16, periodic jobs run as `[[job]]` entries in `USER/CONFIG/PULSE.user.toml`).
+   - `OmpHooksBridge.ts` translating Claude Code hook events (`SessionStart`, `UserPromptSubmit`, `PreToolUse`, `PostToolUse`/`PostToolUseFailure`, `Stop`, `SessionEnd`, `PermissionRequest`) for OMP.
    - Utility inference compatibility via [`bin/claude-shim.py`](bin/claude-shim.py) (documented in [`bin/claude-shim.md`](bin/claude-shim.md)).
 
 ---
@@ -65,9 +65,19 @@ cd mypai
 
 ### 5. Install & Layer LifeOS into OMP
 
+Deploy the LifeOS distribution payload per [`references/lifeos-upgrade-runbook.md`](references/lifeos-upgrade-runbook.md) (staged release tarball → `install/install.sh` bootstrap → `bun Tools/InstallAll.ts --yes ...` overlay → data-home re-link via `LinkUser.ts`/`ScaffoldUser.ts`/`Migrate.ts`). The omp profile + hooks bridge (`OmpHooksBridge.ts`) deploy through the sandboxed install hooks:
+
+```bash
+./submodules/agents-shared/scripts/sandbox-ctl install --new-config-from .   # run from this repo root
+```
+
+Headless bridge verification afterwards: `make bridge-test` / `make bridge-smoke`.
 
 ### 6. Launch LifeOS under OMP
 
+```bash
+lifeos        # bin/lifeos: exports LIFEOS_CONFIG_DIR, execs omp --cwd ~/agent-private/lifeos with the LifeOS system prompt
+```
 
 ---
 
@@ -163,6 +173,6 @@ When any of `lifeos`, `ephemeral-omp`, or `ephemeral-lifeos` is called on the ho
 
 - [**`USAGE.md`**](USAGE.md) — Complete operational guide for OMP, LifeOS, subagents, and skills.
 - [**`AGENTS.md`**](AGENTS.md) — System realities, agent operating guidelines, and code style.
-- [**`references/lifeos-host-linux.md`**](references/lifeos-host-linux.md) — LifeOS topology, config plumbing, OS translation on this host (supersedes `old-lifeos-setup.md`). Companion harness-delta reference: [`references/lifeos-omp-difference.md`](references/lifeos-omp-difference.md); upgrade procedure: [`references/lifeos-upgrade-runbook.md`](references/lifeos-upgrade-runbook.md).
+- [**`references/mypai-lifeos-host-linux.md`**](references/mypai-lifeos-host-linux.md) — LifeOS topology, config plumbing, OS translation on this host (supersedes `old-lifeos-setup.md`). Companion harness-delta reference: [`references/lifeos-omp-difference.md`](references/lifeos-omp-difference.md); upgrade procedure: [`references/lifeos-upgrade-runbook.md`](references/lifeos-upgrade-runbook.md).
 - [**`references/omp-runtime-config.md`**](references/omp-runtime-config.md) — OMP runtime configuration, prompt layering, and subagent resolution.
 

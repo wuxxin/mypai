@@ -16,7 +16,7 @@ Reference for what lives where in `~/agent-shared/code/mypai` and how it relates
 
 ## Runtime relationship (summary)
 
-- Harness = omp; config root `~/.omp`, symlinked as `~/.claude` so stock LifeOS paths resolve. LifeOS payload at `~/.claude/LIFEOS`; private data repo `$HOME/agent-private/lifeos`. Full topology + mounts: `lifeos-host-linux.md`.
+- Harness = omp; config root `~/.omp`, symlinked as `~/.claude` so stock LifeOS paths resolve. LifeOS payload at `~/.claude/LIFEOS`; private data repo `$HOME/agent-private/lifeos`. Full topology + mounts: `mypai-lifeos-host-linux.md`.
 - Hooks bridge: `omp/agent/extensions/OmpHooksBridge.ts` (+ `.md`) translates Claude Code hook events for omp; fidelity/gaps in `lifeos-omp-difference.md`; version history in `omp-lifeos-OmpHooksBridge-changelog.md`.
 - Launch command: `lifeos`. Headless verification: `make bridge-test` / `make bridge-smoke`.
 
@@ -24,7 +24,8 @@ Reference for what lives where in `~/agent-shared/code/mypai` and how it relates
 
 | File | Scope |
 |---|---|
-| `lifeos-host-linux.md` | Live topology, data-home contract, git teeth, OS translation, model/voice plumbing, Doctor declines. Supersedes `old-lifeos-setup.md`. |
+| `mypai-lifeos-host-linux.md` | Live topology, data-home contract, git teeth, OS translation, model/voice plumbing, Doctor declines. Supersedes `old-lifeos-setup.md`. |
+| `mypai-host-memorymap.md` | VRAM/RAM allocation map for co-running the local inference services (dGPU/iGPU/CPU split, headroom). |
 | `lifeos-omp-difference.md` | Claude Code vs omp harness deltas: registry merge, event map fidelity, permissions split, scheduling, web verification, guard enforcement, accepted gaps. |
 | `lifeos-upgrade-runbook.md` | LifeOS distro upgrade procedure, version semantics, stock invariants. |
 | `omp-lifeos-OmpHooksBridge.md` / `-changelog.md` | Bridge implementation; per-version bridge mechanics (was `omp-hooks-bridge-upgrade-notes.md`). |

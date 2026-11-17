@@ -1,4 +1,6 @@
-# Oh-My-Pi Hindsight Configuration & Architecture Guide (`oh-my-pi-hindsight.md`)
+# Oh-My-Pi Hindsight Configuration & Architecture Guide (`omp-hindsight.md`)
+
+> **Status 2026-11-17: retired fallback.** The primary long-term memory plane is now omp's internal Mnemopi memory. The Hindsight stack (`:28888`/:28889, `bin/membank-ctl`, `omp/agent/memorybanks/`) is kept in working order as a fallback, to be re-enabled only if the internal memory does not work as expected. This doc and [`hindsight-memorybank.md`](hindsight-memorybank.md) (the bank-schema manual) are maintained for that fallback path; bank parameter details live there, not here.
 
 ## Executive Summary
 
@@ -114,52 +116,12 @@ When using `scoping: per-project-tagged`, Oh-My-Pi executes both a global prompt
 
 ## 2. Memory Bank & Mental Model Definitions (`*.yaml` / `*.json`)
 
-Bank definitions live in `omp/agent/memorybanks/`. They configure extraction missions, disposition weights, and synthesized mental model queries.
+Bank definitions live in `omp/agent/memorybanks/` (e.g. `oh-my-pi.yaml`). They configure extraction missions, disposition weights, and synthesized mental model queries; the concrete YAMLs in that directory are the worked examples — every field is documented parameter-by-parameter in the schema manual below.
 
 > [!NOTE]
-> - 📖 Full parameter-by-parameter manual: [**Hindsight Memory Bank Configuration Reference (`references/hindsight-memorybank.md`)**](file:///home/wuxxin/agent-shared/code/mypai/references/hindsight-memorybank.md)
+> - 📖 Full parameter-by-parameter manual (dispositions, retain/extract, entities, observations, reflect/recall settings, mental-model & directives schemas): [**Hindsight Memory Bank Configuration Reference (`references/hindsight-memorybank.md`)**](file:///home/wuxxin/agent-shared/code/mypai/references/hindsight-memorybank.md)
 > - 📄 Built-in Oh-My-Pi default mental model seeds: [**`default-omp-bankconfig.yaml`**](file:///home/wuxxin/agent-shared/code/mypai/references/memorybanks-research/default-omp-bankconfig.yaml)
 > - 📄 Complete default Hindsight in-engine bank configuration: [**`default-hindsight-bankconfig.yaml`**](file:///home/wuxxin/agent-shared/code/mypai/references/memorybanks-research/default-hindsight-bankconfig.yaml)
-
-### Example: `omp/agent/memorybanks/oh-my-pi.yaml`
-
-```yaml
-version: '1'
-bank:
-  disposition_skepticism: 3
-  disposition_literalism: 3
-  disposition_empathy: 4
-  retain_extraction_mode: concise
-  enable_observations: true
-  enable_auto_consolidation: true
-  recall_max_tokens: 1536
-  retain_mission: Extract overall project goals, technical decisions, architectural choices, coding patterns, and environment configuration...
-  observations_mission: Track active project progress, ongoing task state, tech stack evolution, and codebase design patterns over time...
-  reflect_mission: Synthesize an executive summary of project status, developer preferences, upcoming goals, and recent session handoffs...
-
-mental_models:
-- id: user-preferences
-  name: User Preferences
-  source_query: What does the user prefer in coding style, tooling, communication, and review?
-  max_tokens: 600
-  scopes:
-    - global
-  projectTagged: false
-  trigger:
-    mode: delta
-    refresh_after_consolidation: true
-
-- id: project-conventions
-  name: Project Conventions
-  source_query: What are this project's conventions for code style, build, testing, and review?
-  max_tokens: 800
-  scopes:
-    - per-project-tagged
-  projectTagged: true
-  trigger:
-    mode: delta
-    refresh_after_consolidation: true
-```
 
 ---
 

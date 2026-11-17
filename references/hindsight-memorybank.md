@@ -1,5 +1,7 @@
 # Hindsight Memory Bank Configuration Reference (`hindsight-memorybank.md`)
 
+> **Status 2026-11-17: retired fallback.** Hindsight is superseded by omp's internal Mnemopi memory; this schema manual is kept for the fallback stack (see banner in [`omp-hindsight.md`](omp-hindsight.md)).
+
 This document is the exhaustive parameter reference for Hindsight memory bank configuration files (`.yaml` / `.json`), covering every configurable field recognized by the Hindsight REST API and engine.
 
 ---

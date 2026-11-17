@@ -1,10 +1,10 @@
-# MyPAI System Specification (`references/mypai-spec.md`) [Gen-2 Reference]
+# MyPAI System Specification (`references/gen2-mesh/mypai-spec.md`) [Gen-2 Reference]
 
 > [!IMPORTANT]
 > **Architecture Status: TRANSITIONAL / RETIRED (Gen-2)**
 > This specification describes the Generation 2 (`aoe` :28080, `amux` :28824, `cc-connect` :9810) multi-session orchestration architecture.
 > In the **active Generation 3 architecture**, the system operates directly on **`oh-my-pi` (`omp`)** + **`LifeOS`** (`~/.omp/LIFEOS` with Pulse dashboard on `:31337` and `OmpHooksBridge.ts`), backed by **`submodules/agents-shared`** local inference and **Hindsight** memory (`:28888`).
-> Please refer to [**`README.md`**](../README.md), [**`USAGE.md`**](../USAGE.md), and [**`AGENTS.md`**](../AGENTS.md) for the active system documentation.
+> Please refer to [**`README.md`**](../../README.md), [**`USAGE.md`**](../../USAGE.md), and [**`AGENTS.md`**](../../AGENTS.md) for the active system documentation.
 
 ## Executive Summary
 

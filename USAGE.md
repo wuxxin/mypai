@@ -15,13 +15,12 @@ MyPAI combines **Oh-My-Pi (`omp`)** as the high-performance agent execution harn
 │   ~/.claude ────────► (Symlink) ────────► ~/.omp                            │
 │                                                │                            │
 │                                                ├── LIFEOS/ (Framework Core) │
-│                                                │    ├── PULSE/ (:31337)     │
+│                                                │    ├── PULSE/ (:31337,     │
+│                                                │    │   systemd unit primary)│
 │                                                │    ├── TOOLS/              │
-│                                                │    ├── USER ──┐ (Symlink)  │
-│                                                │    └── MEMORY ┘            │
-│                                                │           │                │
-│   ~/agent-private/lifeos ◄─────────────────────┴───────────┘                │
-│     (Private User Vault: TELOS, Identity, Long-Term Memory)                 │
+│                                                │    └── USER (Symlink)      │
+│   ~/agent-private/lifeos ◄─────────────────────┴──────────────              │
+│     (Private data repo: USER/MEMORY, TELOS.md, Identity, Long-Term Memory)  │
 │                                                                             │
 │   OMP Base Profile (~/.omp/agent/)                                          │
 │     ├── config.yml & models.yml                                             │
@@ -35,7 +34,7 @@ MyPAI combines **Oh-My-Pi (`omp`)** as the high-performance agent execution harn
 
 1. **Oh-My-Pi (`omp`)**: The primary execution harness driving interactive CLI sessions, task subagents (`task(agent: "...")`), internal tool devices (`xd://`), and in-kernel Python runtimes (`eval`).
 2. **LifeOS (`~/.omp/LIFEOS`)**: Intent engineering platform running the Algorithm, TELOS alignment, and Pulse dashboard on port `:31337`.
-3. **`OmpHooksBridge.ts`**: Extension bridging Claude Code hook events (`SessionStart`, `UserPromptSubmit`, `PostToolExecution`, `SessionEnd`) to OMP native extension hooks.
+3. **`OmpHooksBridge.ts`**: Extension bridging Claude Code hook events (`SessionStart`, `UserPromptSubmit`, `PreToolUse`, `PostToolUse`/`PostToolUseFailure`, `Stop`, `SessionEnd`, `PermissionRequest`) to OMP native extension hooks. Fidelity map: `references/lifeos-omp-difference.md`.
 4. **Local Inference Services (`submodules/agents-shared/`)**: Local model routing (`local-router` on `:21080`), chat, embeddings, reranking, STT, and TTS.
 
 ---
@@ -49,33 +48,26 @@ Use the configured shell alias:
 lifeos
 ```
 
-Or execute directly:
+Or execute directly (equivalent to `bin/lifeos`, which also exports `LIFEOS_CONFIG_DIR` — without it tools scaffold into `~/.config/LIFEOS`):
 ```bash
-OMP_VOICE=0 LIFEOS_DIR=~/.claude/LIFEOS omp --append-system-prompt ~/.claude/LIFEOS/LIFEOS_SYSTEM_PROMPT.md
+OMP_VOICE=0 LIFEOS_DIR=~/.claude/LIFEOS LIFEOS_CONFIG_DIR=$HOME/agent-private/lifeos \
+    omp --cwd $HOME/agent-private/lifeos --append-system-prompt ~/.claude/LIFEOS/LIFEOS_SYSTEM_PROMPT.md
 ```
 
 ### Managing the Pulse Dashboard
 
-Pulse provides observability, work kanban, wiki, voice notifications, and system health on port `:31337`:
+Pulse provides observability, work kanban, wiki, voice notifications, and system health on port `:31337`. It runs supervised as the **primary service of the systemd user unit** (`~/.config/systemd/user/omp.service`, `LAUNCHER_SERVICE_CMD` in `omp.env`) — sidecars were retired 2026-11-16; periodic jobs run as `[[job]]` entries in `USER/CONFIG/PULSE.user.toml`:
 
 ```bash
-# Start Pulse dashboard
-cd ~/.claude/LIFEOS/PULSE && bun run pulse.ts
-
-# Open in browser:
+# Status / restart (unit-managed, not `bun run pulse.ts`):
+systemctl --user status omp.service
 # http://localhost:31337
 ```
+Caveats: `pulse.ts` ignores SIGTERM/SIGINT (stop needs SIGKILL) and refuses a second instance — confirm the port is free before launching a replacement.
 
 ### Re-Deploying & Managing LifeOS
 
-To deploy, update, or uninstall the LifeOS scaffold in OMP:
-```bash
-# Idempotent install / update:
-./bin/install-lifeos install
-
-# Uninstall (preserves private user data):
-./bin/install-lifeos uninstall
-```
+The old `bin/install-lifeos` management script is retired (archived at `references/old-install-lifeos`). The current procedure is the LifeOS distribution installer, recorded verbatim in [`references/lifeos-upgrade-runbook.md`](references/lifeos-upgrade-runbook.md): staged release tarball → `install/install.sh` bootstrap → `bun Tools/InstallAll.ts --yes ...` overlay → data-home re-link (`LinkUser.ts` / `ScaffoldUser.ts` / `Migrate.ts`) → Doctor + Pulse `/healthz` + hook probe. The omp profile side syncs via `sandbox-ctl install --new-config-from .` from the repo root (AGENTS.md §1).
 
 ---
 
@@ -124,15 +116,17 @@ In any interactive OMP session, you can invoke specialized workflows using slash
 * **`/git`** (or `/git-master`): Safe git inspection, worktree branching, and conventional commits.
 * **`/scout`**: Spawns `@scout` to explore repository architecture.
 * **`/security`**: Runs security vulnerability scan with `@security-reviewer`.
-* **`/writer`**: Generates documentation or updates memory banks.
+* **`/writer`**: Generates documentation; maintains reference docs and changelogs.
 * **`/patch`**: Spawns `@patcher` for quick mechanical edits.
-* **`/learn`**: Distills recent turn insights into Hindsight mental models.
+* **`/learn`**: Distills recent-turn insights into long-term memory (omp internal Mnemopi store; Hindsight mental models are the retired fallback — see §6).
 
 ---
 
-## 6. Hindsight Long-Term Memory Management (`bin/membank-ctl`)
+## 6. Hindsight Long-Term Memory Management (`bin/membank-ctl`) [Retired Fallback]
 
-Hindsight (`:28888`) maintains persistent vector memory and auto-synthesizes mental models.
+> **Status 2026-11-17: retired.** Primary long-term memory is omp's internal Mnemopi store. The Hindsight stack (`:28888`, marked Inactive in `references/mypai-portmap.md`) is kept provisioned as a fallback, to be re-enabled only if the internal memory does not work as expected. Details: [`references/omp-hindsight.md`](references/omp-hindsight.md).
+
+When the fallback is enabled, manage it with `membank-ctl`:
 
 ### Provisioning & Updating Memory Banks
 
@@ -177,4 +171,4 @@ curl http://localhost:21080/v1/models
 > - **`mypai_runtime` Status:** `src/mypai_runtime/` will be used in the target setup, but is **not currently used or ported to be used correctly** yet. Porting is scheduled once the LifeOS integration is stabilized.
 > - **Generation 1 (Legacy-Legacy):** The monolithic `omp-mypai` FastAPI daemon (`:52080`) has been completely removed.
 > - **Generation 2 (Transitional):** The `aoe` (:28080) ACP cockpit, `amux-server` (:28824) Kanban/message bus, `cc-connect` (:9810) chat bridge, and `mypai-channel`/`mypai-main`/`mypai-cron` 3-session model are **retired from the active trajectory**. Associated clients in `src/mypai_runtime/amux.py` and unit tests are preserved for historical reference and test suite integrity but are not used in the active OMP + LifeOS runtime path.
-> - **Generation 3 (Current Active):** Direct **`oh-my-pi` (`omp`)** + **`LifeOS`** (`~/.omp/LIFEOS` with Pulse `:31337` and `OmpHooksBridge.ts`), backed by **`submodules/agents-shared`** local inference and **Hindsight** memory.
+> - **Generation 3 (Current Active):** Direct **`oh-my-pi` (`omp`)** + **`LifeOS`** (`~/.omp/LIFEOS` with Pulse `:31337`, supervised as the primary service of the systemd user unit, and `OmpHooksBridge.ts`), backed by **`submodules/agents-shared`** local inference. Long-term memory: omp's internal Mnemopi store; **Hindsight** (`:28888`) is a retired fallback (§6).

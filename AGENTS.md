@@ -10,7 +10,7 @@
 
 Layering and stabilizing **LifeOS** (https://github.com/danielmiessler/LifeOS) into the OMP sandbox: basically working, under active adjustment. This file is an index — the knowledge lives in `references/`:
 
-- Topology, mounts, data-home contract, OS translation, model & voice plumbing: `references/lifeos-host-linux.md`
+- Topology, mounts, data-home contract, OS translation, model & voice plumbing: `references/mypai-lifeos-host-linux.md`
 - Claude Code vs. omp harness deltas (event-map fidelity, registry merge, permission split, scheduling, guard enforcement, accepted gaps): `references/lifeos-omp-difference.md` — the authority on harness deltas; §1 is only an index.
 - LifeOS distro upgrade procedure & version semantics: `references/lifeos-upgrade-runbook.md`
 - Bridge (`omp/agent/extensions/OmpHooksBridge.ts` + `.md`) per-version mechanics: `references/omp-lifeos-OmpHooksBridge-changelog.md`; implementation doc: `omp/agent/extensions/OmpHooksBridge.md`.

@@ -1,4 +1,4 @@
-# MyPAI Testing & Quality Architecture (`references/mypai-test.md`)
+# MyPAI Testing & Quality Architecture (`references/gen2-mesh/mypai-test.md`)
 
 > [!NOTE]
 > **Testing Architecture Note**:

@@ -1,6 +1,6 @@
 # LifeOS Setup Reference & Harness Architecture
 
-> **Superseded 2026-11-16.** Live topology, config plumbing and OS translation are now in `lifeos-host-linux.md`; harness deltas in `lifeos-omp-difference.md`. Kept for history: §1's topology predates v8's MEMORY-under-USER move, and the §3–4 inference failure is resolved by claude-shim (`~/.local/bin/claude`).
+> **Superseded 2026-11-16.** Live topology, config plumbing and OS translation are now in `mypai-lifeos-host-linux.md` (renamed from `lifeos-host-linux.md`); harness deltas in `lifeos-omp-difference.md`. Kept for history: §1's topology predates v8's MEMORY-under-USER move, and the §3–4 inference failure is resolved by claude-shim (`~/.local/bin/claude`).
 
 > [!IMPORTANT]
 > **Current Focus & Status**:
@@ -133,8 +133,6 @@ delete env.ANTHROPIC_API_KEY;   // Force OAuth subscription over API key
 delete env.ANTHROPIC_AUTH_TOKEN;
 delete env.ANTHROPIC_BASE_URL;  // Bypass LiteLLM / local proxies to reach Anthropic directly
 ```
-
----
 
 ## 3. Diagnostic Analysis: Background Inference Failure
 

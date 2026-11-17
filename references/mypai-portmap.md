@@ -56,6 +56,6 @@ All services use unprivileged non-ephemeral ports in the **`20000`–`29000`** r
 
 - Default engine since 2026-11-16: **kokoro-onnx** FastAPI on `:20095` (unit `local-text-to-speech.service`, agents-shared `scripts/local-text-to-speech.sh`); voices en-US `af_heart`, de-DE `df_victoria`.
 - `qwen3-tts` stays switchable via the `TTS_ENGINE` env var in that script. The router's `/v1/audio/speech` answers any model string and proxies to whichever engine is current — the engine is invisible above the router; omp's role string only names a provider alias.
-- Consumer chain: omp role `speech:` → :21080 → :20095. Host-side prose: `lifeos-host-linux.md` § Voice.
+- Consumer chain: omp role `speech:` → :21080 → :20095. Host-side prose: `mypai-lifeos-host-linux.md` § Voice.
 
 
