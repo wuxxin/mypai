@@ -67,7 +67,7 @@ Caveats: `pulse.ts` ignores SIGTERM/SIGINT (stop needs SIGKILL) and refuses a se
 
 ### Re-Deploying & Managing LifeOS
 
-The old `bin/install-lifeos` management script is retired (archived at `references/old-install-lifeos`). The current procedure is the LifeOS distribution installer, recorded verbatim in [`references/lifeos-upgrade-runbook.md`](references/lifeos-upgrade-runbook.md): staged release tarball → `install/install.sh` bootstrap → `bun Tools/InstallAll.ts --yes ...` overlay → data-home re-link (`LinkUser.ts` / `ScaffoldUser.ts` / `Migrate.ts`) → Doctor + Pulse `/healthz` + hook probe. The omp profile side syncs via `sandbox-ctl install --new-config-from .` from the repo root (AGENTS.md §1).
+The old `bin/install-lifeos` management script is retired (deleted 2026-11-17). The current procedure is the LifeOS distribution installer, recorded verbatim in [`references/lifeos-upgrade-runbook.md`](references/lifeos-upgrade-runbook.md): staged release tarball → `install/install.sh` bootstrap → `bun Tools/InstallAll.ts --yes ...` overlay → data-home re-link (`LinkUser.ts` / `ScaffoldUser.ts` / `Migrate.ts`) → Doctor + Pulse `/healthz` + hook probe. The omp profile side syncs via `sandbox-ctl install --new-config-from .` from the repo root (AGENTS.md §1).
 
 ---
 

@@ -1,6 +1,6 @@
 # LifeOS on this Linux host — topology, config plumbing, OS translation
 
-Live setup reference for the LifeOS deployment on host `power` (Manjaro x64, bare metal). Supersedes `old-lifeos-setup.md` (archived; its §1 topology predates v8's MEMORY move and its §3-4 inference diagnostic is resolved by claude-shim). Harness deltas between Claude Code and omp: `lifeos-omp-difference.md`. Bridge implementation: `../omp/agent/extensions/OmpHooksBridge.md`; version history: `omp-lifeos-OmpHooksBridge-changelog.md`. Verified 2026-11-16 against the running host; hardware/services/account inventory: `$HOME/agent-private/lifeos/USER/GEAR.md`.
+Live setup reference for the LifeOS deployment on host `power` (Manjaro x64, bare metal). Supersedes the pre-v8 archives (`old-lifeos-setup.md`, deleted 2026-11-17; its §1 topology predates v8's MEMORY move and its inference diagnostic is resolved by claude-shim). Harness deltas between Claude Code and omp: `lifeos-omp-difference.md`. Bridge implementation: `../omp/agent/extensions/OmpHooksBridge.md`; version history: `omp-lifeos-OmpHooksBridge-changelog.md`. Verified 2026-11-16 against the running host; hardware/services/account inventory: `$HOME/agent-private/lifeos/USER/GEAR.md`.
 
 ## Live topology & mounts (v8 layout)
 

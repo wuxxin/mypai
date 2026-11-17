@@ -24,7 +24,7 @@ Reference for what lives where in `~/agent-shared/code/mypai` and how it relates
 
 | File | Scope |
 |---|---|
-| `mypai-lifeos-host-linux.md` | Live topology, data-home contract, git teeth, OS translation, model/voice plumbing, Doctor declines. Supersedes `old-lifeos-setup.md`. |
+| `mypai-lifeos-host-linux.md` | Live topology, data-home contract, git teeth, OS translation, model/voice plumbing, Doctor declines. |
 | `mypai-host-memorymap.md` | VRAM/RAM allocation map for co-running the local inference services (dGPU/iGPU/CPU split, headroom). |
 | `lifeos-omp-difference.md` | Claude Code vs omp harness deltas: registry merge, event map fidelity, permissions split, scheduling, web verification, guard enforcement, accepted gaps. |
 | `lifeos-upgrade-runbook.md` | LifeOS distro upgrade procedure, version semantics, stock invariants. |
@@ -32,4 +32,4 @@ Reference for what lives where in `~/agent-shared/code/mypai` and how it relates
 | `mypai-portmap.md` | Canonical port allocations (:20000–:29000, :31337). |
 | `mypai-layout.md` | This file. |
 | `omp-runtime-config.md`, `omp-rpc-functions.md`, `omp-eval-tool.md`, `omp-hindsight.md`, `hindsight-memorybank.md`, `omp-speedtests.md` | omp internals: runtime config layering, RPC surface, eval tool, Hindsight memory plane, speed benchmarks. |
-| `old-lifeos-setup.md`, `old-install-lifeos`, `old-mypai/`, `gen2-mesh/`, `memorybanks-research/` | Archived; kept for history, not authoritative. |
+| `memorybanks-research/` | Archived bank-config samples; kept for history, not authoritative. (Gen-2 mesh docs and pre-v8 LifeOS setup archives deleted 2026-11-17.) |
