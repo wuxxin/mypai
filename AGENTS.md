@@ -1,10 +1,6 @@
 # AGENTS.md — System Realities & Agent Operating Guidelines
 
----
-
-## 1. System Architecture
-
-**UPDATE:** System architecture is currently in major restructuring.
+## System Architecture
 
 ### Current Architectural Focus: LifeOS Integration
 
@@ -38,9 +34,4 @@ Layering and stabilizing **LifeOS** (https://github.com/danielmiessler/LifeOS) i
   - `make help` (target overview) | `make buildenv` (provision venv) | `make all` (full CI gate)
   - `make test` / `make test-unit` / `make test-e2e` | `make coverage` (97%+ line coverage)
   - `make lint` / `make format` (ruff) | `make typecheck` (mypy) | `make clean`
-
-## Code Strict Fail-Fast Invariants
-
-- **`httpx` Only:** Pure `httpx` in `mypai_runtime`. No defensive `urllib` fallbacks.
-- **Explicit Errors:** Never use empty `except: pass`. Capture stack traces in `_LAST_ERROR` and raise typed domain exceptions.
 

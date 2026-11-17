@@ -6,29 +6,7 @@ This guide explains how to operate, develop with, and configure **MyPAI** using 
 
 ## 1. System Architecture & Operating Model
 
-MyPAI combines **Oh-My-Pi (`omp`)** as the high-performance agent execution harness with **LifeOS** as the cognitive intent engineering platform:
-
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                              HOST WORKSPACE                                 │
-│                                                                             │
-│   ~/.claude ────────► (Symlink) ────────► ~/.omp                            │
-│                                                │                            │
-│                                                ├── LIFEOS/ (Framework Core) │
-│                                                │    ├── PULSE/ (:31337,     │
-│                                                │    │   systemd unit primary)│
-│                                                │    ├── TOOLS/              │
-│                                                │    └── USER (Symlink)      │
-│   ~/agent-private/lifeos ◄─────────────────────┴──────────────              │
-│     (Private data repo: USER/MEMORY, TELOS.md, Identity, Long-Term Memory)  │
-│                                                                             │
-│   OMP Base Profile (~/.omp/agent/)                                          │
-│     ├── config.yml & models.yml                                             │
-│     ├── agents/ (@orchestrator, @scout, @debugger, @reviewer, @task, ...)   │
-│     ├── skills/ (ulw-plan, systematic-debugging, git-master, review-work)   │
-│     ├── extensions/ (OmpHooksBridge.ts -> LifeOS Hooks)                     │
-└─────────────────────────────────────────────────────────────────────────────┘
-```
+MyPAI combines **Oh-My-Pi (`omp`)** as the high-performance agent execution harness with **LifeOS** as the cognitive intent engineering platform.
 
 ### Key Components:
 
@@ -122,7 +100,24 @@ In any interactive OMP session, you can invoke specialized workflows using slash
 
 ---
 
-## 6. Hindsight Long-Term Memory Management (`bin/membank-ctl`) [Retired Fallback]
+## 6. Local Inference Management (`submodules/agents-shared/`)
+
+Local inference services are managed via scripts in `submodules/agents-shared`:
+
+```bash
+# 1. Download model weights (LLM, vision, embeddings, rerank, TTS, STT)
+./submodules/agents-shared/scripts/local-download.sh /data/public/machine-learning/models --all
+
+# 2. Provision and start local inference daemons
+./submodules/agents-shared/assistants/local-inference.sh install --new-config
+
+# 3. Query local router status (OpenAI-compatible port :21080)
+curl http://localhost:21080/v1/models
+```
+
+---
+
+## 7. Hindsight Long-Term Memory Management (`bin/membank-ctl`) [Retired Fallback]
 
 > **Status 2026-11-17: retired.** Primary long-term memory is omp's internal Mnemopi store. The Hindsight stack (`:28888`, marked Inactive in `references/mypai-portmap.md`) is kept provisioned as a fallback, to be re-enabled only if the internal memory does not work as expected. Details: [`references/omp-hindsight.md`](references/omp-hindsight.md).
 
@@ -144,31 +139,3 @@ When the fallback is enabled, manage it with `membank-ctl`:
 # Export bank config to YAML:
 ./bin/membank-ctl export http://localhost:28888 oh-my-pi --yaml --out oh-my-pi.yaml
 ```
-
----
-
-## 7. Local Inference Management (`submodules/agents-shared/`)
-
-Local inference services are managed via scripts in `submodules/agents-shared`:
-
-```bash
-# 1. Download model weights (LLM, vision, embeddings, rerank, TTS, STT)
-./submodules/agents-shared/scripts/local-download.sh /data/public/machine-learning/models --all
-
-# 2. Provision and start local inference daemons
-./submodules/agents-shared/assistants/local-inference.sh install --new-config
-
-# 3. Query local router status (OpenAI-compatible port :21080)
-curl http://localhost:21080/v1/models
-```
-
----
-
-## 8. Architectural Transition & Legacy Notes
-
-> **Note on Architecture Evolution & Current Priorities:**
-> - **Active Priority:** The primary focus is stabilizing and refining the **LifeOS integration** into OMP (`~/.omp/LIFEOS`, Pulse `:31337`, `OmpHooksBridge.ts`). It is currently basically working, but actively undergoing adjustments.
-> - **`mypai_runtime` Status:** `src/mypai_runtime/` will be used in the target setup, but is **not currently used or ported to be used correctly** yet. Porting is scheduled once the LifeOS integration is stabilized.
-> - **Generation 1 (Legacy-Legacy):** The monolithic `omp-mypai` FastAPI daemon (`:52080`) has been completely removed.
-> - **Generation 2 (Transitional):** The `aoe` (:28080) ACP cockpit, `amux-server` (:28824) Kanban/message bus, `cc-connect` (:9810) chat bridge, and `mypai-channel`/`mypai-main`/`mypai-cron` 3-session model are **retired from the active trajectory**. Associated clients in `src/mypai_runtime/amux.py` and unit tests are preserved for historical reference and test suite integrity but are not used in the active OMP + LifeOS runtime path.
-> - **Generation 3 (Current Active):** Direct **`oh-my-pi` (`omp`)** + **`LifeOS`** (`~/.omp/LIFEOS` with Pulse `:31337`, supervised as the primary service of the systemd user unit, and `OmpHooksBridge.ts`), backed by **`submodules/agents-shared`** local inference. Long-term memory: omp's internal Mnemopi store; **Hindsight** (`:28888`) is a retired fallback (§6).
