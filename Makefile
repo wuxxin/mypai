@@ -95,16 +95,13 @@ all: format lint typecheck test coverage ## Run complete CI pipeline (format, li
 
 ## Cleanup Targets
 clean: ## Remove temporary caches, coverage reports, and Python bytecode
-	@echo "==> Cleaning temporary build artifacts, caches, and bytecode..."
-	@find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
-	@find . -type f -name "*.pyc" -delete 2>/dev/null || true
-	@find . -type f -name "*.pyo" -delete 2>/dev/null || true
-	@find . -type d -name ".pytest_cache" -exec rm -rf {} + 2>/dev/null || true
-	@find . -type d -name ".ruff_cache" -exec rm -rf {} + 2>/dev/null || true
-	@find . -type d -name ".mypy_cache" -exec rm -rf {} + 2>/dev/null || true
-	@find . -type d -name "*.egg-info" -exec rm -rf {} + 2>/dev/null || true
-	@find . -type d -name "build" -exec rm -rf {} + 2>/dev/null || true
-	@find . -type d -name "dist" -exec rm -rf {} + 2>/dev/null || true
+	@echo "==> Cleaning caches, build output, and bytecode (project tree only)..."
+	@find . \( -name .git -o -path ./submodules -o -path ./scratch \) -prune -o \
+	    -type d \( -name __pycache__ -o -name .pytest_cache -o -name .ruff_cache \
+	               -o -name .mypy_cache -o -name '*.egg-info' -o -name build -o -name dist \) \
+	        -exec rm -rf {} + \
+	    -o -type f \( -name '*.py[cod]' -o -name '*$$py.class' \) -print0 2>/dev/null \
+	    | xargs -0 -r rm -f
 	@rm -f .coverage coverage.xml
 	@echo "==> Clean complete."
 
