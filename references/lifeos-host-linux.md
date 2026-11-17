@@ -59,3 +59,35 @@ $HOME/agent-private/lifeos    private data repo of record (USER/, MEMORY/, TELOS
 
 - Declined 2026-11-10 with `bun LIFEOS/TOOLS/Doctor.ts decline <name>` (`enable <name>` re-probes): codex (installable via `bun install -g @openai/codex`, needs OpenAI login), cloudflare (needs `CLOUDFLARE_API_TOKEN` in `<configRoot>/.env`), fabric (patterns run natively; only `fabric -y` transcript fetch wants the CLI — its fixCmd is macOS-only, ticket `ERR-20261110-234334-a83c`), interceptor (macOS `.pkg` only, ticket `ERR-20261110-234334-2330`). Doctor exits 0: 10 live rows, 4 ⏸ declined, voice `off`.
 - Declines persist in `USER/MEMORY/STATE/capabilities.json`, which is **gitignored** (`USER/MEMORY/STATE/*`) — disk-local, not versioned. Replacement paths per row: difference doc § Inactive stock features.
+
+## Capability map — the DOCUMENTATION list vs this host (probed 2026-11-17)
+
+The integrated docs are ~46 system folders under `LIFEOS/DOCUMENTATION/` (pattern `<System>/<System>System.md`; exceptions: `Setup/Helm.md`, `Terminal/Helm.md`, `Pulse/DaSubsystem.md`, `LifeOs/HillClimbing.md`, `Codex/CodexFrontDoor.md`, `Maestro/MaestroFrontDoor.md`, `Memory/CortexContract.md`, `Security/DataClassification.md`, `Services/BackgroundServices.md`, `Sessions/SessionRestore.md`, `Skills/ProgressiveContext.md`, `Testing/TestingDoctrine.md`, `Tex/TexSystem.md`, `Telos/RiskRegister.md`). One-line plain-language reading of each system with its state on this host. Evidence: Pulse healthz, `Services.ts status` (launchd view — Linux rows read "missing" by design), Doctor, direct tool probes.
+
+Legend: **RUN** daemon/job live · **TOOL** in-session tool, no daemon by design · **EMPTY** present, unconfigured/registry empty · **PRIVATE** concept doc only, code not in public release · **DECLINED** host-trimmed (see § Doctor declines).
+
+|System|What it does for the principal (LifeOS terms in parens)|State here|
+|---|---|---|
+|Pulse / DaSubsystem|Dashboard at :31337 showing current state vs ideal state; runs the job runner (`[[job]]`)|RUN — unit primary service|
+|Conduit|Sensory layer: captures day-to-day activity so the system knows actual state, not just `TELOS` plans (jobs `*/7`)|RUN|
+|Vigil / VigilSystem|Always-on watcher: reads every subsystem log on a 5-min tick, folds with current state, decides whether to speak; here records only (`VIGIL_SEND=off`, no trusted channel — see difference doc § Scheduling)|RUN (records only)|
+|Observability|The shared event-log tree every subsystem writes (`MEMORY/OBSERVABILITY/*.jsonl`); raw material for Vigil and pruning rules in `ObservabilityPrune.ts`|RUN|
+|Hooks / HookSystem|Automatic guardrails at session events; the gates that refuse moves (bridge: `OmpHooksBridge.md`)|RUN — all resolve|
+|Memory / CortexContract|Long-term memory across sessions: decisions, preferences, project facts|RUN|
+|Router / RouterSystem|Decides which model runs each piece of work, cheapest-first; here all inference local via :21080 (see § Model & inference topology)|RUN|
+|Algorithm · ISA · Assay|The working method: write "done" down first (`ISA`), build to it, grade the output against its own eval set (`Assay`); no services — run inside every real task|TOOL|
+|Skills / ProgressiveContext|Task playbooks loaded on demand|RUN (in-session)|
+|Config · Terminal/Helm · Sessions|Central settings (name/voice TOML), the launcher, session restore|RUN|
+|Statvs|The one record of everything that happened; replay proves fixes. Upstream doc says `status: building` — prose is direction, not installed behavior|TOOL|
+|Censvs|Register of everything LifeOS owns. Upstream `status: building`|TOOL/doc|
+|Atlas · Ledger · Delegation · Testing · Workflows · Dictation · Spinner · Fabric · Errata · Freshness · Security/DataClassification + SecurityRings · Overage · People · Vera · Synapse|Asset graph; change-tracking (private); parallel-agent rules; testing doctrine; scheduled flows; voice input; spinner verbs; prompt patterns (native); complaint ledger; staleness checks on the constitutional context files; data-classification rings (privacy); API-quota overflow lane; local address book; public-figure profiles; input grading/routing|TOOL / doc|
+|Achilles / AchillesSystem|Vulnerability registry — "the heels of your system"; one registry of record per finding|EMPTY — `Achilles.ts` runs, 0 findings registered; no scan on the clock here|
+|Work / WorkSystem|Issue-tracker workflow via `gh`; repo named in OPERATIONAL_PREFERENCES § Trusted channels (blank here)|TOOL — gh works; sweep not scheduled|
+|Notifications · VoiceMode|Spoken task alerts. LifeOS VoiceServer is Fish-SaaS-only, pending `FISH_API_KEY` (§ Voice); omp's own vocalizer (phonon) and the local kokoro TTS are separate paths that do work|EMPTY — silent via LifeOS|
+|Tex / TexSystem|iMessage texting bridge to the DA (macOS plumbing)|not applicable on Linux|
+|Location · Lockbox|Presence from iPhone/Seat; "the one door into LifeOS" — upstream `designed, not built`|not configured / not built|
+|Bunker / BunkerSystem|Application harness + fleet monitor (`bunker test` row engine, post-deploy probes, run ledger). Concept ships in docs; implementation is maintainer-private. The public installer refuses by design ("no monitor to install", `InstallBunkerMonitor.ts`, launchd-only); the live teeth here are `DeployRegistrationGate` (ported) and `ISAGate.ts`'s expected ledger `MEMORY/OBSERVABILITY/bunker-runs.jsonl` — no writer exists, file absent; registry empty (`deploy-registration-gate.json` project/files blank). Adopt when a first app registers: schedule as Pulse `[[job]]`, never launchd|PRIVATE / EMPTY fleet|
+|Feed · Ledger (pipeline) |External news/transcript ingestion and change-tracking — private infrastructure, reference docs only in the public release|PRIVATE|
+|Maestro · Codex · Hermes front doors|Optional companion apps; each doc covers its integration shim|not installed (Hermes: `References/HermesSidecar.md`)|
+
+Shape to remember: LifeOS splits into a **loop** (Algorithm/ISA/Assay — always in-session), a **nervous system** (Pulse/Conduit/Vigil/Observability — the daemons), and a **toolbox** (everything TOOL). Newcomer surprises come from the EMPTY rows, not the loop. `bun LIFEOS/TOOLS/Doctor.ts` is the live truth-teller; "declined" rows are silent by design, never broken.

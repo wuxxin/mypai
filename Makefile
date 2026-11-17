@@ -53,7 +53,7 @@ test-e2e: ## Run end-to-end multi-session and protocol integration tests
 
 bridge-test: ## Run the OmpHooksBridge behavior suite (bun test, hermetic fixtures only)
 	@echo "==> Running OmpHooksBridge behavior tests..."
-	@bun test omp/agent/extensions/OmpHooksBridge.test.ts
+	@bun test omp/agent/extensions/tests/OmpHooksBridge.test.ts
 
 bridge-smoke: ## Probe the live LifeOS hooks bridge end-to-end via its audit log (needs omp + registry)
 	@echo "==> Running OmpHooksBridge headless probe..."

@@ -1,4 +1,7 @@
-// Behavior tests for the LifeOS hooks bridge. bun test omp/agent/extensions/OmpHooksBridge.test.ts
+// Behavior tests for the LifeOS hooks bridge. bun test omp/agent/extensions/tests/OmpHooksBridge.test.ts
+// Lives in a `tests/` subdirectory, not beside the extension: omp's discovery globs `*.{ts,js}` at the top
+// level of every extensions dir (discovery/helpers.ts), so a suite there is imported as an extension and
+// dies on `Cannot use afterEach() outside of the test runner`. Subdirs load only via index.ts/package.json.
 // The module reads its environment at import (OMP_BRIDGE_SETTINGS, LIFEOS_CONFIG_ROOT, OMP_BRIDGE_LOG),
 // so each scenario writes a fixture settings.json + hook commands into a fresh tmpdir and imports the
 // extension with a cache-busting query to get an isolated instance. Hook fixtures are shell one-liners:
@@ -9,7 +12,7 @@ import { mkdtempSync, writeFileSync, readFileSync, existsSync } from "fs";
 import { tmpdir } from "os";
 import { join } from "path";
 
-const EXT = new URL("./OmpHooksBridge.ts", import.meta.url).pathname;
+const EXT = new URL("../OmpHooksBridge.ts", import.meta.url).pathname;
 
 type Handler = (event: unknown, ctx?: unknown) => Promise<unknown> | unknown;
 
