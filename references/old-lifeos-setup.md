@@ -54,85 +54,9 @@ LifeOS runs as a hybrid system with the core framework located in the OMP profil
 
 ## 2. Harness Execution vs. Utility Inference
 
-In this environment, two distinct execution mechanisms govern AI calls:
+> **Collapsed 2026-11-17.** The mechanics this section documented (claude binary resolution via `resolveClaudeBin()`, the four effort tiers max/high/medium/low → fable/opus/sonnet/haiku, headless invocation flags, and the credential scrubbing that forces subscription-billing intent) are duplicated verbatim in [`mypai-lifeos-host-linux.md`](mypai-lifeos-host-linux.md) § Model & inference topology, which is the maintained copy. The shim-routed path itself: `../bin/claude-shim.md`. Kept here only as an index; do not maintain two copies of the `Inference.ts` contract.
 
-1. **OMP / MyPAI Agent Execution (Interactive & Task Loops)**
-2. **LifeOS Utility Inference (`Inference.ts` CLI Subprocess)**
-
-```
-                                  AI INVOCATION PATHS
-                                 
-   [ Interactive Agent Loop ]                  [ LifeOS Background / Pulse ]
-               │                                             │
-               ▼                                             ▼
-          Oh-My-Pi (OMP)                               LifeOS PULSE / Tools / Hooks
-    (~/.omp/agent/config.yml)                    (e.g., algorithm-tab.ts)
-               │                                             │
-               ▼                                             ▼
-     Local / API Providers                         LIFEOS/TOOLS/Inference.ts
-  (e.g., local-router :21080)                                │
-                                                             ▼
-                                                Subprocess: `claude` CLI / shim
-                                                (--output-format json)
-                                                             │
-                                                             ▼
-                                                Anthropic API or Local OMP Shim
-
-### A. OMP Agent Execution (`~/.omp/agent/`)
-
-- **Configuration:** `~/.omp/agent/config.yml` and `~/.omp/agent/models.yml`.
-- **Primary Model Role:** Defaults to configured models (`local-router`, cloud providers) configured in `models.yml`.
-- **Role:** Drives the primary agent loop, conversational turns, MCP tools, and subagents (`task(agent: "...")`).
-### B. LifeOS Utility Inference (`LIFEOS/TOOLS/Inference.ts`)
-
-LifeOS scripts, background hooks, and Pulse dashboard tabs execute targeted LLM calls (e.g., classifying amber items, summarizing the algorithm chain) using `LIFEOS/TOOLS/Inference.ts`.
-
-#### 1. Executable Binary Resolution (`Inference.ts:60-65`)
-The function `resolveClaudeBin()` locates the `claude` executable:
-```typescript
-export function resolveClaudeBin(): string {
-  const fromPath = typeof Bun !== "undefined" ? Bun.which("claude") : null;
-  if (fromPath) return fromPath;
-  const fallback = join(homedir(), ".local", "bin", "claude");
-  return existsSync(fallback) ? fallback : "claude";
-}
-```
-
-#### 2. Model & Tier Resolution (`models.ts:26-31`, `70-75`)
-LifeOS defines four effort levels mapping to Claude models:
-```typescript
-export const EFFORT_MODEL: Record<EffortLevel, ClaudeTier> = {
-  max: "fable",     // top rung -> claude-fable-5
-  high: "opus",     // high rung -> claude-opus-5
-  medium: "sonnet", // medium rung -> claude-sonnet-5
-  low: "haiku",     // low rung -> claude-haiku-4-5-20251001
-};
-```
-
-#### 3. Execution Flags & Invocation (`Inference.ts:257-278`)
-`Inference.ts` spawns `claude` as a headless child process:
-```bash
-claude \
-  --print \
-  --model <model> \
-  --effort high \
-  --tools '' \
-  --output-format json \
-  --exclude-dynamic-system-prompt-sections \
-  --setting-sources '' \
-  --system-prompt <prompt>
-```
-The user prompt is piped to `stdin` to avoid OS argument length limits (`ARG_MAX` / `MAX_ARG_STRLEN`).
-
-#### 4. Credential Scrubbing & Precedence (`Inference.ts:215-234`)
-`Inference.ts` strips environment variables to force Claude Code subscription billing and prevent API key / local gateway leaks:
-```typescript
-const env = { ...process.env };
-delete env.CLAUDECODE;          // Prevent nested session detection
-delete env.ANTHROPIC_API_KEY;   // Force OAuth subscription over API key
-delete env.ANTHROPIC_AUTH_TOKEN;
-delete env.ANTHROPIC_BASE_URL;  // Bypass LiteLLM / local proxies to reach Anthropic directly
-```
+---
 
 ## 3. Diagnostic Analysis: Background Inference Failure
 
