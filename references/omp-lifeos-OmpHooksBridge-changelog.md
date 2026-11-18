@@ -1,15 +1,15 @@
 # OmpHooksBridge upgrade notes (formerly `omp-hooks-bridge-upgrade-notes.md`)
 
-`omp/agent/extensions/OmpHooksBridge.ts` shims Claude Code hooks onto omp's event bus; it is the load-bearing piece of the LifeOS layering. This note records the 18.18.8 → 18.20.2 upgrade path, what it changed for the bridge, and the timeout incident that followed. The plan this supersedes (`OMPHOOKSBRIDGE_UPGRADE_NOTES_PLAN.md`) was written against v18.20.0 as a future target; the upgrade has since been executed — installed is `omp/18.20.2` (`oh-my-pi-git-tag 18.20.2.r0.g7c49c1-1`, i.e. exactly tag v18.20.2), so its rebuild prompt is moot and the facts below are recomputed against `9369103…v18.20.2` on 2026-11-16.
+`omp/agent/extensions/OmpHooksBridge.ts` shims Claude Code hooks onto omp's event bus; it is the load-bearing piece of the LifeOS layering. This note records the 18.18.8 → 18.20.2 upgrade path, what it changed for the bridge, and the timeout incident that followed. The plan this supersedes (`OMPHOOKSBRIDGE_UPGRADE_NOTES_PLAN.md`) was written against v18.20.0 as a future target; the upgrade has since been executed — installed is `omp/18.20.2` (`oh-my-pi-git 18.20.2.r0.g7c49c1-1`, i.e. exactly tag v18.20.2), so its rebuild prompt is moot and the facts below are recomputed against `9369103…v18.20.2` on 2026-11-16.
 
 ## Baseline and delta
 
 Base: installed `omp/18.18.8`, built from commit `9369103e4a06d099f3060aea95dae2fb7782cd9b` (upstream v18.18.8 + 212 commits, dated 2026-11-11). Shipped target: `v18.20.2` (published 2026-11-14T20:08:51Z); v18.20.1 published the same day at 17:29:17Z; `v18.20.3` is upstream's newest tag as of writing (published 2026-11-16T01:38:21Z). The compare over the shipped delta reports 1305 commits.
 
-The installed string decodes exactly, with zero source drift: `oh-my-pi-git-tag 18.20.2.r0.g7c49c1-1` is git-describe tag `v18.20.2`, 0 commits past it (the `-1` is AUR pkgrel). Tag v18.20.2 → commit `7c49c11aa5bbaf3f418406583096168ad5b8c6dc` ("chore: bump version to 18.20.2", 2026-11-14T20:00:48Z); `compare/v18.20.2...7c49c11` reports ahead=0, behind=0 — the PKGBUILD's `#tag=` pin is authoritative and a non-zero `rN` in future `pkgver()`-free builds means post-tag commits are baked in. Recompute with:
+The installed string decodes exactly, with zero source drift: `oh-my-pi-git 18.20.2.r0.g7c49c1-1` is git-describe tag `v18.20.2`, 0 commits past it (the `-1` is AUR pkgrel). Tag v18.20.2 → commit `7c49c11aa5bbaf3f418406583096168ad5b8c6dc` ("chore: bump version to 18.20.2", 2026-11-14T20:00:48Z); `compare/v18.20.2...7c49c11` reports ahead=0, behind=0 — the PKGBUILD's `#tag=` pin is authoritative and a non-zero `rN` in future `pkgver()`-free builds means post-tag commits are baked in. Recompute with:
 
 ```sh
-omp --version; pacman -Q oh-my-pi-git-tag
+omp --version; pacman -Q oh-my-pi-git
 curl -sf https://api.github.com/repos/can1357/oh-my-pi/releases?per_page=5 \
   | jq -r '.[] | [.tag_name, .published_at] | @tsv'
 curl -sf "https://api.github.com/repos/can1357/oh-my-pi/compare/<base>...<target>" | jq '"commits: \(.total_commits)"'
@@ -77,7 +77,7 @@ The double-stamp observation (previous section) remains open; the source-agnosti
 
 Symptom: every omp start logged `Failed to load extension` for `~/.omp/agent/extensions/OmpHooksBridge.test.ts`, error `Cannot use afterEach() outside of the test runner`.
 
-Cause, pinned to the installed build's source (`submodules/aur-packages/oh-my-pi-git-tag/src/oh-my-pi`, commit `6e8ab5fb`): native discovery globs `*.{ts,js}` at the top level of every extensions dir (`packages/coding-agent/src/discovery/helpers.ts:851-863`, `buildExtensionModuleItems`; accepted-file predicate `extensibility/extensions/loader.ts:614 isExtensionFile`). There is no `.test.ts` exclusion. The suite sat beside the bridge in `mypai/omp/agent/extensions/`, and the profile deploy (`omp.env:87`, `cp -rf omp/agent/extensions/. → ~/.omp/agent/extensions/`) copied it into the scanned directory, so bun imported it as an extension.
+Cause, pinned to the installed build's source (`submodules/aur-packages/oh-my-pi-git/src/oh-my-pi`, commit `6e8ab5fb`): native discovery globs `*.{ts,js}` at the top level of every extensions dir (`packages/coding-agent/src/discovery/helpers.ts:851-863`, `buildExtensionModuleItems`; accepted-file predicate `extensibility/extensions/loader.ts:614 isExtensionFile`). There is no `.test.ts` exclusion. The suite sat beside the bridge in `mypai/omp/agent/extensions/`, and the profile deploy (`omp.env:87`, `cp -rf omp/agent/extensions/. → ~/.omp/agent/extensions/`) copied it into the scanned directory, so bun imported it as an extension.
 
 Fix: the suite moved to `omp/agent/extensions/tests/OmpHooksBridge.test.ts`. Subdirectories are discovered only through `*/index.{ts,js}` or `*/package.json` (same glob lines), so a test-only subdir is never loaded; the import path in the suite is now `../OmpHooksBridge.ts`, and `make bridge-test` points at the new path. No config exemption was added — `disabledExtensions: extension-module:<name>` (id derived by `discovery/helpers.ts:936 getExtensionNameFromPath`, basename minus last extension) would gate one file, and every future suite would need its own row.
 

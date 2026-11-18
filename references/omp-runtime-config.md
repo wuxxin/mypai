@@ -9,31 +9,31 @@ Comprehensive technical reference on `oh-my-pi` (`omp`) configuration lifecycle,
 Key implementation files in the `oh-my-pi` codebase:
 
 - **System Prompt Templates & Prompt Engine:**
-  - Default template: [`packages/coding-agent/src/prompts/system/system-prompt.md`](../submodules/aur-packages/oh-my-pi-git-tag/src/oh-my-pi/packages/coding-agent/src/prompts/system/system-prompt.md)
-  - Custom template (`SYSTEM.md` active): [`packages/coding-agent/src/prompts/system/custom-system-prompt.md`](../submodules/aur-packages/oh-my-pi-git-tag/src/oh-my-pi/packages/coding-agent/src/prompts/system/custom-system-prompt.md)
-  - Subagent template: [`packages/coding-agent/src/prompts/system/subagent-system-prompt.md`](../submodules/aur-packages/oh-my-pi-git-tag/src/oh-my-pi/packages/coding-agent/src/prompts/system/subagent-system-prompt.md)
-  - Project footer template: [`packages/coding-agent/src/prompts/system/project-prompt.md`](../submodules/aur-packages/oh-my-pi-git-tag/src/oh-my-pi/packages/coding-agent/src/prompts/system/project-prompt.md)
-  - System prompt compiler: [`packages/coding-agent/src/system-prompt.ts`](../submodules/aur-packages/oh-my-pi-git-tag/src/oh-my-pi/packages/coding-agent/src/system-prompt.ts)
-  - Core agent loop & tool normalization: [`packages/agent/src/agent-loop.ts`](../submodules/aur-packages/oh-my-pi-git-tag/src/oh-my-pi/packages/agent/src/agent-loop.ts)
-  - Session creation & SDK: [`packages/coding-agent/src/sdk.ts`](../submodules/aur-packages/oh-my-pi-git-tag/src/oh-my-pi/packages/coding-agent/src/sdk.ts)
-  - CLI entry & session options builder: [`packages/coding-agent/src/main.ts`](../submodules/aur-packages/oh-my-pi-git-tag/src/oh-my-pi/packages/coding-agent/src/main.ts)
+  - Default template: [`packages/coding-agent/src/prompts/system/system-prompt.md`](../submodules/aur-packages/oh-my-pi-git/src/oh-my-pi/packages/coding-agent/src/prompts/system/system-prompt.md)
+  - Custom template (`SYSTEM.md` active): [`packages/coding-agent/src/prompts/system/custom-system-prompt.md`](../submodules/aur-packages/oh-my-pi-git/src/oh-my-pi/packages/coding-agent/src/prompts/system/custom-system-prompt.md)
+  - Subagent template: [`packages/coding-agent/src/prompts/system/subagent-system-prompt.md`](../submodules/aur-packages/oh-my-pi-git/src/oh-my-pi/packages/coding-agent/src/prompts/system/subagent-system-prompt.md)
+  - Project footer template: [`packages/coding-agent/src/prompts/system/project-prompt.md`](../submodules/aur-packages/oh-my-pi-git/src/oh-my-pi/packages/coding-agent/src/prompts/system/project-prompt.md)
+  - System prompt compiler: [`packages/coding-agent/src/system-prompt.ts`](../submodules/aur-packages/oh-my-pi-git/src/oh-my-pi/packages/coding-agent/src/system-prompt.ts)
+  - Core agent loop & tool normalization: [`packages/agent/src/agent-loop.ts`](../submodules/aur-packages/oh-my-pi-git/src/oh-my-pi/packages/agent/src/agent-loop.ts)
+  - Session creation & SDK: [`packages/coding-agent/src/sdk.ts`](../submodules/aur-packages/oh-my-pi-git/src/oh-my-pi/packages/coding-agent/src/sdk.ts)
+  - CLI entry & session options builder: [`packages/coding-agent/src/main.ts`](../submodules/aur-packages/oh-my-pi-git/src/oh-my-pi/packages/coding-agent/src/main.ts)
 - **Embedded Workflow Commands:**
-  - Init template: [`packages/coding-agent/src/prompts/agents/init.md`](../submodules/aur-packages/oh-my-pi-git-tag/src/oh-my-pi/packages/coding-agent/src/prompts/agents/init.md)
-  - Command loader & registry: [`packages/coding-agent/src/task/commands.ts`](../submodules/aur-packages/oh-my-pi-git-tag/src/oh-my-pi/packages/coding-agent/src/task/commands.ts)
+  - Init template: [`packages/coding-agent/src/prompts/agents/init.md`](../submodules/aur-packages/oh-my-pi-git/src/oh-my-pi/packages/coding-agent/src/prompts/agents/init.md)
+  - Command loader & registry: [`packages/coding-agent/src/task/commands.ts`](../submodules/aur-packages/oh-my-pi-git/src/oh-my-pi/packages/coding-agent/src/task/commands.ts)
 - **Capability Discovery System:**
-  - Native provider (`.omp`): [`packages/coding-agent/src/discovery/builtin.ts`](../submodules/aur-packages/oh-my-pi-git-tag/src/oh-my-pi/packages/coding-agent/src/discovery/builtin.ts)
-  - Context file discovery (`AGENTS.md`): [`packages/coding-agent/src/discovery/agents-md.ts`](../submodules/aur-packages/oh-my-pi-git-tag/src/oh-my-pi/packages/coding-agent/src/discovery/agents-md.ts)
+  - Native provider (`.omp`): [`packages/coding-agent/src/discovery/builtin.ts`](../submodules/aur-packages/oh-my-pi-git/src/oh-my-pi/packages/coding-agent/src/discovery/builtin.ts)
+  - Context file discovery (`AGENTS.md`): [`packages/coding-agent/src/discovery/agents-md.ts`](../submodules/aur-packages/oh-my-pi-git/src/oh-my-pi/packages/coding-agent/src/discovery/agents-md.ts)
 - **ACP (Agent Client Protocol) Server:**
-  - Protocol handler & session manager: [`packages/coding-agent/src/modes/acp/acp-agent.ts`](../submodules/aur-packages/oh-my-pi-git-tag/src/oh-my-pi/packages/coding-agent/src/modes/acp/acp-agent.ts)
-  - Transport & factory lifecycle: [`packages/coding-agent/src/modes/acp/acp-mode.ts`](../submodules/aur-packages/oh-my-pi-git-tag/src/oh-my-pi/packages/coding-agent/src/modes/acp/acp-mode.ts)
+  - Protocol handler & session manager: [`packages/coding-agent/src/modes/acp/acp-agent.ts`](../submodules/aur-packages/oh-my-pi-git/src/oh-my-pi/packages/coding-agent/src/modes/acp/acp-agent.ts)
+  - Transport & factory lifecycle: [`packages/coding-agent/src/modes/acp/acp-mode.ts`](../submodules/aur-packages/oh-my-pi-git/src/oh-my-pi/packages/coding-agent/src/modes/acp/acp-mode.ts)
 - **Task & Subagent Subsystem:**
-  - Subagent spawning & prompt composition: [`packages/coding-agent/src/task/executor.ts`](../submodules/aur-packages/oh-my-pi-git-tag/src/oh-my-pi/packages/coding-agent/src/task/executor.ts)
-  - Subagent definition discovery: [`packages/coding-agent/src/task/discovery.ts`](../submodules/aur-packages/oh-my-pi-git-tag/src/oh-my-pi/packages/coding-agent/src/task/discovery.ts)
-  - Agent registry: [`packages/coding-agent/src/task/agents.ts`](../submodules/aur-packages/oh-my-pi-git-tag/src/oh-my-pi/packages/coding-agent/src/task/agents.ts)
+  - Subagent spawning & prompt composition: [`packages/coding-agent/src/task/executor.ts`](../submodules/aur-packages/oh-my-pi-git/src/oh-my-pi/packages/coding-agent/src/task/executor.ts)
+  - Subagent definition discovery: [`packages/coding-agent/src/task/discovery.ts`](../submodules/aur-packages/oh-my-pi-git/src/oh-my-pi/packages/coding-agent/src/task/discovery.ts)
+  - Agent registry: [`packages/coding-agent/src/task/agents.ts`](../submodules/aur-packages/oh-my-pi-git/src/oh-my-pi/packages/coding-agent/src/task/agents.ts)
 - **Hindsight Memory System:**
-  - Backend resolution: [`packages/coding-agent/src/memory-backend/resolve.ts`](../submodules/aur-packages/oh-my-pi-git-tag/src/oh-my-pi/packages/coding-agent/src/memory-backend/resolve.ts)
-  - Config loader: [`packages/coding-agent/src/hindsight/config.ts`](../submodules/aur-packages/oh-my-pi-git-tag/src/oh-my-pi/packages/coding-agent/src/hindsight/config.ts)
-  - Bank scope computation: [`packages/coding-agent/src/hindsight/bank.ts`](../submodules/aur-packages/oh-my-pi-git-tag/src/oh-my-pi/packages/coding-agent/src/hindsight/bank.ts)
+  - Backend resolution: [`packages/coding-agent/src/memory-backend/resolve.ts`](../submodules/aur-packages/oh-my-pi-git/src/oh-my-pi/packages/coding-agent/src/memory-backend/resolve.ts)
+  - Config loader: [`packages/coding-agent/src/hindsight/config.ts`](../submodules/aur-packages/oh-my-pi-git/src/oh-my-pi/packages/coding-agent/src/hindsight/config.ts)
+  - Bank scope computation: [`packages/coding-agent/src/hindsight/bank.ts`](../submodules/aur-packages/oh-my-pi-git/src/oh-my-pi/packages/coding-agent/src/hindsight/bank.ts)
 - **Installed Documentation & Examples (`/usr/share/doc/oh-my-pi`):**
   - Architecture specs, config reference, tool guides, and API docs are installed to `/usr/share/doc/oh-my-pi/`.
   - SDK, tool, extension, and hook examples are installed to `/usr/share/doc/oh-my-pi/examples/`.
@@ -138,9 +138,9 @@ Block 2+: Safety & Nested Repo Reminders
 
 ### Template Selection
 
-- **Default Template ([`system-prompt.md`](../submodules/aur-packages/oh-my-pi-git-tag/src/oh-my-pi/packages/coding-agent/src/prompts/system/system-prompt.md)):**
+- **Default Template ([`system-prompt.md`](../submodules/aur-packages/oh-my-pi-git/src/oh-my-pi/packages/coding-agent/src/prompts/system/system-prompt.md)):**
   Used when no `SYSTEM.md` or `--system-prompt` flag is passed. Contains the entire OMP engineering harness, RFC 2119 directives, tool catalog, `xd://` device protocol, and URI schemes.
-- **Custom Template ([`custom-system-prompt.md`](../submodules/aur-packages/oh-my-pi-git-tag/src/oh-my-pi/packages/coding-agent/src/prompts/system/custom-system-prompt.md)):**
+- **Custom Template ([`custom-system-prompt.md`](../submodules/aur-packages/oh-my-pi-git/src/oh-my-pi/packages/coding-agent/src/prompts/system/custom-system-prompt.md)):**
   Used when `SYSTEM.md` or `--system-prompt` is present. Replaces the default harness and strips built-in tool policy definitions unless explicitly written into the custom prompt.
 
 ---
@@ -165,7 +165,7 @@ When an agent specification (such as `agents/orchestrator.md`) is linked or copi
 
 ## 5. Workflow Template `/init` (`packages/coding-agent/src/prompts/agents/init.md`)
 
-The file [`packages/coding-agent/src/prompts/agents/init.md`](../submodules/aur-packages/oh-my-pi-git-tag/src/oh-my-pi/packages/coding-agent/src/prompts/agents/init.md) is embedded at build time into `EMBEDDED_COMMANDS` within `packages/coding-agent/src/task/commands.ts`.
+The file [`packages/coding-agent/src/prompts/agents/init.md`](../submodules/aur-packages/oh-my-pi-git/src/oh-my-pi/packages/coding-agent/src/prompts/agents/init.md) is embedded at build time into `EMBEDDED_COMMANDS` within `packages/coding-agent/src/task/commands.ts`.
 
 ### When `init.md` is Used
 1. **Invocation:** Triggered whenever a user or agent invokes the `/init` slash command in a repository.
@@ -225,13 +225,13 @@ OMP supports two primary runtime topologies: **Interactive TUI Session** and **A
   - Discovers `APPEND_SYSTEM.md` (project `.omp/APPEND_SYSTEM.md` or user `~/.omp/agent/APPEND_SYSTEM.md`).
   - Appends `@orchestrator` instructions to the main session's `appendPrompt`.
 - **Spawned Subagents:**
-  - Subagents invoked via `task(agent: "<name>")` run [`subagent-system-prompt.md`](../submodules/aur-packages/oh-my-pi-git-tag/src/oh-my-pi/packages/coding-agent/src/prompts/system/subagent-system-prompt.md).
+  - Subagents invoked via `task(agent: "<name>")` run [`subagent-system-prompt.md`](../submodules/aur-packages/oh-my-pi-git/src/oh-my-pi/packages/coding-agent/src/prompts/system/subagent-system-prompt.md).
   - Subagents **never** inherit `APPEND_SYSTEM.md` or the orchestrator role. They only receive their dedicated specialist role from `agents/<name>.md`.
 
 ### 2. ACP Server (`omp acp`) Session Resolution
 - **Launch:** Headless ACP client / IDE or daemon host spawns `omp acp` over stdio.
 - **Client Workspace Selection:** The client issues `session/new` with `cwd: "/path/to/repo"`.
-- **Factory Execution ([`packages/coding-agent/src/main.ts#L402`](../submodules/aur-packages/oh-my-pi-git-tag/src/oh-my-pi/packages/coding-agent/src/main.ts#L402)):**
+- **Factory Execution ([`packages/coding-agent/src/main.ts#L402`](../submodules/aur-packages/oh-my-pi-git/src/oh-my-pi/packages/coding-agent/src/main.ts#L402)):**
   1. Clones settings for target workspace via `settings.cloneForCwd(cwd)`.
   2. Creates session manager for the target `cwd`.
   3. Re-discovers `TITLE_SYSTEM.md` for target `cwd`.
