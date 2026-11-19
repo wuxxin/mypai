@@ -53,10 +53,16 @@
  *     sidecar's journal (`journalctl --user -u omp.service | grep lifeos-bridge`);
  *     OMP_BRIDGE_LOG=<path> appends JSON lines to a file for probes and tailing.
  *     stdout is never touched (in `omp -p` print mode it carries the model's answer).
+ *   - In-session stats rows: on by default, one compact row per turn + a registry-load row,
+ *     sent via pi.sendMessage with excludeFromContext:true (zero context cost on runtimes
+ *     that carry #19550; opt out with OMP_BRIDGE_SESSION=0).
  *
  * Every invocation is logged to the audit log. Hook failures are logged and
  * never crash the session. Per-hook timeout comes from the registry's `timeout` field (seconds);
  * 30s is only the fallback for registrations without one.
+ *
+ * Docs: implementation & configuration — references/omp-lifeos-OmpHooksBridge.md;
+ * per-version mechanics & incident history — references/omp-lifeos-OmpHooksBridge-changelog.md.
  */
 
 import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
@@ -99,6 +105,12 @@ const HOOK_TIMEOUT_MS = 30_000;
 // has none and keeps the historical "omp" key. Hardcoded "unknown" put every run's writes
 // in one shared file, where parallel sessions overwrote each other. (2026-11-10)
 const SESSION_ID = process.env.OMP_SESSION_ID || "omp";
+
+// In-session stats rows via pi.sendMessage (drawn + persisted in the transcript). The payload is
+// flagged excludeFromContext:true — on runtimes with #19550 payload support (upstream tip ≥ 19.0.0)
+// rows never enter model context; older runtimes ignore the field and the row lands in context, so
+// OMP_BRIDGE_SESSION=0 opts out entirely. Off is cheap insurance for shared routers.
+const SESSION_ROWS = process.env.OMP_BRIDGE_SESSION !== "0";
 
 interface HookReg {
   event: string;
@@ -450,6 +462,10 @@ async function dispatch(cc: string, regs: HookReg[], payload: Record<string, unk
 // message fires Claude Code's contract once per submission, not once per model call.
 let lastUserPrompt = "";
 
+// Per-turn counters for the in-session stats row; reset on every flush (turn_end).
+let turnSeq = 0;
+let tTools = 0, tBlocked = 0, tCtxChars = 0, tVoice = "-";
+
 /** omp-native voice line: the VoiceCompletion hook needs a Claude transcript,
  *  which omp doesn't have — extract the 🗣️ closer from the message that just
  *  completed the turn instead. */
@@ -488,8 +504,35 @@ export default function lifeosBridge(pi: ExtensionAPI): void {
   }
   log({ event: "bridge_init", hooks: registry.length, settings: registrySource || null, configRoot: CONFIG_ROOT });
 
+  // One compact stats row per turn + a registry-load row. The excludeFromContext flag is honored
+  // by runtimes with #19550 payload support (upstream tip ≥ 19.0.0); older ones ignore it and the
+  // row enters context — OMP_BRIDGE_SESSION=0 disables rows entirely. Never throws into a hook path.
+  type SendPayload = Parameters<typeof pi.sendMessage>[0];
+  const sendRow = (text: string, details?: Record<string, unknown>): void => {
+    if (!SESSION_ROWS || typeof pi.sendMessage !== "function") return;
+    try {
+      pi.sendMessage({
+        customType: "lifeos-bridge-stats",
+        content: text,
+        display: true,
+        details: details ?? { text },
+        excludeFromContext: true,
+      } as SendPayload);
+    } catch { /* stats rows must never break a session */ }
+  };
+  const flushTurnRow = (): void => {
+    turnSeq += 1;
+    sendRow(
+      `lifeos-bridge · turn ${turnSeq} · tools=${tTools} blocked=${tBlocked} ctx=+${tCtxChars}c voice=${tVoice}`,
+      { turn: turnSeq, tools: tTools, blocked: tBlocked, ctxChars: tCtxChars, voice: tVoice },
+    );
+    tTools = 0; tBlocked = 0; tCtxChars = 0; tVoice = "-";
+  };
+
   pi.on("session_start", async () => {
     log({ event: "session_start" });
+    sendRow(`lifeos-bridge · registry loaded · hooks=${registry.length} · settings=${registrySource ?? "(none)"}`,
+      { hooks: registry.length, settings: registrySource ?? null });
     await dispatch("SessionStart", forEvent("SessionStart"), {
       session_id: SESSION_ID,
       source: "startup",
@@ -531,6 +574,7 @@ export default function lifeosBridge(pi: ExtensionAPI): void {
     const info = readToolCall(event);
     if (!info) return;
     log({ event: "tool_call", tool: info.name });
+    tTools += 1;
     const ccName = toolCcName(info.name);
     const regs = forTool("PreToolUse", ccName);
     if (regs.length === 0) return;
@@ -549,16 +593,23 @@ export default function lifeosBridge(pi: ExtensionAPI): void {
       tool_use_id: info.toolCallId,
     }, { tool: info.name });
     const denied = results.find((d) => d.parsed.decision === "deny");
-    if (denied) return { block: true, reason: denied.parsed.reason || `blocked by LifeOS hook ${hookName(denied.reg.command)}` };
+    if (denied) {
+      tBlocked += 1;
+      return { block: true, reason: denied.parsed.reason || `blocked by LifeOS hook ${hookName(denied.reg.command)}` };
+    }
     const ask = results.find((d) => d.parsed.decision === "ask");
     if (!ask) return;
     const ui = readCtxUI(ctx);
     if (ui?.ui?.confirm) {
       const allow = await ui.ui.confirm("LifeOS hook", ask.parsed.reason ?? "allow this tool call?");
-      if (!allow) return { block: true, reason: ask.parsed.reason ?? "denied by user" };
+      if (!allow) {
+        tBlocked += 1;
+        return { block: true, reason: ask.parsed.reason ?? "denied by user" };
+      }
     } else {
       // Claude Code headless behavior: ask → deny (fail closed)
       log({ hook: hookName(ask.reg.command), cc: "PreToolUse", tool: info.name, note: "ask→deny (headless)" });
+      tBlocked += 1;
       return { block: true, reason: ask.parsed.reason ?? "ask denied (headless)" };
     }
   });
@@ -621,9 +672,15 @@ export default function lifeosBridge(pi: ExtensionAPI): void {
     // doesn't have. Speak the turn's OWN final message — the old path read the
     // newest session log globally, so with parallel sessions it picked the
     // wrong session's line (or none) and voice silently died. (2026-08-22)
-    if (process.env.OMP_VOICE === "0") return;
+    if (process.env.OMP_VOICE === "0") {
+      flushTurnRow();
+      return;
+    }
     const line = extractVoiceLine(messageText(event?.message));
-    if (!line) return;
+    if (!line) {
+      flushTurnRow();
+      return;
+    }
     const t0 = Date.now();
     try {
       const res = await fetch(PULSE_NOTIFY, {
@@ -632,10 +689,13 @@ export default function lifeosBridge(pi: ExtensionAPI): void {
         body: JSON.stringify({ message: line, voice_id: VOICE_ID }),
         signal: AbortSignal.timeout(10_000),
       });
+      tVoice = res.ok ? "sent" : "failed";
       log({ voice: res.ok ? "sent" : "failed", status: res.status, ms: Date.now() - t0, line: line.slice(0, 40) });
     } catch (e) {
+      tVoice = "failed";
       log({ voice: "failed", err: String(e).slice(0, 120) });
     }
+    flushTurnRow();
   });
 
   pi.on("session_shutdown", async (_event: unknown, ctx: unknown) => {
@@ -688,6 +748,7 @@ export default function lifeosBridge(pi: ExtensionAPI): void {
     const text = pendingContext.join("\n");
     pendingContext = [];
     log({ event: "context_inject", chars: text.length });
+    tCtxChars += text.length;
     const messages = event && typeof event === "object" && "messages" in event && Array.isArray(event.messages)
       ? [...event.messages]
       : [];

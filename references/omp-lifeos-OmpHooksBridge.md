@@ -1,5 +1,5 @@
 ---
-version: 1.0.2
+version: 1.1.0
 ---
 
 # OmpHooksBridge — LifeOS hooks in omp (Oh My Pi)
@@ -26,6 +26,8 @@ Hooks are invoked exactly as Claude Code invokes them: `sh -c <command>` with th
 
 **Voice.** The `VoiceCompletion` hook requires a Claude transcript, which omp doesn't produce, so the bridge adds an omp-native voice path: at `turn_end` it reads the turn's own final assistant message and extracts the final `🗣️ <DA>:` closer (angle brackets optional — both `🗣️ <ZEN>:` and `🗣️ ZEN:` are accepted), and speaks it through Pulse's `/notify` (ElevenLabs). Same semantics as Claude Code — no `🗣️` line means silence. Disable with `OMP_VOICE=0`; override the voice id with `OMP_VOICE_ID`.
 
+**Session stats rows (v1.1.0, 2026-11-19).** The bridge surfaces its own activity inside the TUI: a registry-load row at `session_start` and one compact per-turn row at `turn_end` (`tools=N blocked=N ctx=+Nc voice=sent|failed|-`) via `pi.sendMessage`, payload flagged `excludeFromContext: true`. On runtimes carrying #19550 (upstream tip ≥ 19.0.0) rows are drawn and persisted **without entering model context**; on older builds the flag is ignored and each row costs one short line of context — disable with `OMP_BRIDGE_SESSION=0` there. Mechanism, version gate, and test evidence: `references/omp-lifeos-OmpHooksBridge-changelog.md` § 18.22.2.
+
 **Safety.** A hook returning `deny` blocks the tool. `ask` shows a UI confirm; headless runs fail closed (deny). Hook failures are logged, never crash the session. Per-hook timeout 30s. **A non-zero exit is a failure:** `ok` follows the process exit code and every result carries `exit`. It used to mean "not a timeout", so any hook that exited 1 logged `ok:true` — the audit trail said all was well while stop gates silently stopped running, and no synthesized `StopFailure` could ever fire. (2026-11-11)
 
 ## Install
@@ -44,6 +46,9 @@ Configuration:
 - `OMP_BRIDGE_SETTINGS` — pins the registry file explicitly. Pass `/dev/null`, `none`, or `off` to **completely disable the bridge** (registers zero event handlers, skips voice/transcript mirroring, and leaves `tools.speculativeExecution` unlocked for benchmarks or non-LifeOS runs).
 - `OMP_SESSION_ID` — the run's Claude-shaped session id, exported per child by `bin/claude-shim.py` (uuid4). Every dispatch payload carries it, so hook state files (`STATE/isa-nudge/<id>.json`, `memory-inject/<id>.queue.json`…) are attributable and parallel runs stop overwriting one file. Interactive sessions have no shim and keep the historical `"omp"` key.
 - Audit logging is off by default. `OMP_BRIDGE_STDERR=1` writes every line to stderr prefixed `lifeos-bridge` (captured by the sidecar unit's journal: `journalctl --user -u omp.service | grep lifeos-bridge`). `OMP_BRIDGE_LOG=<path>` appends JSON lines to a file for probes and tailing.
+- `OMP_BRIDGE_SESSION=0` disables the in-session stats rows (see Session stats rows above); default is on.
+
+Per-version mechanics live in `references/omp-lifeos-OmpHooksBridge-changelog.md`; system-facing upgrade entries in `submodules/aur-packages/oh-my-pi-git/CHANGELOG.md`.
 
 ## Loading in headless runs
 

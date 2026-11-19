@@ -18,17 +18,24 @@ type Handler = (event: unknown, ctx?: unknown) => Promise<unknown> | unknown;
 
 interface MockPi {
   on(event: string, handler: Handler): void;
+  sendMessage(message: unknown): void;
+  sent: Record<string, unknown>[];
   handlers: Map<string, Handler[]>;
 }
 
 function makePi(): MockPi {
   const handlers = new Map<string, Handler[]>();
+  const sent: Record<string, unknown>[] = [];
   return {
     handlers,
+    sent,
     on(event, handler) {
       const list = handlers.get(event) ?? [];
       list.push(handler);
       handlers.set(event, list);
+    },
+    sendMessage(message) {
+      sent.push(message as Record<string, unknown>);
     },
   };
 }
@@ -43,7 +50,7 @@ async function fire(pi: MockPi, event: string, payload: unknown, ctx?: unknown):
 }
 
 let instance = 0;
-const envKeys = ["OMP_BRIDGE_SETTINGS", "LIFEOS_CONFIG_ROOT", "OMP_BRIDGE_LOG", "OMP_SESSION_ID", "OMP_VOICE", "OMP_BRIDGE_STDERR"];
+const envKeys = ["OMP_BRIDGE_SETTINGS", "LIFEOS_CONFIG_ROOT", "OMP_BRIDGE_LOG", "OMP_SESSION_ID", "OMP_VOICE", "OMP_BRIDGE_STDERR", "OMP_BRIDGE_SESSION"];
 
 interface Scenario {
   dir: string;
@@ -281,6 +288,50 @@ describe("context injection and failure synthesis", () => {
     const pi = await bootAndLoad(s);
     await fire(pi, "turn_end", { message: { role: "assistant", content: [] } }, {});
     expect(s.events().length).toBe(0);
+  });
+});
+
+describe("session stats rows (pi.sendMessage + excludeFromContext)", () => {
+  test("registry-load row carries customType, display, and the excludeFromContext flag", async () => {
+    const s = scenario(); // empty registry: rows must not depend on any hook being present
+    const pi = await bootAndLoad(s);
+    await fire(pi, "session_start", {});
+    expect(pi.sent.length).toBe(1);
+    const row = pi.sent[0];
+    expect(row.customType).toBe("lifeos-bridge-stats");
+    expect(row.display).toBe(true);
+    // The payload flag is the contract: honored by runtimes with #19550 (rows never enter model
+    // context), ignored by older ones. Asserting it here pins what OUR side sends.
+    expect(row.excludeFromContext).toBe(true);
+    expect(String(row.content)).toContain("registry loaded");
+  });
+
+  test("turn row counts tools and hook blocks; flags stay set", async () => {
+    const s = fixture(() => ({ PreToolUse: [{ matcher: "*", hooks: [{ type: "command", command: echo({ permissionDecision: "deny" }) }] }] }));
+    const pi = await bootAndLoad(s);
+    expect(await fire(pi, "tool_call", { toolName: "bash", input: {}, toolCallId: "t9" }, {})).toMatchObject({ block: true });
+    await fire(pi, "turn_end", { message: { role: "assistant", content: [{ type: "text", text: "done" }] } }, {});
+    const row = pi.sent[pi.sent.length - 1];
+    expect(row.customType).toBe("lifeos-bridge-stats");
+    expect(row.excludeFromContext).toBe(true);
+    expect(String(row.content)).toContain("tools=1 blocked=1");
+    // OMP_VOICE=0 (scenario default): the voice column stays "-", no Pulse fetch.
+    expect((row.details as Record<string, unknown>).voice).toBe("-");
+  });
+
+  test("OMP_BRIDGE_SESSION=0 sends nothing", async () => {
+    const s = scenario("unused");
+    for (const k of envKeys) delete process.env[k];
+    process.env.OMP_BRIDGE_SETTINGS = join(s.dir, "settings.json");
+    process.env.LIFEOS_CONFIG_ROOT = s.dir;
+    process.env.OMP_BRIDGE_LOG = s.logPath;
+    process.env.OMP_VOICE = "0";
+    process.env.OMP_BRIDGE_SESSION = "0";
+    const mod = await import(`${EXT}?instance=${++instance}`);
+    const pi = makePi();
+    mod.default(pi);
+    await fire(pi, "session_start", {});
+    expect(pi.sent.length).toBe(0);
   });
 });
 
