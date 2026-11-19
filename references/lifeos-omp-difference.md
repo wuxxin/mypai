@@ -171,6 +171,8 @@ Installed: `oh-my-pi-git 19.0.0.r1.gd4ebe4d-1` — note package name **`oh-my-pi
 
 Doc drift closed: `task.crossInstance`/`agent://peers`, cache-warming strategies `auto|keepalive|compact`, `excludeFromContext` — all exist in the installed 19.0.0 tree; the § 18.22.2 "not in built tip" corrections apply only to 2cdc756-era reads and stay as historical record.
 
+Cache warming, correct key (documented 2026-11-19, deliberately NOT configured): the setting is `providers.cacheWarming` with enum `off|streaming|idle` (SDK: `createAgentSession.cacheWarming` mode caps); the pkg CHANGELOG's `providers.cacheWarmingStrategy(auto|keepalive|compact)` name is drift to fix at next re-derive. Host decision: leave unset — warming targets Anthropic-style prompt-caching endpoints (on-demand compaction, priced buy-out), and this host fronts llama.cpp + google-antigravity only; there is nothing to warm. Revisit only if an Anthropic/custom-API gateway joins the router.
+
 ## Local LifeOS overlay (divergence record, checked 2026-11-16)
 
 The active tree (`~/.claude`) vs stock **v8.761.0** (tarball fb9aef4), sha256-compared file-by-file, each diff reviewed 2026-11-16. The shadow copy at `src/omp-lifeos-overlay/` carries **only source-level divergences this host owns**, by category: hooks behavior fixes (`BlockerText.hook.ts` + `lib/blocker-text.ts` v1.1.0 clear-on-resolve, `StopGates.hook.ts` v1.3.2 gate retirement), LifeOS tool code (`AgentJob`, `HarvestExecutor`, `MemoryReviewer` — all the `LIFEOS_BRIDGE=1` durable-work opt-in), local doctrine (`RULES/Verification.md` Linux host-translation paragraph), skill content (`skills/LifeOS/SKILL.md` installed-copy header) — 8 files. Full record + regenerator scripts: that dir's `MANIFEST.md`.

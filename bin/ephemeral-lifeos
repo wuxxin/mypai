@@ -43,5 +43,6 @@ export OMP_EPHEMERAL="1"
 
 exit_code=0
 # --no-judge: unattended one-shot runs (Pulse jobs launch through here); keeps router slots for the main loop.
-omp --no-session --no-title --no-judge --cwd "$LIFEOS_CWD" --append-system-prompt "$prompt_file" "$@" || exit_code=$?
+# --no-spotlight: output-shaping aux service (default endpoint is remote, cloud.stencil.so); nothing consumes shaped results in a one-shot run.
+omp --no-session --no-title --no-judge --no-spotlight --cwd "$LIFEOS_CWD" --append-system-prompt "$prompt_file" "$@" || exit_code=$?
 exit "$exit_code"
