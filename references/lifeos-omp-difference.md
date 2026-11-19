@@ -138,6 +138,15 @@ Actionable (open recommendations, not applied):
 - `bash.allowedEnvVars` + per-rule `env` allowlists exist now if bash allow-rules ever need env prefixes.
 - Approval-flow fixes landed: pending approval closes when a turn aborts (#19242), TUI no longer freezes switching sessions from an open prompt — both reduce stale-blocker states the BlockerText clear-on-resolve path was compensating for.
 
+## omp 18.21.0 → 18.22.2.r190 impact on this system (checked 2026-11-19)
+
+Realtime voice endpoint — **checked no-op**: the router fronts no OpenAI-Realtime-compatible server, so `live.endpoint`/`live.apiKey` stay unset and VoiceMode keeps the existing paths. Probe: `curl -X POST http://localhost:21080/v1/realtime/sessions` → 404; `/v1/models` catalog contains no realtime entry (2026-11-19). Re-probe after router stack changes.
+
+Applied this pass:
+- `composer.predictions: true` kept on — principal's call: accept one ghost request/turn for typing speed (default flipped on upstream in 18.22).
+- `--no-judge` added to the default flags of `bin/ephemeral-omp` / `bin/ephemeral-lifeos` (unattended runs; judge calls would steal router slots from the main loop, maxInFlight=2). Not set for interactive `lifeos`.
+- `providers.webKeyless: false` — keyless aux web services (Parallel/Exa/Firecrawl/Keenable/Perplexity/Jina + scraped engines) off; only configured services may run.
+
 ## Local LifeOS overlay (divergence record, checked 2026-11-16)
 
 The active tree (`~/.claude`) vs stock **v8.761.0** (tarball fb9aef4), sha256-compared file-by-file, each diff reviewed 2026-11-16. The shadow copy at `src/omp-lifeos-overlay/` carries **only source-level divergences this host owns**, by category: hooks behavior fixes (`BlockerText.hook.ts` + `lib/blocker-text.ts` v1.1.0 clear-on-resolve, `StopGates.hook.ts` v1.3.2 gate retirement), LifeOS tool code (`AgentJob`, `HarvestExecutor`, `MemoryReviewer` — all the `LIFEOS_BRIDGE=1` durable-work opt-in), local doctrine (`RULES/Verification.md` Linux host-translation paragraph), skill content (`skills/LifeOS/SKILL.md` installed-copy header) — 8 files. Full record + regenerator scripts: that dir's `MANIFEST.md`.
