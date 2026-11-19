@@ -157,6 +157,20 @@ Bridge stats rows: OmpHooksBridge now sends a registry-load row + one per-turn r
 
 Curated-CHANGELOG drift found (fix at next pkg CHANGELOG re-derive): `providers.cacheWarmingStrategy(auto|keepalive|compact)` → real key is `providers.cacheWarming` enum `off|streaming|idle`; `task.crossInstance`/`agent://peers` do not exist in the built tree; the `pi.sendMessage excludeFromContext` entry describes a post-tip feature (see above).
 
+## omp 18.22.2 → 19.0.0 impact on this system (checked 2026-11-19, same day as the upgrade)
+
+Installed: `oh-my-pi-git 19.0.0.r1.gd4ebe4d-1` — note package name **`oh-my-pi-git`**, not our `oh-my-pi-git-tag`; running `omp/19.0.0`. Upstream HEAD at check time `8937157423`.
+
+**OmpHooksBridge: zero adapter work.** `git diff 2cdc756..HEAD -- .../extensibility/extensions/types.ts packages/agent/src/types.ts` = empty; every mapped event unchanged. The stats-row feature's dependency landed as promised: `excludeFromContext` in `pi.sendMessage` payloads (19.0.0 Added) plus three hardening fixes (`queue mid-run excluded rows`, `draw at run end, keep out of compaction`, `keep out of tail decisions`). Rows now render and persist **without entering model context** — the § 18.22.2 caveat is closed; no need for `OMP_BRIDGE_SESSION=0`.
+
+**TTS/say deferral lifted — both paths verified working on 19.0.0, same local model role (qwen3.8-flash-next):**
+- The **`tts` device executes**: German synthesis with `voice_id: df_victoria` produced a real 3.5 s WAV (`scratch/voice-test/device-19.wav`). The 18.22.2 verbatim-echo defect is gone (no repro on 19.0.0; do not file upstream — likely fixed by the tool-call intent-tracing/side-request work in the delta).
+- **`say` builtin v2** (`53302e9801`, Rust `crates/pi-builtins/src/say.rs` + `src/tts/shell-speech.ts`): speaks through the **session's speech-role chain**, not local-inference-only — our pinned `modelRoles.speech: llama.cpp/kokoro` is first candidate, bundled Phonon is the fallback. Synthesis streams into a streaming player (`synthesizeStream`, `SpeakableStream`; cloud openai-speech arrives as one chunk played through the same player); `-o` captures PCM; `-r <wpm>` maps to openai-speech speed (clamped). Verified live: en + de sentences spoke, exit 0.
+- **Gap found:** for `api: openai-speech`, `say -v` is NOT plumbed — voice names match only the xAI built-in list (`shell-speech.ts #synthesizeCloud`: `model.api === "xai-tts" ? XAI_BUILTIN_VOICES.find… : undefined`). A German sentence through `say` therefore uses the router's default voice, not a `df_*`. Voice selection on our stack goes through the **tts device** (`voice_id`) — RULES.md policy (device-first; en af_heart, de df_victoria) is now the working path and needs no change.
+- TTS model lifecycle: speech models load once per machine, unload after 15 min idle (shared across sessions).
+
+Doc drift closed: `task.crossInstance`/`agent://peers`, cache-warming strategies `auto|keepalive|compact`, `excludeFromContext` — all exist in the installed 19.0.0 tree; the § 18.22.2 "not in built tip" corrections apply only to 2cdc756-era reads and stay as historical record.
+
 ## Local LifeOS overlay (divergence record, checked 2026-11-16)
 
 The active tree (`~/.claude`) vs stock **v8.761.0** (tarball fb9aef4), sha256-compared file-by-file, each diff reviewed 2026-11-16. The shadow copy at `src/omp-lifeos-overlay/` carries **only source-level divergences this host owns**, by category: hooks behavior fixes (`BlockerText.hook.ts` + `lib/blocker-text.ts` v1.1.0 clear-on-resolve, `StopGates.hook.ts` v1.3.2 gate retirement), LifeOS tool code (`AgentJob`, `HarvestExecutor`, `MemoryReviewer` — all the `LIFEOS_BRIDGE=1` durable-work opt-in), local doctrine (`RULES/Verification.md` Linux host-translation paragraph), skill content (`skills/LifeOS/SKILL.md` installed-copy header) — 8 files. Full record + regenerator scripts: that dir's `MANIFEST.md`.

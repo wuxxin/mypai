@@ -94,3 +94,11 @@ New feature shipped — **session stats rows**:
 - Tests: MockPi gained a `sendMessage` capture; three new cases pin the flag on the payload, the counters (`tools=1 blocked=1`, voice column), and the opt-out. `make bridge-test` → **18 pass / 0 fail** (was 15).
 
 Also verified this pass (voice stack, no bridge change): the omp-native voice path still posts to Pulse `/notify`; `say`/vocalizer resolve Phonon-31M local English only; German synthesis runs through the router kokoro (`api: openai-speech`) — details and the tts-device defect in references/lifeos-omp-difference.md.
+
+## omp 19.0.0 closes the stats-row context cost (2026-11-19)
+
+The host moved to `oh-my-pi-git 19.0.0.r1.gd4ebe4d-1` (`omp/19.0.0`). Bridge impact: **none** — event surface byte-identical over `2cdc756..HEAD` (types.ts, agent types; empty diff), suite unaffected. The § 18.22.2 open item is closed by upstream: `excludeFromContext` ships in the payload union plus three follow-up fixes (mid-run rows queued, drawn at run end, kept out of compaction and tail decisions). Per-turn stats rows are now true zero-context on this host; the `OMP_BRIDGE_SESSION=0` mitigation from § 18.22.2 is obsolete. Rows observed live in the TUI (`lifeos-bridge · turn N · tools/blocked/ctx/voice`). Full upgrade notes: references/lifeos-omp-difference.md § 18.22.2 → 19.0.0.
+
+Follow-up same day: the `OMP_BRIDGE_SESSION` toggle was **removed** from the bridge (code + tests + config docs) — rows are unconditional; on ≥19.0.0 they cost zero context, and pre-19.x runtimes are gone from this host. Suite now 17 pass / 0 fail (opt-out test deleted with the flag).
+
+Second follow-up: **transcript visibility via registered renderer**. The framed 📦 box was noise, so the bridge registers a `lifeos-bridge-stats` message renderer: rows hidden by default (zero-line component — returning `undefined` falls back to the frame and is avoided), `/bridge-stats on|off` toggles drawing, `OMP_BRIDGE_STATS=1` starts shown; when shown it is one unframed width-truncated line. Rows remain in transcript data + audit log always. Two new tests (toggle+truncation, env-default-shown + non-object safety): **19 pass / 0 fail**.

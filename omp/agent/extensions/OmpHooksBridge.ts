@@ -53,9 +53,10 @@
  *     sidecar's journal (`journalctl --user -u omp.service | grep lifeos-bridge`);
  *     OMP_BRIDGE_LOG=<path> appends JSON lines to a file for probes and tailing.
  *     stdout is never touched (in `omp -p` print mode it carries the model's answer).
- *   - In-session stats rows: on by default, one compact row per turn + a registry-load row,
- *     sent via pi.sendMessage with excludeFromContext:true (zero context cost on runtimes
- *     that carry #19550; opt out with OMP_BRIDGE_SESSION=0).
+ *   - In-session stats rows: one compact row per turn + a registry-load row, sent via
+ *     pi.sendMessage with excludeFromContext:true (zero context cost on runtimes carrying
+ *     #19550, i.e. omp ≥ 19.0.0; older runtimes ignore the flag — run this bridge there only
+ *     if one short context line per turn is acceptable).
  *
  * Every invocation is logged to the audit log. Hook failures are logged and
  * never crash the session. Per-hook timeout comes from the registry's `timeout` field (seconds);
@@ -108,9 +109,7 @@ const SESSION_ID = process.env.OMP_SESSION_ID || "omp";
 
 // In-session stats rows via pi.sendMessage (drawn + persisted in the transcript). The payload is
 // flagged excludeFromContext:true — on runtimes with #19550 payload support (upstream tip ≥ 19.0.0)
-// rows never enter model context; older runtimes ignore the field and the row lands in context, so
-// OMP_BRIDGE_SESSION=0 opts out entirely. Off is cheap insurance for shared routers.
-const SESSION_ROWS = process.env.OMP_BRIDGE_SESSION !== "0";
+// rows never enter model context; older runtimes ignore the field and the row lands in context.
 
 interface HookReg {
   event: string;
@@ -506,10 +505,10 @@ export default function lifeosBridge(pi: ExtensionAPI): void {
 
   // One compact stats row per turn + a registry-load row. The excludeFromContext flag is honored
   // by runtimes with #19550 payload support (upstream tip ≥ 19.0.0); older ones ignore it and the
-  // row enters context — OMP_BRIDGE_SESSION=0 disables rows entirely. Never throws into a hook path.
+  // row enters context. Never throws into a hook path.
   type SendPayload = Parameters<typeof pi.sendMessage>[0];
   const sendRow = (text: string, details?: Record<string, unknown>): void => {
-    if (!SESSION_ROWS || typeof pi.sendMessage !== "function") return;
+    if (typeof pi.sendMessage !== "function") return;
     try {
       pi.sendMessage({
         customType: "lifeos-bridge-stats",
@@ -528,6 +527,34 @@ export default function lifeosBridge(pi: ExtensionAPI): void {
     );
     tTools = 0; tBlocked = 0; tCtxChars = 0; tVoice = "-";
   };
+
+  // Transcript visibility for stats rows. The default frame is noisy, so the bridge draws its own
+  // single line and hides it by default: rows stay in the transcript data (and the audit log),
+  // `/bridge-stats` toggles drawing, `OMP_BRIDGE_STATS=1` starts shown. A renderer returning a
+  // zero-line component draws nothing; returning undefined would fall back to the framed box.
+  let statsVisible = process.env.OMP_BRIDGE_STATS === "1";
+  if (typeof pi.registerMessageRenderer === "function") {
+    pi.registerMessageRenderer("lifeos-bridge-stats", (message: unknown) => ({
+      render: (width: number): string[] => {
+        if (!statsVisible) return [];
+        const content = message && typeof message === "object" && "content" in message ? String(message.content) : "";
+        const text = content.trim();
+        return [text.length > width ? `${text.slice(0, Math.max(0, width - 1))}…` : text];
+      },
+    }));
+  }
+  if (typeof pi.registerCommand === "function") {
+    pi.registerCommand("bridge-stats", {
+      description: "Show or hide lifeos-bridge stats rows in the transcript (/bridge-stats on|off)",
+      handler: async (args: string, ctx) => {
+        const a = args.trim().toLowerCase();
+        if (a === "on" || a === "show" || a === "1") statsVisible = true;
+        else if (a === "off" || a === "hide" || a === "0") statsVisible = false;
+        else statsVisible = !statsVisible;
+        ctx.ui.notify(`lifeos-bridge stats rows: ${statsVisible ? "shown" : "hidden"} (transcript data and audit log unaffected)`, "info");
+      },
+    });
+  }
 
   pi.on("session_start", async () => {
     log({ event: "session_start" });

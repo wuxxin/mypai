@@ -16,19 +16,28 @@ const EXT = new URL("../OmpHooksBridge.ts", import.meta.url).pathname;
 
 type Handler = (event: unknown, ctx?: unknown) => Promise<unknown> | unknown;
 
+type MockRenderer = (message: unknown, options: { expanded: boolean }, theme: unknown) => { render(width: number): string[] } | undefined;
+interface MockCommand { description?: string; handler: (args: string, ctx: unknown) => Promise<void> }
+
 interface MockPi {
   on(event: string, handler: Handler): void;
   sendMessage(message: unknown): void;
   sent: Record<string, unknown>[];
   handlers: Map<string, Handler[]>;
+  renderers: Map<string, MockRenderer>;
+  commands: Map<string, MockCommand>;
 }
 
 function makePi(): MockPi {
   const handlers = new Map<string, Handler[]>();
   const sent: Record<string, unknown>[] = [];
+  const renderers = new Map<string, MockRenderer>();
+  const commands = new Map<string, MockCommand>();
   return {
     handlers,
     sent,
+    renderers,
+    commands,
     on(event, handler) {
       const list = handlers.get(event) ?? [];
       list.push(handler);
@@ -36,6 +45,12 @@ function makePi(): MockPi {
     },
     sendMessage(message) {
       sent.push(message as Record<string, unknown>);
+    },
+    registerMessageRenderer(type: string, renderer: MockRenderer) {
+      renderers.set(type, renderer);
+    },
+    registerCommand(name: string, opts: MockCommand) {
+      commands.set(name, opts);
     },
   };
 }
@@ -50,7 +65,7 @@ async function fire(pi: MockPi, event: string, payload: unknown, ctx?: unknown):
 }
 
 let instance = 0;
-const envKeys = ["OMP_BRIDGE_SETTINGS", "LIFEOS_CONFIG_ROOT", "OMP_BRIDGE_LOG", "OMP_SESSION_ID", "OMP_VOICE", "OMP_BRIDGE_STDERR", "OMP_BRIDGE_SESSION"];
+const envKeys = ["OMP_BRIDGE_SETTINGS", "LIFEOS_CONFIG_ROOT", "OMP_BRIDGE_LOG", "OMP_SESSION_ID", "OMP_VOICE", "OMP_BRIDGE_STDERR", "OMP_BRIDGE_STATS"];
 
 interface Scenario {
   dir: string;
@@ -319,19 +334,42 @@ describe("session stats rows (pi.sendMessage + excludeFromContext)", () => {
     expect((row.details as Record<string, unknown>).voice).toBe("-");
   });
 
-  test("OMP_BRIDGE_SESSION=0 sends nothing", async () => {
-    const s = scenario("unused");
+  test("renderer hides rows by default; /bridge-stats toggles drawing", async () => {
+    const s = scenario();
+    const pi = await bootAndLoad(s);
+    const renderer = pi.renderers.get("lifeos-bridge-stats");
+    const cmd = pi.commands.get("bridge-stats");
+    expect(renderer).toBeDefined();
+    expect(cmd).toBeDefined();
+    let notified = "";
+    const ctx = { ui: { notify: (m: string) => { notified = m; } } };
+    // Default hidden: a zero-line component draws nothing.
+    expect(renderer!({ content: "lifeos-bridge · turn 1" }, { expanded: false }, {})!.render(80)).toEqual([]);
+    await cmd!.handler("on", ctx);
+    expect(notified).toContain("shown");
+    const comp = renderer!({ content: "lifeos-bridge · turn 1 · tools=2 blocked=0 ctx=+5c voice=-" }, { expanded: false }, {})!;
+    expect(comp.render(80)).toHaveLength(1);
+    expect(comp.render(80)[0]).toContain("turn 1");
+    expect(comp.render(10)[0].length).toBeLessThanOrEqual(10); // truncates to width
+    await cmd!.handler("off", ctx);
+    expect(notified).toContain("hidden");
+    expect(renderer!({ content: "x" }, { expanded: false }, {})!.render(80)).toEqual([]);
+  });
+
+  test("OMP_BRIDGE_STATS=1 starts shown; non-object messages render empty, never throw", async () => {
+    const s = scenario("stats-on");
     for (const k of envKeys) delete process.env[k];
     process.env.OMP_BRIDGE_SETTINGS = join(s.dir, "settings.json");
     process.env.LIFEOS_CONFIG_ROOT = s.dir;
     process.env.OMP_BRIDGE_LOG = s.logPath;
     process.env.OMP_VOICE = "0";
-    process.env.OMP_BRIDGE_SESSION = "0";
+    process.env.OMP_BRIDGE_STATS = "1";
     const mod = await import(`${EXT}?instance=${++instance}`);
     const pi = makePi();
     mod.default(pi);
-    await fire(pi, "session_start", {});
-    expect(pi.sent.length).toBe(0);
+    const renderer = pi.renderers.get("lifeos-bridge-stats")!;
+    expect(renderer({ content: "shown from env" }, { expanded: false }, {})!.render(80)[0]).toContain("shown from env");
+    expect(renderer(undefined, { expanded: false }, {})!.render(80)).toEqual([""]);
   });
 });
 
