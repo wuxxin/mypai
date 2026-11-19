@@ -1,4 +1,5 @@
 providers:
+  webKeyless: false   # no paid/keyless aux fallbacks; localhost-router policy (omp >=18.22)
   maxInFlightRequests:
     llama.cpp: 2
     google-antigravity: 6
@@ -166,6 +167,7 @@ secrets:
   enabled: true
 composer:
   shape: borderless
+  predictions: true   # principal's call 2026-11-19: accept one ghost request/turn for typing speed
 update:
   auto: false
 spotlight:
