@@ -44,5 +44,11 @@ export OMP_EPHEMERAL="1"
 exit_code=0
 # --no-judge: unattended one-shot runs (Pulse jobs launch through here); keeps router slots for the main loop.
 # --no-spotlight: output-shaping aux service (default endpoint is remote, cloud.stencil.so); nothing consumes shaped results in a one-shot run.
-omp --no-session --no-title --no-judge --no-spotlight --cwd "$LIFEOS_CWD" --append-system-prompt "$prompt_file" "$@" || exit_code=$?
+# Tool contract append concatenated via process substitution (same mechanism as bin/lifeos; no named temp file).
+omp_append="${LIFEOS_OMP_APPEND_SYSTEM:-$HOME/.omp/agent/LIFEOS_OMP_APPEND_SYSTEM.md}"
+if [[ -f "$omp_append" ]]; then
+    omp --no-session --no-title --no-judge --no-spotlight --cwd "$LIFEOS_CWD" --append-system-prompt <(cat "$prompt_file" "$omp_append") "$@" || exit_code=$?
+else
+    omp --no-session --no-title --no-judge --no-spotlight --cwd "$LIFEOS_CWD" --append-system-prompt "$prompt_file" "$@" || exit_code=$?
+fi
 exit "$exit_code"

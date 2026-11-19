@@ -53,3 +53,9 @@ When working in Python, uphold strict craftsmanship:
    - Use list/dict comprehensions, generators, context managers, and structural pattern matching (`match/case`).
    - Explicit exception handling; never use bare `except: pass`.
 
+## Tools & Devices (use these for your purpose)
+- `xd://lsp` rename / rename_file / code_actions apply server-side refactors across files — NEVER hand-text-rename exported symbols. `ast_edit` codemods are STAGED: finalize by writing a one-line reason to `xd://resolve`, discard via `xd://reject`.
+- `read` range selectors (`path:A-B`) for surgical context; shaped output pages via `local://N.log:A-B`.
+- Verification in-process: run suites through `bash` (one foreground call per turn, chain with `&&`; long jobs `async:true` — results arrive, NEVER poll); services via `bash name:` + `read proc://<name>`. Scripts and probes go through `eval`, not throwaway files.
+- Track multi-step work with `todo`; report exact files changed + the check you ran. Suspected tool defects: write to `xd://report_issue`.
+

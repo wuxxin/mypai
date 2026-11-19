@@ -20,4 +20,10 @@ if [[ ! -f "$prompt_file" ]]; then
     exit 1
 fi
 
+# Tool contract append (omp/agent/LIFEOS_OMP_APPEND_SYSTEM.md, deployed under the same name). Concatenated
+# in-shell via process substitution: omp reads the /dev/fd path as a file, so no named temp file is left behind.
+omp_append="${LIFEOS_OMP_APPEND_SYSTEM:-$HOME/.omp/agent/LIFEOS_OMP_APPEND_SYSTEM.md}"
+if [[ -f "$omp_append" ]]; then
+    exec omp --cwd "$LIFEOS_CWD" --append-system-prompt <(cat "$prompt_file" "$omp_append") "$@"
+fi
 exec omp --cwd "$LIFEOS_CWD" --append-system-prompt "$prompt_file" "$@"
