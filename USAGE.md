@@ -13,7 +13,7 @@ MyPAI combines **Oh-My-Pi (`omp`)** as the high-performance agent execution harn
 1. **Oh-My-Pi (`omp`)**: The primary execution harness driving interactive CLI sessions, task subagents (`task(agent: "...")`), internal tool devices (`xd://`), and in-kernel Python runtimes (`eval`).
 2. **LifeOS (`~/.omp/LIFEOS`)**: Intent engineering platform running the Algorithm, TELOS alignment, and Pulse dashboard on port `:31337`.
 3. **`OmpHooksBridge.ts`**: Extension bridging Claude Code hook events (`SessionStart`, `UserPromptSubmit`, `PreToolUse`, `PostToolUse`/`PostToolUseFailure`, `Stop`, `SessionEnd`, `PermissionRequest`) to OMP native extension hooks. Fidelity map: `references/lifeos-omp-difference.md`.
-4. **Local Inference Services (`submodules/agents-shared/`)**: Local model routing (`local-router` on `:21080`), chat, embeddings, reranking, STT, and TTS.
+4. **Local Inference Services (`submodules/agents-shared/`)**: Local model routing (`local-router` on `:21080`), chat, embeddings, reranking, STT (whisper), TTS (kokoro default, qwen3 switchable), image generation.
 
 ---
 
@@ -26,10 +26,12 @@ Use the configured shell alias:
 lifeos
 ```
 
-Or execute directly (equivalent to `bin/lifeos`, which also exports `LIFEOS_CONFIG_DIR` — without it tools scaffold into `~/.config/LIFEOS`):
+Or execute directly (equivalent to `bin/lifeos`, which exports `OMP_VOICE=0`, `LIFEOS_DIR`, `LIFEOS_CWD`, and `LIFEOS_CONFIG_DIR` — without the latter, tools scaffold into `~/.config/LIFEOS` — and concatenates the LifeOS system prompt with the omp-side contract append `~/.omp/agent/LIFEOS_OMP_APPEND_SYSTEM.md` when present):
 ```bash
-OMP_VOICE=0 LIFEOS_DIR=~/.claude/LIFEOS LIFEOS_CONFIG_DIR=$HOME/agent-private/lifeos \
-    omp --cwd $HOME/agent-private/lifeos --append-system-prompt ~/.claude/LIFEOS/LIFEOS_SYSTEM_PROMPT.md
+OMP_VOICE=0 LIFEOS_DIR=$HOME/.claude/LIFEOS LIFEOS_CONFIG_DIR=$HOME/agent-private/lifeos \
+    omp --cwd $HOME/agent-private/lifeos \
+        --append-system-prompt <(cat $HOME/.claude/LIFEOS/LIFEOS_SYSTEM_PROMPT.md \
+                                    $HOME/.omp/agent/LIFEOS_OMP_APPEND_SYSTEM.md)
 ```
 
 ### Managing the Pulse Dashboard
@@ -81,6 +83,13 @@ MyPAI equips agents with high-rigor engineering workflows:
 7. **`archlinux-pkgbuild` (`skills/archlinux-pkgbuild/SKILL.md`):** PKGBUILD creation, review, and AUR packaging standards.
 8. **`system-prompts` (`skills/system-prompts/SKILL.md`):** Authoring and editing system prompts, tool docs, and agent specifications.
 
+Beyond the core set, the profile carries:
+
+9. **`arbor` (MCP device skill, `xd://arbor`):** Deterministic code-graph intelligence — dependency traversal, AST indexing, cross-module caller tracing, hypothesis verification (`mcp__arbor__*`).
+10. **`openadapt` (MCP device skill, `xd://openadapt`):** Headless browser rendering, DOM/state inspection, UI verification, web interaction automation (`mcp__openadapt__*`).
+11. **`german`:** Writing German that reads human — natural register, particles, flow; not formal/Hochdeutsch/AI-stiff.
+12. **Plugin bundles:** `diagram-design-plugin` (diagram design skill + commands/scripts) and `modern-web-guidance-plugin` (`modern-web-guidance`, `chrome-extensions` web-platform guidance).
+
 ---
 
 ## 5. Custom Slash Command Palette
@@ -97,6 +106,7 @@ In any interactive OMP session, you can invoke specialized workflows using slash
 * **`/writer`**: Generates documentation; maintains reference docs and changelogs.
 * **`/patch`**: Spawns `@patcher` for quick mechanical edits.
 * **`/learn`**: Distills recent-turn insights into long-term memory (omp internal Mnemopi store; Hindsight mental models are the retired fallback — see §6).
+* **`/bridge-stats on|off`**: Toggles drawing of the OmpHooksBridge session stats rows (`tools/blocked/ctx/voice` per-turn counters); rows stay in transcript data and audit log regardless, drawing is hidden by default (persistent default via `OMP_BRIDGE_STATS=1`).
 
 ---
 

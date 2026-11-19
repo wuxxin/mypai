@@ -65,7 +65,7 @@ One inference call per user prompt: `PromptProcessing.hook.ts` (~6–12s through
 - Config root: `~/.omp`, symlinked as `~/.claude`; LifeOS payload at `~/.claude/LIFEOS` (real repo: `~/agent-private/lifeos`). Vendor edits in `~/.omp` stay untracked per the payload-untracked convention; personal data lives in the workdir repo.
 - Skills dir is shared three ways: workdir `.omp/skills → ~/.omp/skills ≡ ~/.claude/skills`.
 - Launch: `lifeos` = `exec omp --cwd "$LIFEOS_CWD" --append-system-prompt "$prompt_file" "$@"` — flags pass through (`--offline`, `--no-judge` from 18.20.3 are usable for router-contention-free runs).
-- Headless probe/CI: `make bridge-test` (bun suite, 15 tests) and `make bridge-smoke` (full event sequence + zero-failure gate) in mypai.
+- Headless probe/CI: `make bridge-test` (bun suite, 19 tests as of 2026-11-19) and `make bridge-smoke` (full event sequence + zero-failure gate) in mypai.
 
 ## Scheduling: launchd vs Pulse job runner
 
@@ -83,7 +83,7 @@ One inference call per user prompt: `PromptProcessing.hook.ts` (~6–12s through
 
 - Stock LifeOS verifies web output through **Interceptor** (macOS `.pkg` app + CLI) driving real Chrome in the user's real profile — the ONLY sanctioned browser automation; modality fidelity depends on a logged-in, real-browser session. It has no Linux build; ticket `ERR-20261110-234334-2330` stands (upstream PR owed).
 - Here: **omp's internal browser tool is the standing verifier class** (principal directive 2026-11-16). It is the eval `browser` namespace (`await browser.open(...)` → managed headless shared tabs); there is no `xd://browser` device. Verified live against the Pulse dashboard (tab titled "Pulse | Home", DOM observed, clean close).
-- Fidelity (settled 2026-11-16): **full-capability web verifier** — navigation, interaction, console/network, `screenshot()` + `diffScreenshot()` visual regression, `pdf()`, device emulation; via the relay it adopts the user's real Chrome session (login state included). Appearance/layout claims close on screenshots from a real navigation; the only deferral is login-state without the relay. The `openadapt` skill (headless Playwright) was **deleted 2026-11-16**; `/usr/bin/chromium` remains for raw probes (`--dump-dom`, `--screenshot`) via bash.
+- Fidelity (settled 2026-11-16): **full-capability web verifier** — navigation, interaction, console/network, `screenshot()` + `diffScreenshot()` visual regression, `pdf()`, device emulation; via the relay it adopts the user's real Chrome session (login state included). Appearance/layout claims close on screenshots from a real navigation; the only deferral is login-state without the relay. The headless-Playwright `openadapt` skill was deleted 2026-11-16; the profile now carries a re-authored MCP-backed `openadapt` skill (device mounted at `xd://openadapt`, present in `omp/agent/skills/` as of 2026-11-19) beside this verifier class. `/usr/bin/chromium` remains for raw probes (`--dump-dom`, `--screenshot`) via bash.
 
 ## Known gaps summary (accepted on this host)
 

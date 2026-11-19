@@ -1,9 +1,9 @@
 # mypai — a private, local-first **Personal Artificial Intelligence (PAI) infrastructure**
 
-- **Oh-My-Pi (`omp`)** — High-performance agent execution harness with native tool orchestration, subagents, and extensibility.
 - **LifeOS** — Intent engineering platform and DA (Digital Assistant) system that articulates done, hill-climbs from current state to ideal state, and verifies claims via tool evidence.
+- **Oh-My-Pi (`omp`)** — High-performance agent execution harness with native tool orchestration, subagents, and extensibility.
 - **Local inference service wrappers** `submodules/agents-shared` (local-router, chat, embeddings, reranking, STT, TTS, image generation) and `sandbox-ctl` environment isolation.
-- **Arch Linux PKGBUILDs** for local inference and agents `submodules/aur-packages`
+- **Arch Linux PKGBUILDs** for customized local inference and agents `submodules/aur-packages` binaries
 
 ---
 
@@ -16,10 +16,10 @@
 2. **Agent Harness (`omp/agent/`)**:
    - Base configuration (`config.yml`, `models.yml`, `lsp.json`).
    - Specialist agent roster (`agents/orchestrator.md`, `scout.md`, `debugger.md`, `reviewer.md`, `security-reviewer.md`, `task.md`, `writer.md`, `patcher.md`, `librarian.md`, `designer.md`).
-   - Engineering skills (`skills/ulw-plan`, `systematic-debugging`, `git-master`, `review-work`, `test-driven-development`, `lilac`, `archlinux-pkgbuild`, `system-prompts`).
+   - Engineering skills (`skills/ulw-plan`, `systematic-debugging`, `git-master`, `review-work`, `test-driven-development`, `lilac`, `archlinux-pkgbuild`, `system-prompts`), MCP-backed device skills (`arbor` code-graph intelligence at `xd://arbor`, `openadapt` browser verification at `xd://openadapt`), the `german` language-style skill, and plugin bundles (`diagram-design-plugin`, `modern-web-guidance-plugin`).
    - Claude Code hooks bridge extension (`extensions/OmpHooksBridge.ts`).
 
-4. **LifeOS Integration (`~/.omp/LIFEOS` via `~/.claude` symlink)**:
+3. **LifeOS Integration (`~/.omp/LIFEOS` via `~/.claude` symlink)**:
    - Primary immediate engineering effort: layering LifeOS into OMP (basically working, actively undergoing adjustments).
    - Private data repo of record in `~/agent-private/lifeos` (v8 layout: `USER/` with `MEMORY/` under it, single-file `TELOS.md`; `LIFEOS_CONFIG_DIR` exported by the launcher).
    - Pulse dashboard on port `:31337`, supervised as the primary service of the systemd user unit `~/.config/systemd/user/omp.service` (`LAUNCHER_SERVICE_CMD` in `omp.env`; sidecars retired 2026-11-16, periodic jobs run as `[[job]]` entries in `USER/CONFIG/PULSE.user.toml`).
@@ -76,7 +76,8 @@ Headless bridge verification afterwards: `make bridge-test` / `make bridge-smoke
 ### 6. Launch LifeOS under OMP
 
 ```bash
-lifeos        # bin/lifeos: exports LIFEOS_CONFIG_DIR, execs omp --cwd ~/agent-private/lifeos with the LifeOS system prompt
+lifeos        # bin/lifeos: exports OMP_VOICE/LIFEOS_DIR/LIFEOS_CWD/LIFEOS_CONFIG_DIR, execs omp --cwd ~/agent-private/lifeos
+              # with the concatenated LifeOS system prompt + LIFEOS_OMP_APPEND_SYSTEM.md contract (when present)
 ```
 
 ---
@@ -98,8 +99,8 @@ To perform research or execute tasks without recording shell command history, in
 `bin/ephemeral-omp` and `bin/ephemeral-lifeos` (copied to `~/.local/bin/` by `omp.env`) automate ephemeral containment:
 - Sets `HISTFILE=/dev/null`
 - Allocates an isolated scratch directory in `/tmp` for `PI_CODING_AGENT_DIR`
-- Symlinks static configs (`config.yml`, `models.yml`, `skills/`, `tools/`, `extensions/`, `APPEND_SYSTEM.md`) so existing models, tools, and append instructions remain fully active
-- Passes `--no-session` and `--no-title`
+- Symlinks static configs (`config.yml`, `models.yml`, `lsp.json`, `mcp.json`, `extensions/`, `skills/`, `tools/`, `commands/`, `prompts/`, `APPEND_SYSTEM.md`, `RULES.md`) so existing models, tools, and append instructions remain fully active
+- Passes `--no-session`, `--no-title`, `--no-judge` (judge calls would steal router slots from the main loop), and `--no-spotlight` (remote output-shaping aux service; nothing consumes shaped results in a one-shot run)
 - Displays the `⚡ EPHEMERAL` statusline badge and `ephemeral` session tag via `OMP_EPHEMERAL=1`
 - Unlinks and removes all traces from `/tmp` on exit (even in hotshell or real host `/tmp`)
 
@@ -115,19 +116,7 @@ To perform research or execute tasks without recording shell command history, in
 ```
 *(Note: The leading space prevents the invocation command from being recorded in shell history).*
 
-### 2. Manual One-Liner (RAM-backed, Zero Trace)
-
-If invoking directly without the wrapper scripts:
-
-```bash
- (
-    tmpdir=$(mktemp -d "${XDG_RUNTIME_DIR:-/dev/shm}/omp-XXXXXX")
-    trap 'rm -rf "$tmpdir"' EXIT INT TERM
-    HISTFILE=/dev/null PI_CODING_AGENT_DIR="$tmpdir" omp --no-session
-)
-```
-
-### 3. Host Dispatcher Wrapper (`sandboxed-omp`)
+### 2. Host Dispatcher Wrapper (`sandboxed-omp`)
 
 To invoke sandboxed utilities seamlessly from the host outside the sandbox without relying on shell aliases (ensuring they work in scripts, subshells, desktop launchers, and terminal multiplexers):
 
@@ -173,6 +162,14 @@ When any of `lifeos`, `ephemeral-omp`, or `ephemeral-lifeos` is called on the ho
 
 - [**`USAGE.md`**](USAGE.md) — Complete operational guide for OMP, LifeOS, subagents, and skills.
 - [**`AGENTS.md`**](AGENTS.md) — System realities, agent operating guidelines, and code style.
+
+Host & LifeOS:
 - [**`references/mypai-lifeos-host-linux.md`**](references/mypai-lifeos-host-linux.md) — LifeOS topology, config plumbing, OS translation on this host. Companion harness-delta reference: [`references/lifeos-omp-difference.md`](references/lifeos-omp-difference.md); upgrade procedure: [`references/lifeos-upgrade-runbook.md`](references/lifeos-upgrade-runbook.md).
+- [**`references/omp-lifeos-OmpHooksBridge.md`**](references/omp-lifeos-OmpHooksBridge.md) / [**-changelog.md**](references/omp-lifeos-OmpHooksBridge-changelog.md) — hooks bridge implementation; per-version upgrade mechanics.
+- [**`references/mypai-layout.md`**](references/mypai-layout.md) — repo layout & full references index. · [`mypai-portmap.md`](references/mypai-portmap.md) — canonical port allocations. · [`mypai-host-memorymap.md`](references/mypai-host-memorymap.md) — VRAM/RAM co-running map.
+
+OMP internals:
 - [**`references/omp-runtime-config.md`**](references/omp-runtime-config.md) — OMP runtime configuration, prompt layering, and subagent resolution.
+- [`omp-eval-tool.md`](references/omp-eval-tool.md) · [`omp-rpc-functions.md`](references/omp-rpc-functions.md) · [`omp-speedtests.md`](references/omp-speedtests.md) — eval tool & loopback bridge, `omp_rpc` Python SDK, model speed benchmarks.
+- [`omp-hindsight.md`](references/omp-hindsight.md) · [`hindsight-memorybank.md`](references/hindsight-memorybank.md) — Hindsight memory plane (retired fallback; primary is omp's internal Mnemopi store).
 
