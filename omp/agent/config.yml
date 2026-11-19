@@ -1,5 +1,5 @@
 providers:
-  webKeyless: false   # no paid/keyless aux fallbacks; localhost-router policy (omp >=18.22)
+  webKeyless: true   # paid/keyless aux fallbacks; localhost-router policy (omp >=18.22)
   maxInFlightRequests:
     llama.cpp: 2
     google-antigravity: 6
