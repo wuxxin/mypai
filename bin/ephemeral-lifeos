@@ -42,5 +42,6 @@ export PI_CODING_AGENT_DIR="$tmpdir"
 export OMP_EPHEMERAL="1"
 
 exit_code=0
-omp --no-session --no-title --cwd "$LIFEOS_CWD" --append-system-prompt "$prompt_file" "$@" || exit_code=$?
+# --no-judge: unattended one-shot runs (Pulse jobs launch through here); keeps router slots for the main loop.
+omp --no-session --no-title --no-judge --cwd "$LIFEOS_CWD" --append-system-prompt "$prompt_file" "$@" || exit_code=$?
 exit "$exit_code"

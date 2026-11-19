@@ -26,5 +26,6 @@ export PI_CODING_AGENT_DIR="$tmpdir"
 export OMP_EPHEMERAL="1"
 
 exit_code=0
-omp --no-session --no-title "$@" || exit_code=$?
+# --no-judge: unattended one-shot runs; judge calls would steal router slots (maxInFlight=2) with no consumer.
+omp --no-session --no-title --no-judge "$@" || exit_code=$?
 exit "$exit_code"
