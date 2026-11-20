@@ -7,9 +7,12 @@ tools:
   - write
   - grep
   - glob
+  - lsp 
+  - ast_grep
   - ast_edit
   - bash
   - eval
+  - yield
 model: "@smol"
 thinking_effort: "minimal"
 ---
