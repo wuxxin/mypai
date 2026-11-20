@@ -198,6 +198,8 @@ display:
   hideToolActivity: false
 steeringMode: all
 followUpMode: all
+task:
+  crossInstance: true   # agent mesh: interactive instances in this folder list via agent://peers and can message each other (omp >=19.0.0)
 error:
   notify: "on"
 power:
@@ -234,5 +236,3 @@ retry:
     scout:
       - llama.cpp/qwen3.8-flash-next:low
       - llama.cpp/qwen3.6-35B-A3B:low
-task:
-  crossInstance: true   # agent mesh: interactive instances in this folder list via agent://peers and can message each other (omp >=19.0.0)
