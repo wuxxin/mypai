@@ -14,11 +14,64 @@ trap cleanup EXIT INT TERM HUP
 # Symlink static configs from ~/.omp/agent into ephemeral directory if available
 agent_dir="${HOME}/.omp/agent"
 if [[ -d "$agent_dir" ]]; then
-    for item in config.yml models.yml lsp.json mcp.json extensions skills tools commands prompts APPEND_SYSTEM.md RULES.md rules; do
+    for item in models.yml lsp.json mcp.json extensions skills tools commands prompts APPEND_SYSTEM.md RULES.md rules; do
         if [[ -e "$agent_dir/$item" ]]; then
             ln -sf "$agent_dir/$item" "$tmpdir/$item"
         fi
     done
+
+    # config.yml is copied, not symlinked: ephemeral runs must not touch the long-term memory
+    # subsystem. omp has no CLI flag or env override for it (settings layer only), so force
+    # `memory.backend: off` in the copy. Line-based rewrite keeps comments and layout intact.
+    config_src="$agent_dir/config.yml"
+    if [[ -e "$config_src" ]]; then
+        python3 - "$config_src" "$tmpdir/config.yml" <<'PY'
+import re
+import sys
+
+src, dst = sys.argv[1], sys.argv[2]
+with open(src, encoding="utf-8") as handle:
+    lines = handle.readlines()
+
+out: list[str] = []
+in_memory = has_memory = patched = False
+
+
+def close_block() -> None:
+    global in_memory, patched
+    if in_memory and not patched:
+        out.append("  backend: off\n")
+        patched = True
+    in_memory = False
+
+
+for line in lines:
+    if re.match(r"^[A-Za-z]", line):
+        close_block()
+        if re.match(r"^memory:[ \t]*$", line):
+            in_memory = True
+            has_memory = True
+        out.append(line)
+        continue
+    if in_memory and not patched and re.match(r"^[ \t]+backend:", line):
+        out.append("  backend: off\n")
+        patched = True
+        continue
+    out.append(line)
+
+close_block()
+text = "".join(out)
+if not text.endswith("\n"):
+    text += "\n"
+if not has_memory:
+    text += "memory:\n  backend: off\n"
+
+with open(dst, "w", encoding="utf-8") as handle:
+    handle.write(text)
+PY
+    else
+        printf 'memory:\n  backend: off\n' >"$tmpdir/config.yml"
+    fi
 fi
 
 export HISTFILE=/dev/null

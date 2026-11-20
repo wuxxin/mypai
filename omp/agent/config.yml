@@ -96,6 +96,14 @@ mnemopi:
   # llmBaseUrl: http://127.0.0.1:21080/v1
   # llmModel: qwen3.8-flash-next
 
+# Agent Plugins packages (root plugin.json + skills/) wired into discovery by the
+# omp-plugins provider: skills/, commands/, prompts/, hooks/, tools/, mcp. Relative paths
+# resolve against each session's cwd, so these are absolute (~ expanded). The tree lives in
+# this repo at omp/agent/plugins/ and is deployed to ~/.omp/agent/plugins by sandbox-ctl install.
+extensions:
+  - ~/.omp/agent/plugins/diagram-design-plugin
+  - ~/.omp/agent/plugins/modern-web-guidance-plugin
+
 autolearn:
   enabled: true              # exposes `learn` when you explicitly want to save lessons/skills
   autoContinue: false        # no automatic post-turn capture runs
