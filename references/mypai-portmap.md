@@ -24,10 +24,10 @@ All services use unprivileged non-ephemeral ports in the **`20000`–`29000`** r
 │         │ ─── Local Inference (20xxx)   │            │                                      │
 │ 20080   │ local-chat                    │ Active     │ llama-server (Chat & Vision GGUF)    │
 │ 20082   │ local-embedding               │ Active     │ llama-server (Qwen3-Embedding-0.6B)  │
-│ 20086   │ local-rerank                  │ Active     │ llama-server / TEI (Reranker 0.6B)   │
+│ 20086   │ local-rerank                  │ Disabled   │ llama-server / TEI (Reranker 0.6B)   │
 │ 20090   │ local-speech-to-text          │ Active     │ whisper-server (large-v3-turbo)      │
 │ 20095   │ local-text-to-speech          │ Active     │ kokoro-onnx (default); qwen3 switch  │
-│ 20100   │ local-image                   │ Active     │ sd-server (Stable Diffusion)         │
+│ 20100   │ local-image                   │ Disabled   │ sd-server (Stable Diffusion)         │
 │ 21080   │ local-router                  │ Active     │ Unified OpenAI-compatible Gateway    │
 │         │                               │            │                                      │
 │         │ ─── Memory & Cognitive Plane  │            │                                      │
