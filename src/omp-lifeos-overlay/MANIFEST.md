@@ -4,7 +4,7 @@
 
 Shadow copy of the source-level divergences this host owns — nothing generated, rendered, merged, or duplicated from a canonical in-repo file. Regenerate with `tools/lifeos-diff.ts` + `tools/lifeos-overlay.ts` (stock at `/tmp/lifeos-stock/`); the classifier detects both placeholder shapes (`{{PRINCIPAL_NAME}}`, `{DA_IDENTITY.NAME}`).
 
-## Categories (copied: 8 files)
+## Categories (copied: 9 files)
 
 ### hooks (behavior fixes)
 
@@ -17,6 +17,7 @@ Shadow copy of the source-level divergences this host owns — nothing generated
 - `LIFEOS/TOOLS/AgentJob.ts`
 - `LIFEOS/TOOLS/HarvestExecutor.ts`
 - `LIFEOS/TOOLS/MemoryReviewer.ts`
+- `LIFEOS/PULSE/VoiceServer/voice.ts` — local speech provider (2026-11-20): OpenAI-compatible `/audio/speech` engine behind the Fish branch (agents-shared router :21080, WAV-only, tag-strip + pronunciations preprocessing), player list settled by listening tests to pw-play → paplay → ffplay (mpg123/aplay stall on PipeWire; all three decode WAV and MP3), honest `/voice/health` (`local-speech`, `speech_endpoint`). Moved from Appendix A: it is now source-diverged, not rendered-only. Personal-name comment mentions are generalized ("Noben" → "the DA") in BOTH trees (copied to live 2026-11-20), so overlay and live are byte-identical.
 
 ### local doctrine (rules)
 
@@ -32,7 +33,7 @@ Each was diffed against stock and reviewed 2026-11-16; all eight kept by the pri
 
 |class|count|why not copied|
 |---|---|---|
-|rendered|77|placeholder personalization (`{{...}}` and `{DA_IDENTITY.*}` filled), byte-identical to stock after substitution — Appendix A lists paths. Includes `skills/Prompting/Templates/Data/Agents.yaml`: a **wrong-place edit** (agent naming hand-filled into the distribution template). **Fixed 2026-11-16:** live file reverted byte-identical to stock; the name is canonical in `USER/DIGITAL_ASSISTANT/DA_IDENTITY.md` (`name: "Noben"`), which RenderIdentity fills from — no move needed.|
+|rendered|76|placeholder personalization (`{{...}}` and `{DA_IDENTITY.*}` filled), byte-identical to stock after substitution — Appendix A lists paths. Includes `skills/Prompting/Templates/Data/Agents.yaml`: a **wrong-place edit** (agent naming hand-filled into the distribution template). **Fixed 2026-11-16:** live file reverted byte-identical to stock; the name is canonical in `USER/DIGITAL_ASSISTANT/DA_IDENTITY.md` (`name: "Noben"`), which RenderIdentity fills from — no move needed. `LIFEOS/PULSE/VoiceServer/voice.ts` moved out of this class 2026-11-20 (source-diverged, copied).|
 |bridge duplicates|2|`LIFEOS/TOOLS|DOCUMENTATION/OmpHooksBridge.*` deployed payloads; canonical advanced version is this repo's `omp/agent/extensions/OmpHooksBridge.ts`, byte-identical to the live extension.|
 |generated / merge output|4|`LIFEOS/VERSION` newline artifact, `settings.system.json` + rendered `CLAUDE.md` (installer outputs), one local lockfile.|
 |noise locks & state|~15|worker `bun.lock`s, Pulse runtime state.|
@@ -53,7 +54,7 @@ Each was diffed against stock and reviewed 2026-11-16; all eight kept by the pri
 
 Copied tree: **no principal name, no absolute user paths, no secrets** (hook comments genericized to "the user"; rendered docs not copied). Push-safe at file content level; P7 judgment still applies before publishing.
 
-## Appendix A — rendered-only paths (77), record, not copied
+## Appendix A — rendered-only paths (76), record, not copied
 
 - `LIFEOS/ASSAY/Report.ts`
 - `LIFEOS/ASSAY/ReviewEntry.ts`
@@ -69,7 +70,6 @@ Copied tree: **no principal name, no absolute user paths, no secrets** (hook com
 - `LIFEOS/LIFEOS_SYSTEM_PROMPT.md`
 - `LIFEOS/PULSE/Observability/observability.ts`
 - `LIFEOS/PULSE/Observability/src/app/telos/_v7/styles.css`
-- `LIFEOS/PULSE/VoiceServer/voice.ts`
 - `LIFEOS/PULSE/modules/content.ts`
 - `LIFEOS/PULSE/modules/siri.ts`
 - `LIFEOS/RELAY/bridge/Probe.ts`
