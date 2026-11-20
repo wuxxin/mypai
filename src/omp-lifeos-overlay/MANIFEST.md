@@ -4,13 +4,14 @@
 
 Shadow copy of the source-level divergences this host owns — nothing generated, rendered, merged, or duplicated from a canonical in-repo file. Regenerate with `tools/lifeos-diff.ts` + `tools/lifeos-overlay.ts` (stock at `/tmp/lifeos-stock/`); the classifier detects both placeholder shapes (`{{PRINCIPAL_NAME}}`, `{DA_IDENTITY.NAME}`).
 
-## Categories (copied: 9 files)
+## Categories (copied: 10 files)
 
 ### hooks (behavior fixes)
 
 - `hooks/BlockerText.hook.ts`
 - `hooks/lib/blocker-text.ts`
 - `hooks/StopGates.hook.ts`
+- `hooks/handlers/VoiceNotification.ts` — record honesty (2026-11-20): the hardcoded `voice_engine:'fish'` literal becomes `'pulse'` (the bus; the server picks Fish vs local endpoint), docstrings updated. Voice is now the single stock chain: OmpHooksBridge's built-in speak block was retired and `OMP_VOICE=0` filters this hook out of the session's Stop set instead.
 
 ### LifeOS tool code
 

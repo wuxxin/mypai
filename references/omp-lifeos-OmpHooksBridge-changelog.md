@@ -102,3 +102,12 @@ The host moved to `oh-my-pi-git 19.0.0.r1.gd4ebe4d-1` (`omp/19.0.0`). Bridge imp
 Follow-up same day: the `OMP_BRIDGE_SESSION` toggle was **removed** from the bridge (code + tests + config docs) — rows are unconditional; on ≥19.0.0 they cost zero context, and pre-19.x runtimes are gone from this host. Suite now 17 pass / 0 fail (opt-out test deleted with the flag).
 
 Second follow-up: **transcript visibility via registered renderer**. The framed 📦 box was noise, so the bridge registers a `lifeos-bridge-stats` message renderer: rows hidden by default (zero-line component — returning `undefined` falls back to the frame and is avoided), `/bridge-stats on|off` toggles drawing, `OMP_BRIDGE_STATS=1` starts shown; when shown it is one unframed width-truncated line. Rows remain in transcript data + audit log always. Two new tests (toggle+truncation, env-default-shown + non-object safety): **19 pass / 0 fail**.
+
+## Voice ownership moves to the stock chain (2026-11-20)
+
+The built-in omp voice block (added 2026-08-22 for the pre-mirror era: extract `🗣️` from `event.message`, POST `/notify` with a hardcoded voice id) is **retired**. The transcript mirror this bridge dispatches to Stop hooks makes VoiceCompletion.hook.ts session-correct under omp — proven live (closers spoke through it all evening while the built-in path was flag-off). Keeping both double-spoke every closer.
+
+- `turn_end`: `OMP_VOICE=0` now filters `VoiceCompletion.hook.ts` out of the Stop set (`VOICE_HOOK` const + one-line filter) — the per-launch opt-out keeps its meaning; voice itself is upstream code.
+- The stats row's `voice=` column reads the dispatch result (sent/failed/-), so no dedicated fetch remains.
+- Deleted: `extractVoiceLine`, `PULSE_NOTIFY`, `VOICE_ID` (`OMP_VOICE_ID` is unused from today). Paired host change: VoiceNotification.ts records say `voice_engine:'pulse'` (the bus) instead of the hardcoded `'fish'`.
+- Copies synced byte-identical: canonical extension, `~/.omp/agent/extensions`, deployed `LIFEOS/TOOLS/OmpHooksBridge.ts`. Suite unchanged: **19 pass / 0 fail**; live proof: handleVoice → `/notify` 200, record shows `voice_engine:"pulse"`.

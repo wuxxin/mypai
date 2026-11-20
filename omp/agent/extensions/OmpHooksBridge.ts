@@ -96,8 +96,10 @@ const SETTINGS_CANDIDATES = BRIDGE_DISABLED
 const LOG_PREFIX = "lifeos-bridge";
 const LOG_STDERR = process.env.OMP_BRIDGE_STDERR === "1";
 const LOG_PATH = process.env.OMP_BRIDGE_LOG;
-const PULSE_NOTIFY = "http://127.0.0.1:31337/notify";
-const VOICE_ID = process.env.OMP_VOICE_ID ?? "fTtv3eikoepIosk8dTZ5";
+// The Stop-hook that carries voice, by registered command name. Voice lives in the stock chain
+// (VoiceCompletion.hook.ts reads the transcript mirror this bridge dispatches); OMP_VOICE=0 keeps
+// its per-launch meaning by dropping this hook from the session's Stop set. (2026-11-20)
+const VOICE_HOOK = "VoiceCompletion.hook.ts";
 // Fallback cap for hooks with no settings.json `timeout` field; registered hooks carry their own.
 const HOOK_TIMEOUT_MS = 30_000;
 // Claude Code gives every run a session id, and LifeOS hooks key their state files on it
@@ -465,22 +467,6 @@ let lastUserPrompt = "";
 let turnSeq = 0;
 let tTools = 0, tBlocked = 0, tCtxChars = 0, tVoice = "-";
 
-/** omp-native voice line: the VoiceCompletion hook needs a Claude transcript,
- *  which omp doesn't have — extract the 🗣️ closer from the message that just
- *  completed the turn instead. */
-function extractVoiceLine(text: string): string | null {
-  const lines = text.split("\n");
-  for (let i = lines.length - 1; i >= 0; i--) {
-    // Accept both `🗣️ <ZEN>:` and `🗣️ ZEN:` — the constitution template's
-    // `<DA>` is a placeholder, and TranscriptParser.extractVoiceCompletion
-    // accepts both. Angle-bracket-only matching silently dropped every closer
-    // written without brackets, so sessions spoke nothing. (2026-08-22)
-    const m = lines[i].match(/^🗣️\s*(?:<[^>]{1,32}>|[^:\n]{1,32})\s*:\s*(.+)$/);
-    if (m) return m[1].trim();
-  }
-  return null;
-}
-
 /** Extracts plain text from any AgentMessage content shape (string, or blocks with .text).
  *  Role-agnostic: the assistant voice line and a submitted user prompt read the same way. */
 function messageText(msg: unknown): string {
@@ -673,7 +659,15 @@ export default function lifeosBridge(pi: ExtensionAPI): void {
   pi.on("turn_end", async (event: { message?: unknown }, ctx: unknown) => {
     log({ event: "turn_end" });
     const mirror = transcriptMirror(ctx);
-    const results = await dispatch("Stop", forEvent("Stop"), {
+    // Voice is owned by the stock chain: this Stop dispatch hands the session's transcript mirror
+    // to VoiceCompletion.hook.ts, which speaks the closer. The omp-built-in speak block that
+    // worked around the pre-mirror global-log bug (2026-08-22) is retired — with a per-session
+    // mirror it double-speaks and hardcodes one voice id. OMP_VOICE=0 keeps its per-launch
+    // meaning: drop the voice hook from this session's Stop set. Stats stay honest by reading
+    // the dispatch result. (2026-11-20)
+    const voiceOn = process.env.OMP_VOICE !== "0";
+    const stopRegs = forEvent("Stop").filter((r) => voiceOn || hookName(r.command) !== VOICE_HOOK);
+    const results = await dispatch("Stop", stopRegs, {
       stop_hook_active: true,
       transcript_path: mirror,
       cwd: process.cwd(),
@@ -695,32 +689,9 @@ export default function lifeosBridge(pi: ExtensionAPI): void {
         log({ hook: hookName(failReg.command), cc: "StopFailure", ok: fres.ok, ms: fres.ms, err: fres.err || null, cause: hookName(d.reg.command) });
       }
     }
-    // omp-native voice: VoiceCompletion.hook.ts needs a Claude transcript omp
-    // doesn't have. Speak the turn's OWN final message — the old path read the
-    // newest session log globally, so with parallel sessions it picked the
-    // wrong session's line (or none) and voice silently died. (2026-08-22)
-    if (process.env.OMP_VOICE === "0") {
-      flushTurnRow();
-      return;
-    }
-    const line = extractVoiceLine(messageText(event?.message));
-    if (!line) {
-      flushTurnRow();
-      return;
-    }
-    const t0 = Date.now();
-    try {
-      const res = await fetch(PULSE_NOTIFY, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: line, voice_id: VOICE_ID }),
-        signal: AbortSignal.timeout(10_000),
-      });
-      tVoice = res.ok ? "sent" : "failed";
-      log({ voice: res.ok ? "sent" : "failed", status: res.status, ms: Date.now() - t0, line: line.slice(0, 40) });
-    } catch (e) {
-      tVoice = "failed";
-      log({ voice: "failed", err: String(e).slice(0, 120) });
+    // Report the voice outcome from what actually ran, keeping the stats row honest.
+    for (const d of results) {
+      if (hookName(d.reg.command) === VOICE_HOOK) tVoice = d.res.ok ? "sent" : "failed";
     }
     flushTurnRow();
   });
