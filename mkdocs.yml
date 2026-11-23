@@ -25,6 +25,5 @@ nav:
   - Host Topology & Ports: HOST_TOPOLOGY.md
   - LifeOS on OMP Architecture: LIFEOS_OMP_ARCHITECTURE.md
   - LifeOS Upgrade Runbook: LIFEOS_UPGRADE_RUNBOOK.md
-  - OMP Runtime & SDK: OMP_RUNTIME.md
-  - Memory & Benchmarks: MEMORY_AND_BENCHMARKS.md
+  - OMP Runtime, SDK & Memory: OMP_RUNTIME.md
   - Backlog & TODO: TODO.md

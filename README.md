@@ -16,7 +16,7 @@
 2. **Agent Harness (`omp/agent/`)**:
    - Base configuration (`config.yml`, `models.yml`, `lsp.json`).
    - Specialist agent roster (`agents/orchestrator.md`, `scout.md`, `debugger.md`, `reviewer.md`, `security-reviewer.md`, `task.md`, `writer.md`, `patcher.md`, `librarian.md`, `designer.md`).
-   - Engineering skills (`skills/ulw-plan`, `systematic-debugging`, `git-master`, `review-work`, `test-driven-development`, `lilac`, `archlinux-pkgbuild`, `system-prompts`), MCP-backed tool-command skills (`arbor` code-graph intelligence, `openadapt` browser verification), the `german` language-style skill, and plugin bundles (`diagram-design-plugin`, `modern-web-guidance-plugin`).
+   - Engineering skills (`systematic-debugging`, `review-work`, `lilac`, `archlinux-pkgbuild`, `system-prompts`), MCP-backed tool-command skills (`arbor` code-graph intelligence, `openadapt` browser verification), the `german` language-style skill, and plugin bundles (`diagram-design-plugin`, `modern-web-guidance-plugin`).
    - Claude Code hooks bridge extension (`extensions/OmpHooksBridge.ts`).
 
 3. **LifeOS Integration (`~/.omp/LIFEOS` via `~/.claude` symlink)**:
@@ -167,7 +167,6 @@ Build locally with `make docs` (MkDocs Material, `mkdocs.yml`) or browse directl
 - [**`docs/HOST_TOPOLOGY.md`**](docs/HOST_TOPOLOGY.md) — Linux host topology, data-home contract, canonical port map, VRAM allocation map, Pulse jobs & `lifeos-workflows-tick`.
 - [**`docs/LIFEOS_OMP_ARCHITECTURE.md`**](docs/LIFEOS_OMP_ARCHITECTURE.md) — LifeOS-on-OMP architecture, `OmpHooksBridge.ts`, `claude-shim.py`, guard enforcement, web verification, and upgrade history.
 - [**`docs/LIFEOS_UPGRADE_RUNBOOK.md`**](docs/LIFEOS_UPGRADE_RUNBOOK.md) — Step-by-step LifeOS payload upgrade procedure and overlay diffing.
-- [**`docs/OMP_RUNTIME.md`**](docs/OMP_RUNTIME.md) — `omp` 19.1.1+ runtime configuration, prompt assembly, `eval` loopback bridge, and `omp_rpc` Python SDK.
-- [**`docs/MEMORY_AND_BENCHMARKS.md`**](docs/MEMORY_AND_BENCHMARKS.md) — Mnemopi long-term memory, retired Hindsight fallback, and model speed benchmarks.
+- [**`docs/OMP_RUNTIME.md`**](docs/OMP_RUNTIME.md) — `omp` 19.1.1+ runtime configuration, prompt assembly, `eval` loopback bridge, `omp_rpc` Python SDK, Mnemopi memory, and retired Hindsight fallback.
 - [**`docs/TODO.md`**](docs/TODO.md) — Research backlog, candidate models, MCP servers, and skills.
 

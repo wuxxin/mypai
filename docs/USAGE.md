@@ -80,11 +80,8 @@ Delegate isolated subtasks via `task(agent: "...")` or `@<role>`:
 ## 4. Skills & Custom Slash Commands
 
 ### Core Engineering Skills (`omp/agent/skills/`)
-- `ulw-plan` — Ultralight planning with testable Ideal State Criteria (ISC).
 - `systematic-debugging` — Reproduce → Isolate → Hypothesize → Fix & Verify.
-- `git-master` — Safe worktree isolation (`~/.omp/wt`), atomic conventional commits.
 - `review-work` — Multi-pass review rubric (P0–P3).
-- `test-driven-development` — Red-Green-Refactor cycle.
 - `lilac`, `archlinux-pkgbuild` — Arch Linux packaging and Lilac build automation.
 - `system-prompts` — Prompt and agent-spec authoring.
 - `arbor` — Graph-native code intelligence (`arbor --help` / `mcp__arbor__*`).
@@ -92,9 +89,9 @@ Delegate isolated subtasks via `task(agent: "...")` or `@<role>`:
 - `german` — Natural German prose style.
 - **Plugin bundles (`omp/agent/plugins/`):** `diagram-design-plugin`, `modern-web-guidance-plugin` (`modern-web-guidance`, `chrome-extensions`).
 
-### Slash Commands
+### Slash Commands (`omp/agent/commands/` & Built-ins)
+- `/debug`, `/patch`, `/scout`, `/security-review`, `/source-review`, `/writer` — Custom specialist workflow commands.
 - `/plan` — Native plan mode (submits via the `propose` tool command).
-- `/ulw-plan`, `/debug`, `/review`, `/git`, `/scout`, `/security`, `/writer`, `/patch` — Invoke the corresponding specialist workflows.
 - `/learn` — Distill turn insights into Mnemopi long-term memory.
 - `/bridge-stats on|off` — Toggle rendering of `OmpHooksBridge` per-turn stats rows (hidden by default; set `OMP_BRIDGE_STATS=1` to start visible).
 
@@ -113,4 +110,4 @@ Delegate isolated subtasks via `task(agent: "...")` or `@<role>`:
 curl http://localhost:21080/v1/models
 ```
 
-Primary long-term memory is `omp`'s internal **Mnemopi** store (`qwen3-embedding` via `:21080`). Hindsight (`:28888`, `bin/membank-ctl`) is retired and kept only as an inactive fallback — see [`MEMORY_AND_BENCHMARKS.md`](MEMORY_AND_BENCHMARKS.md).
+Primary long-term memory is `omp`'s internal **Mnemopi** store (`qwen3-embedding` via `:21080`). Hindsight (`:28888`, `bin/membank-ctl`) is retired and kept only as an inactive fallback — see [`OMP_RUNTIME.md`](OMP_RUNTIME.md#4-active-long-term-memory-mnemopi).

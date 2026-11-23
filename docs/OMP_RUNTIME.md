@@ -1,6 +1,6 @@
 # Oh-My-Pi (`omp` 19.1.1+) Runtime Configuration, `eval` & `omp_rpc`
 
-Reference for `omp`'s runtime configuration layering, prompt assembly, `eval` persistent kernel / loopback bridge, and the `omp_rpc` Python SDK. Grounded against the local `submodules/aur-packages/oh-my-pi-git/src/oh-my-pi/` checkout (`19.1.1.r184`).
+Reference for `omp`'s runtime configuration layering, prompt assembly, `eval` persistent kernel / loopback bridge, the `omp_rpc` Python SDK and the configured longterm memory configuration. Grounded against the local `submodules/aur-packages/oh-my-pi-git/src/oh-my-pi/` checkout (`19.1.1.r184`).
 
 ---
 
@@ -69,3 +69,30 @@ async with RpcClient(cwd="/path/to/repo") as client:
 - **Key capabilities (`19.1.0+`):** Remote model picker, thinking-level/role selection, `auto` thinking, `steer`/`follow_up`/`abort`/resume controls, and `config_warnings_changed`/`advisor_cost_changed`/`advisor_yielded` events (`#20254`).
 - **Breaking in `19.1.0`:** RPC hosts must handle the `ask` tool as one complete HTML-form `form` request and return submitted data or cancellation (field-by-field prompts were removed).
 - Full upstream protocol spec is installed at `/usr/share/doc/oh-my-pi/rpc.md`.
+
+## 4. Active Long-Term Memory: Mnemopi
+
+Primary long-term memory is `omp`'s built-in **Mnemopi** store (`memory.backend: mnemopi` in [`omp/agent/config.yml`](../omp/agent/config.yml)):
+- **Scoping:** `per-project-tagged` (project-local writes + global recall visibility).
+- **Automatic hooks:** `autoRetain: false`, `autoRecall: false` (normal turns stay free of automatic memory traffic; invoke `recall`, `retain`, `reflect`, or `/learn` explicitly).
+- **Graph & linking:** `polyphonicRecall: true`, `proactiveLinking: true`.
+- **Embeddings:** Local `qwen3-embedding` via `http://127.0.0.1:21080/v1` (no local ONNX daemon spawned), with `embeddingQueryPrefix` configured for Qwen3-Embedding's asymmetric instruct format.
+- **Extraction/consolidation LLM:** `llmMode: smol` (uses configured `smol` role).
+
+
+### Retired Fallback: Hindsight (`:28888`, `bin/membank-ctl`)
+
+> **Status (since 2026-11-17): Retired fallback.** The Hindsight service (`:28888`, worker `:28889`) is kept provisioned and inactive in case Mnemopi needs a fallback.
+
+If re-enabled (`memory.backend: hindsight`), manage memory banks and mental models declaratively from `omp/agent/memorybanks/` using [`bin/membank-ctl`](../bin/membank-ctl):
+```bash
+# Idempotently sync bank configs and mental models
+./bin/membank-ctl update http://localhost:28888 ./omp/agent/memorybanks --yes
+
+# Sync and prune obsolete server-side mental models
+./bin/membank-ctl update http://localhost:28888 ./omp/agent/memorybanks --yes --prune
+
+# Export live bank state to YAML
+./bin/membank-ctl export http://localhost:28888 oh-my-pi --yaml --out oh-my-pi.yaml
+```
+*(In `omp 19.1.1+`, Hindsight `/tan` forks retain only turns added by the fork, not the inherited parent transcript.)*

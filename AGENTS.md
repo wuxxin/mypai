@@ -10,8 +10,7 @@ Layering and stabilizing **LifeOS** (https://github.com/danielmiessler/LifeOS) i
 - Claude Code vs. omp harness deltas, `OmpHooksBridge.ts` (incremental transcript mirror under `~/.claude/lifeos-bridge-transcripts/`, live `session_id`, 120 s `SessionTree` reaper), `claude-shim.py`, guard enforcement, web verification, accepted gaps: `docs/LIFEOS_OMP_ARCHITECTURE.md`
 - LifeOS distro upgrade procedure & version semantics: `docs/LIFEOS_UPGRADE_RUNBOOK.md`
 - Operational guide, repo layout, agent roster, skills & commands: `docs/USAGE.md`
-- `omp` 19.1.1+ runtime config, `eval` loopback bridge, `omp_rpc` SDK: `docs/OMP_RUNTIME.md`
-- Mnemopi memory, retired Hindsight fallback, speed benchmarks: `docs/MEMORY_AND_BENCHMARKS.md`
+- `omp` 19.1.1+ runtime config, `eval` loopback bridge, `omp_rpc` SDK, Mnemopi memory: `docs/OMP_RUNTIME.md`
 - Launch command: `lifeos`. Headless bridge checks: `make bridge-test` / `make bridge-smoke`.
 
 ### Repository Areas, Submodules and Sandboxing Discipline
