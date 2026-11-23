@@ -69,6 +69,7 @@
 import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
 import { homedir, tmpdir } from "os";
 import { join } from "path";
+import type { Timer } from "node:timers";
 import type { ExtensionAPI } from "@oh-my-pi/pi-coding-agent";
 
 const HOME = homedir();
@@ -104,10 +105,11 @@ const VOICE_HOOK = "VoiceCompletion.hook.ts";
 const HOOK_TIMEOUT_MS = 30_000;
 // Claude Code gives every run a session id, and LifeOS hooks key their state files on it
 // (STATE/isa-nudge/<id>.json, memory-inject/<id>.queue.json …). The shim exports
-// OMP_SESSION_ID per child so headless runs are attributable; an interactive omp session
-// has none and keeps the historical "omp" key. Hardcoded "unknown" put every run's writes
-// in one shared file, where parallel sessions overwrote each other. (2026-11-10)
-const SESSION_ID = process.env.OMP_SESSION_ID || "omp";
+// OMP_SESSION_ID per child so headless runs are attributable; interactive omp sessions
+// resolve their live omp session id from ctx.sessionManager.getSessionId() (isolating
+// parallel terminals while keeping --resume continuity), falling back to "omp" only when
+// neither is available.
+const EXPLICIT_SESSION_ID = process.env.OMP_SESSION_ID?.trim() || "";
 
 // In-session stats rows via pi.sendMessage (drawn + persisted in the transcript). The payload is
 // flagged excludeFromContext:true — on runtimes with #19550 payload support (upstream tip ≥ 19.0.0)
@@ -409,19 +411,38 @@ export function branchToTranscriptLines(branch: unknown[], cwd: string): string[
   return lines;
 }
 
-function transcriptMirror(ctx: unknown): string {
+interface MirrorState {
+  file: string | null;
+  branchLen: number;
+}
+
+const TRANSCRIPT_DIR = process.env.OMP_BRIDGE_TRANSCRIPT_DIR?.trim() || join(CONFIG_ROOT, "lifeos-bridge-transcripts");
+
+function syncTranscriptMirror(ctx: unknown, state: MirrorState, fallbackSid?: string): string {
   try {
     const sm = (ctx as { sessionManager?: BridgeSessionManager } | null | undefined)?.sessionManager;
-    if (!sm || typeof sm.getBranch !== "function") return "";
-    const lines = branchToTranscriptLines(sm.getBranch(), process.cwd());
-    const dir = join(tmpdir(), "lifeos-bridge-transcripts");
+    if (!sm || typeof sm.getBranch !== "function") return state.file ?? "";
+    const branch = sm.getBranch();
+    const dir = TRANSCRIPT_DIR;
     mkdirSync(dir, { recursive: true });
-    const sid = typeof sm.getSessionId === "function" ? String(sm.getSessionId() || "") : "";
-    const path = join(dir, `${(sid || "session").replace(/[^A-Za-z0-9._-]/g, "_")}.jsonl`);
-    writeFileSync(path, lines.length ? lines.join("\n") + "\n" : "");
-    return path;
+    const sid = (typeof sm.getSessionId === "function" ? String(sm.getSessionId() || "") : "") || fallbackSid || "session";
+    const file = join(dir, `${sid.replace(/[^A-Za-z0-9._-]/g, "_")}.jsonl`);
+
+    if (state.file === file && branch.length >= state.branchLen && existsSync(file)) {
+      if (branch.length === state.branchLen) return file;
+      const delta = branchToTranscriptLines(branch.slice(state.branchLen), process.cwd());
+      if (delta.length > 0) appendFileSync(file, delta.join("\n") + "\n", "utf8");
+      state.branchLen = branch.length;
+      return file;
+    }
+
+    const lines = branchToTranscriptLines(branch, process.cwd());
+    writeFileSync(file, lines.length ? lines.join("\n") + "\n" : "");
+    state.file = file;
+    state.branchLen = branch.length;
+    return file;
   } catch {
-    return "";
+    return state.file ?? "";
   }
 }
 
@@ -542,12 +563,89 @@ export default function lifeosBridge(pi: ExtensionAPI): void {
     });
   }
 
-  pi.on("session_start", async () => {
-    log({ event: "session_start" });
+  // ── Session-tree reaper loop — the LifeOSHooks function-hook module's TREE_MS poller, ported ───────
+  // The plugin loads in Claude Code only; its per-session half needs the env tags of this session's
+  // processes, and /proc/<pid>/environ is readable ONLY inside the sandbox that spawned them (measured
+  // 2026-11-20: from a foreign sandbox — Pulse's job runner — 833 of 835 reads return EACCES). So the
+  // per-session reaper runs here; the Pulse [[job]] session-tree-sweep covers only its own subtree.
+  // Every SWEEP_MS hand SessionTree.ts a snapshot built from ctx.getAsyncJobSnapshot(): task jobs are
+  // the agents feed (id/status/stopMs), bash jobs owned by a subagent are the command records — the
+  // native state the plugin got from $.agent.list(). SessionTree reaps this session's `orphaned` +
+  // `agent-stopped` work processes and writes MEMORY/STATE/session-tree/<id>.json, which Vigil's
+  // running adapter reads (2-minute freshness contract). A run without PI_SESSION_ID stays silent:
+  // no id, nothing to attribute — the headless passthrough property. pi.setInterval is cleared by the
+  // engine at session_shutdown; every step is guarded so a failing sweep never touches a hook path.
+  const SWEEP_MS = 120_000;
+  const SESSION_TREE_CLI = join(process.env.LIFEOS_DIR || join(homedir(), ".claude", "LIFEOS"), "TOOLS", "SessionTree.ts");
+
+  interface JobItem { type?: string; status?: string; agentId?: string; ownerId?: string; command?: string; endTime?: number }
+  let lastCtx: unknown = null;
+  let sweepSid = "";
+  const captureCtx = (ctx: unknown): void => { if (ctx && typeof ctx === "object") lastCtx = ctx; };
+
+  async function sweepSessionTree(): Promise<void> {
+    if (!sweepSid) return;
+    try {
+      const getter = (lastCtx as { getAsyncJobSnapshot?: () => { running?: JobItem[]; recent?: JobItem[] } } | null)?.getAsyncJobSnapshot;
+      const snap = typeof getter === "function" ? getter() : null;
+      const jobs = [...(snap?.running ?? []), ...(snap?.recent ?? [])];
+      const agents = jobs.filter((j) => j.agentId).map((j) => ({ id: String(j.agentId), status: String(j.status ?? ""), stopMs: typeof j.endTime === "number" ? j.endTime : undefined }));
+      const commands = jobs.filter((j) => j.type === "bash" && j.command && j.ownerId && j.ownerId !== "Main").map((j) => ({ agentId: String(j.ownerId), command: String(j.command) }));
+      const proc = Bun.spawn(["bun", SESSION_TREE_CLI, "snapshot"], { stdin: "pipe", stdout: "ignore", stderr: "ignore" });
+      proc.stdin.write(JSON.stringify({ session_id: sweepSid, agents, commands, apply: true }));
+      proc.stdin.end();
+      await proc.exited;
+    } catch (e) { log({ event: "session_tree_sweep_failed", error: String(e) }); }
+  }
+
+  // The id is armed from ctx.sessionManager.getSessionId() at session_start, NOT from process.env:
+  // core injects the PI_SESSION_ID tag into tool children only — the extension's own environment has
+  // none (probed 2026-11-20). And the scheduler lives on ctx, not pi: ExtensionAPI has no
+  // setInterval (types.ts puts it on ExtensionContext); a `pi.setInterval` guard silently never armed.
+  let sweepArmed = false;
+  let sweepTimer: Timer | null = null; // node:timers.Timer, the handle ctx.setInterval returns
+  const readSessionId = (ctx: unknown): string | undefined => {
+    if (!ctx || typeof ctx !== "object" || !("sessionManager" in ctx)) return undefined;
+    const sm = ctx.sessionManager;
+    if (!sm || typeof sm !== "object" || !("getSessionId" in sm) || typeof sm.getSessionId !== "function") return undefined;
+    try { return (sm.getSessionId as () => string)(); } catch { return undefined; }
+  };
+  let liveSessionId = "";
+  const resolveSessionId = (ctx?: unknown): string => {
+    const candidate = readSessionId(ctx) ?? readSessionId(lastCtx);
+    if (typeof candidate === "string" && /^[A-Za-z0-9._-]+$/.test(candidate)) {
+      liveSessionId = candidate;
+    }
+    return EXPLICIT_SESSION_ID || liveSessionId || "omp";
+  };
+  const mirrorState: MirrorState = { file: null, branchLen: 0 };
+  const transcriptPathFor = (ctx?: unknown): string =>
+    syncTranscriptMirror(ctx ?? lastCtx, mirrorState, resolveSessionId(ctx));
+  const armSweep = (ctx: unknown): void => {
+    captureCtx(ctx);
+    if (!ctx || typeof ctx !== "object" || !("setInterval" in ctx)) return;
+    const sid = readSessionId(ctx);
+    if (typeof sid !== "string" || !/^[A-Za-z0-9_-]+$/.test(sid)) return;
+    if (sweepArmed && sid === sweepSid) return; // same session, already scheduled
+    const scheduler = ctx.setInterval;
+    if (typeof scheduler !== "function") return;
+    if (sweepTimer && "clearTimer" in ctx && typeof ctx.clearTimer === "function") {
+      try { (ctx.clearTimer as (t: Timer) => void)(sweepTimer); } catch { /* engine clears it on shutdown anyway */ }
+    }
+    sweepSid = sid;
+    sweepArmed = true;
+    sweepTimer = scheduler.call(ctx, () => void sweepSessionTree(), SWEEP_MS);
+    log({ event: "session_tree_loop_armed", session: sid.slice(0, 8), interval_ms: SWEEP_MS });
+  };
+
+  pi.on("session_start", async (_event: unknown, ctx: unknown) => {
+    armSweep(ctx); // the stable context object; getAsyncJobSnapshot + sessionId live here
+    const sid = resolveSessionId(ctx);
+    log({ event: "session_start", session_id: sid });
     sendRow(`lifeos-bridge · registry loaded · hooks=${registry.length} · settings=${registrySource ?? "(none)"}`,
       { hooks: registry.length, settings: registrySource ?? null });
     await dispatch("SessionStart", forEvent("SessionStart"), {
-      session_id: SESSION_ID,
+      session_id: sid,
       source: "startup",
       cwd: process.cwd(),
       hook_event_name: "SessionStart",
@@ -563,7 +661,8 @@ export default function lifeosBridge(pi: ExtensionAPI): void {
     log({ event: "turn_start" });
   });
 
-  pi.on("message_start", async (event: unknown) => {
+  pi.on("message_start", async (event: unknown, ctx?: unknown) => {
+    captureCtx(ctx);
     const msg = (event && typeof event === "object" ? (event as Record<string, unknown>).message : null) as Record<string, unknown> | undefined;
     if (!msg || msg.role !== "user") return;
     const prompt = messageText(msg);
@@ -577,13 +676,15 @@ export default function lifeosBridge(pi: ExtensionAPI): void {
     log({ event: "user_message", chars: prompt.length });
     await dispatch("UserPromptSubmit", forEvent("UserPromptSubmit"), {
       prompt,
-      session_id: SESSION_ID,
+      session_id: resolveSessionId(ctx),
+      transcript_path: transcriptPathFor(ctx),
       cwd: process.cwd(),
       hook_event_name: "UserPromptSubmit",
     });
   });
 
   pi.on("tool_call", async (event: unknown, ctx: unknown) => {
+    captureCtx(ctx);
     const info = readToolCall(event);
     if (!info) return;
     log({ event: "tool_call", tool: info.name });
@@ -597,8 +698,8 @@ export default function lifeosBridge(pi: ExtensionAPI): void {
     const results = await dispatch("PreToolUse", regs, {
       tool_name: ccName,
       tool_input: info.input ?? {},
-      session_id: SESSION_ID,
-      transcript_path: "",
+      session_id: resolveSessionId(ctx),
+      transcript_path: transcriptPathFor(ctx),
       cwd: process.cwd(),
       hook_event_name: "PreToolUse",
       permission_mode: "default",
@@ -627,17 +728,21 @@ export default function lifeosBridge(pi: ExtensionAPI): void {
     }
   });
 
-  pi.on("tool_result", async (event: unknown) => {
+  pi.on("tool_result", async (event: unknown, ctx?: unknown) => {
+    captureCtx(ctx);
     const info = readToolResult(event);
     if (!info) return;
     const ccEvent = info.isError ? "PostToolUseFailure" : "PostToolUse";
     log({ event: "tool_result", tool: info.name, isError: info.isError });
+    const sid = resolveSessionId(ctx);
+    const mirror = transcriptPathFor(ctx);
     await dispatch(ccEvent, forTool(ccEvent, toolCcName(info.name)), info.isError
       ? {
           tool_name: toolCcName(info.name),
           tool_input: info.input ?? {},
           tool_response_error: info.content,
-          session_id: SESSION_ID,
+          session_id: sid,
+          transcript_path: mirror,
           cwd: process.cwd(),
           hook_event_name: "PostToolUseFailure",
           tool_use_id: info.toolCallId,
@@ -647,7 +752,8 @@ export default function lifeosBridge(pi: ExtensionAPI): void {
           tool_input: info.input ?? {},
           tool_response: info.content,
           tool_response_error: null,
-          session_id: SESSION_ID,
+          session_id: sid,
+          transcript_path: mirror,
           cwd: process.cwd(),
           hook_event_name: "PostToolUse",
           permission_mode: "default",
@@ -657,8 +763,10 @@ export default function lifeosBridge(pi: ExtensionAPI): void {
   });
 
   pi.on("turn_end", async (event: { message?: unknown }, ctx: unknown) => {
+    captureCtx(ctx);
     log({ event: "turn_end" });
-    const mirror = transcriptMirror(ctx);
+    const sid = resolveSessionId(ctx);
+    const mirror = transcriptPathFor(ctx);
     // Voice is owned by the stock chain: this Stop dispatch hands the session's transcript mirror
     // to VoiceCompletion.hook.ts, which speaks the closer. The omp-built-in speak block that
     // worked around the pre-mirror global-log bug (2026-08-22) is retired — with a per-session
@@ -672,7 +780,7 @@ export default function lifeosBridge(pi: ExtensionAPI): void {
       transcript_path: mirror,
       cwd: process.cwd(),
       hook_event_name: "Stop",
-      session_id: SESSION_ID,
+      session_id: sid,
     });
     // Claude Code's StopFailure = a stop hook failed. omp emits no such event, so synthesize it
     // from the failure this bridge observed; the v8 consumers (EventLogger, TabState's ❌ stamp)
@@ -681,7 +789,7 @@ export default function lifeosBridge(pi: ExtensionAPI): void {
       if (d.res.ok) continue;
       for (const failReg of forEvent("StopFailure")) {
         const fres = await runHook(failReg, {
-          session_id: SESSION_ID,
+          session_id: sid,
           cwd: process.cwd(),
           hook_event_name: "StopFailure",
           error: `${hookName(d.reg.command)} (exit ${d.res.exit ?? "?"}): ${d.res.err.trim().split("\n")[0] || "no stderr"}`,
@@ -697,10 +805,11 @@ export default function lifeosBridge(pi: ExtensionAPI): void {
   });
 
   pi.on("session_shutdown", async (_event: unknown, ctx: unknown) => {
+    captureCtx(ctx);
     log({ event: "session_shutdown" });
-    const mirror = transcriptMirror(ctx);
+    const mirror = transcriptPathFor(ctx);
     await dispatch("SessionEnd", forEvent("SessionEnd"), {
-      session_id: SESSION_ID,
+      session_id: resolveSessionId(ctx),
       transcript_path: mirror,
       cwd: process.cwd(),
       hook_event_name: "SessionEnd",
@@ -714,6 +823,7 @@ export default function lifeosBridge(pi: ExtensionAPI): void {
   pi.on("session_clear", async () => {
     log({ event: "session_clear" });
     lastUserPrompt = "";
+    mirrorState.branchLen = 0;
   });
 
   // One omp approval prompt was originally mapped to two Claude Code events: PermissionRequest
@@ -725,12 +835,13 @@ export default function lifeosBridge(pi: ExtensionAPI): void {
   // clear-on-resolve pairing stay intact. tool_input has no equivalent in
   // ToolApprovalRequestedEvent, so TabState's permissionDetail() falls back to the tool name; that
   // is its documented behavior for an unknown input, not a degraded stamp.
-  pi.on("tool_approval_requested", async (event: unknown) => {
+  pi.on("tool_approval_requested", async (event: unknown, ctx?: unknown) => {
+    captureCtx(ctx);
     const e = event as Record<string, unknown> | undefined;
     const toolName = typeof e?.toolName === "string" ? toolCcName(e.toolName) : "tool";
     log({ event: "tool_approval_requested", tool: toolName });
     await dispatch("PermissionRequest", forEvent("PermissionRequest"), {
-      session_id: SESSION_ID,
+      session_id: resolveSessionId(ctx),
       cwd: process.cwd(),
       hook_event_name: "PermissionRequest",
       tool_name: toolName,

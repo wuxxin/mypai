@@ -393,4 +393,69 @@ describe("transcript mirror (exported pure function)", () => {
     expect(toolResult.message.content[0].tool_use_id).toBe("tu-1");
     expect(toolResult.message.content[0].is_error).toBe(true);
   });
+
+  test("incremental mirror updates on mid-turn events and rewrites cleanly on branch shrink", async () => {
+    const s = fixture((rec) => ({
+      PreToolUse: [{ matcher: "*", hooks: [{ type: "command", command: rec }] }],
+      PostToolUse: [{ matcher: "*", hooks: [{ type: "command", command: rec }] }],
+      Stop: [{ matcher: "*", hooks: [{ type: "command", command: rec }] }],
+    }));
+    const pi = makePi();
+    (await s.load())(pi);
+
+    const branch: unknown[] = [
+      { type: "message", timestamp: "2026-11-23T00:00:00.000Z", message: { role: "user", content: [{ type: "text", text: "first" }] } },
+    ];
+    const ctx = { sessionManager: { getSessionId: () => "inc-mirror-test", getBranch: () => branch } };
+
+    await fire(pi, "session_start", {}, ctx);
+    await fire(pi, "tool_call", { toolName: "bash", toolCallId: "t1", input: { command: "echo hi" } }, ctx);
+    const ev1 = s.events()[0]!;
+    expect(typeof ev1.transcript_path).toBe("string");
+    expect((ev1.transcript_path as string).length).toBeGreaterThan(0);
+    expect(readFileSync(ev1.transcript_path as string, "utf8").trim().split("\n")).toHaveLength(1);
+
+    // Append a new entry and verify incremental append on PostToolUse
+    branch.push({ type: "message", timestamp: "2026-11-23T00:00:01.000Z", message: { role: "assistant", content: [{ type: "toolCall", id: "t1", name: "bash", arguments: { command: "echo hi" } }] } });
+    await fire(pi, "tool_result", { toolName: "bash", toolCallId: "t1", input: { command: "echo hi" }, content: "hi", isError: false }, ctx);
+    const ev2 = s.events()[1]!;
+    expect(ev2.transcript_path).toBe(ev1.transcript_path);
+    expect(readFileSync(ev2.transcript_path as string, "utf8").trim().split("\n")).toHaveLength(2);
+
+    // Shrink branch (rewind) and verify Stop rewrites instead of appending stale lines
+    branch.length = 1;
+    await fire(pi, "turn_end", {}, ctx);
+    const ev3 = s.events()[2]!;
+    expect(readFileSync(ev3.transcript_path as string, "utf8").trim().split("\n")).toHaveLength(1);
+  });
+});
+
+describe("per-session session_id resolution", () => {
+  test("interactive sessions resolve live omp sessionId when OMP_SESSION_ID is unset", async () => {
+    const s = fixture((rec) => ({
+      SessionStart: [{ matcher: "*", hooks: [{ type: "command", command: rec }] }],
+      UserPromptSubmit: [{ matcher: "*", hooks: [{ type: "command", command: rec }] }],
+      PreToolUse: [{ matcher: "*", hooks: [{ type: "command", command: rec }] }],
+    }));
+    for (const k of envKeys) delete process.env[k];
+    process.env.OMP_BRIDGE_SETTINGS = join(s.dir, "settings.json");
+    process.env.LIFEOS_CONFIG_ROOT = s.dir;
+    process.env.OMP_BRIDGE_LOG = s.logPath;
+    process.env.OMP_VOICE = "0";
+    // Deliberately leave OMP_SESSION_ID unset (interactive launch)
+    const mod = await import(`${EXT}?instance=${++instance}`);
+    const pi = makePi();
+    mod.default(pi);
+
+    const ctx = { sessionManager: { getSessionId: () => "omp-live-uuid-42", getBranch: () => [] } };
+    await fire(pi, "session_start", {}, ctx);
+    await fire(pi, "message_start", { message: { role: "user", content: "hello interactive" } });
+    await fire(pi, "tool_call", { toolName: "bash", toolCallId: "c1", input: { command: "pwd" } }, ctx);
+
+    const evs = s.events();
+    expect(evs).toHaveLength(3);
+    for (const ev of evs) {
+      expect(ev.session_id).toBe("omp-live-uuid-42");
+    }
+  });
 });
