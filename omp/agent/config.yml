@@ -41,8 +41,21 @@ theme:
   dark: titanium
 setupVersion: 3
 statusLine:
-  preset: default
+  preset: custom
   separator: powerline-thin
+  leftSegments:
+    - vim
+    - model
+    - mode
+    - path
+    - git
+    - pr
+    - tree
+  rightSegments:
+    - session_name
+    - token_total
+    - cost
+    - context_pct
 stt:
   enabled: true
   language: auto
@@ -152,7 +165,7 @@ todo:
   remindersMax: 10
 computer:
   display: all
-  backgroundFallback: takeover
+  takeover: fallback
 task:
   eager: default
   maxConcurrency: 6
@@ -161,6 +174,7 @@ task:
   agentIdleTtlMs: 420000
   prewalk: false
   enableLsp: true
+  crossInstance: true   # agent mesh: interactive instances in this folder list via agent://peers and can message each other (omp >=19.0.0)
   agentModelOverrides:
     scout: "@smol"
     patcher: "@smol"
@@ -183,7 +197,7 @@ spotlight:
     enabled: true
 tools:
   intentTracing: false
-  xdevDocs: inline
+  commandDocs: inline
   speculativeExecution:
     enabled: true
     maxInFlight: 2
@@ -206,8 +220,6 @@ display:
   hideToolActivity: false
 steeringMode: all
 followUpMode: all
-task:
-  crossInstance: true   # agent mesh: interactive instances in this folder list via agent://peers and can message each other (omp >=19.0.0)
 error:
   notify: "on"
 power:

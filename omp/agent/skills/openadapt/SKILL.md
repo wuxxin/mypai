@@ -21,7 +21,7 @@ Use OpenAdapt tools when:
 
 ## Guidelines & Primitives
 
-1. **OMP `xd://` Discovery & Invocation**: Discover openadapt device schemas via `read xd://openadapt` and execute browser interactions via `write xd://openadapt` or `mcp__openadapt__*`.
+1. **OMP Tool-Command Discovery & Invocation**: Discover openadapt command schemas via `openadapt --help` (or `read help://openadapt`) and execute browser interactions via `openadapt <args>` or `mcp__openadapt__*`.
 2. **Headless Execution**: Use headless Playwright/Chromium mode for fast DOM extraction and low latency.
 3. **DOM & State Inspection**: Query element selectors, text contents, and visual layouts without spawning a heavy GUI window.
 4. **UI Verification**: Validate web frontend layout changes against expected DOM structure after updating components.
