@@ -12,7 +12,7 @@ PYTEST = $(if $(wildcard $(VENV_BIN)/pytest),$(VENV_BIN)/pytest,pytest)
 RUFF = $(if $(wildcard $(VENV_BIN)/ruff),$(VENV_BIN)/ruff,ruff)
 MYPY = $(if $(wildcard $(VENV_BIN)/mypy),$(VENV_BIN)/mypy,mypy)
 
-.PHONY: help buildenv test test-unit test-e2e bridge-test bridge-smoke coverage lint format typecheck clean cleanenv all
+.PHONY: help buildenv test test-unit test-e2e bridge-test bridge-smoke coverage lint format typecheck docs docs-online-build docs-serve docs-clean clean cleanenv all
 
 ## Help & Target Reconstruction
 help: ## Show this help message and reconstruct all primary targets
@@ -34,8 +34,8 @@ help: ## Show this help message and reconstruct all primary targets
 buildenv: ## Provision local virtual environment with uv and install test dependencies
 	@echo "==> Creating virtual environment in $(VENV)..."
 	@if [ ! -d "$(VENV)" ]; then uv venv $(VENV); fi
-	@echo "==> Installing mypai_runtime in editable mode with test dependencies..."
-	@uv pip install --python $(VENV_BIN)/python -e ".[test]"
+	@echo "==> Installing mypai_runtime in editable mode with test and docs dependencies..."
+	@uv pip install --python $(VENV_BIN)/python -e ".[test,docs]"
 	@echo "==> Environment ready: $(VENV_BIN)/python"
 
 ## Testing Targets
@@ -88,6 +88,25 @@ format: ## Automatically fix and format all Python code
 typecheck: ## Run static type analysis with mypy
 	@echo "==> Running mypy static type analysis..."
 	@PYTHONPATH="src:$${PYTHONPATH:-}" $(MYPY) src/
+
+## Documentation Targets (MkDocs)
+docs: buildenv ## Build docs for local file:// browsing
+	@echo "==> Building MkDocs site for local usage..."
+	@mkdir -p build/docs
+	@$(VENV_BIN)/mkdocs build --no-directory-urls -d build/docs -f mkdocs.yml
+	@echo "Finished. Browse at file://$(CURDIR)/build/docs/index.html"
+
+docs-online-build: buildenv ## Build docs for HTTP serving
+	@echo "==> Building MkDocs site for HTTP serving..."
+	@mkdir -p build/docs-online
+	@$(VENV_BIN)/mkdocs build -d build/docs-online -f mkdocs.yml
+	@echo "Finished. Serve with: $(PYTHON) -m http.server --directory build/docs-online"
+
+docs-serve: buildenv ## Rebuild and serve docs with autoreload
+	@$(VENV_BIN)/mkdocs serve -f mkdocs.yml
+
+docs-clean: ## Remove generated MkDocs output
+	@rm -rf build/docs build/docs-online
 
 ## Pipeline Target
 all: format lint typecheck test coverage ## Run complete CI pipeline (format, lint, typecheck, test, coverage)

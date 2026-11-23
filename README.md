@@ -16,15 +16,15 @@
 2. **Agent Harness (`omp/agent/`)**:
    - Base configuration (`config.yml`, `models.yml`, `lsp.json`).
    - Specialist agent roster (`agents/orchestrator.md`, `scout.md`, `debugger.md`, `reviewer.md`, `security-reviewer.md`, `task.md`, `writer.md`, `patcher.md`, `librarian.md`, `designer.md`).
-   - Engineering skills (`skills/ulw-plan`, `systematic-debugging`, `git-master`, `review-work`, `test-driven-development`, `lilac`, `archlinux-pkgbuild`, `system-prompts`), MCP-backed device skills (`arbor` code-graph intelligence at `xd://arbor`, `openadapt` browser verification at `xd://openadapt`), the `german` language-style skill, and plugin bundles (`diagram-design-plugin`, `modern-web-guidance-plugin`).
+   - Engineering skills (`skills/ulw-plan`, `systematic-debugging`, `git-master`, `review-work`, `test-driven-development`, `lilac`, `archlinux-pkgbuild`, `system-prompts`), MCP-backed tool-command skills (`arbor` code-graph intelligence, `openadapt` browser verification), the `german` language-style skill, and plugin bundles (`diagram-design-plugin`, `modern-web-guidance-plugin`).
    - Claude Code hooks bridge extension (`extensions/OmpHooksBridge.ts`).
 
 3. **LifeOS Integration (`~/.omp/LIFEOS` via `~/.claude` symlink)**:
    - Primary immediate engineering effort: layering LifeOS into OMP (basically working, actively undergoing adjustments).
    - Private data repo of record in `~/agent-private/lifeos` (v8 layout: `USER/` with `MEMORY/` under it, single-file `TELOS.md`; `LIFEOS_CONFIG_DIR` exported by the launcher).
-   - Pulse dashboard on port `:31337`, supervised as the primary service of the systemd user unit `~/.config/systemd/user/omp.service` (`LAUNCHER_SERVICE_CMD` in `omp.env`; sidecars retired 2026-11-16, periodic jobs run as `[[job]]` entries in `USER/CONFIG/PULSE.user.toml`).
-   - `OmpHooksBridge.ts` translating Claude Code hook events (`SessionStart`, `UserPromptSubmit`, `PreToolUse`, `PostToolUse`/`PostToolUseFailure`, `Stop`, `SessionEnd`, `PermissionRequest`) for OMP.
-   - Utility inference compatibility via [`bin/claude-shim.py`](bin/claude-shim.py) (documented in [`bin/claude-shim.md`](bin/claude-shim.md)).
+   - Pulse dashboard on port `:31337`, supervised as the primary service of the systemd user unit `~/.config/systemd/user/omp.service` (`LAUNCHER_SERVICE_CMD` in `omp.env`; periodic jobs run as `[[job]]` entries in `USER/CONFIG/PULSE.user.toml` or via `bin/lifeos-workflows-tick.ts`).
+   - `OmpHooksBridge.ts` translating Claude Code hook events (`SessionStart`, `UserPromptSubmit`, `PreToolUse`, `PostToolUse`/`PostToolUseFailure`, `Stop`, `SessionEnd`, `PermissionRequest`) for OMP, with incremental transcript mirroring under `~/.claude/lifeos-bridge-transcripts/` and live per-session `session_id` isolation.
+   - Utility inference compatibility via [`bin/claude-shim.py`](bin/claude-shim.py) (documented in [`docs/LIFEOS_OMP_ARCHITECTURE.md`](docs/LIFEOS_OMP_ARCHITECTURE.md)).
 
 ---
 
@@ -65,7 +65,7 @@ cd mypai
 
 ### 5. Install & Layer LifeOS into OMP
 
-Deploy the LifeOS distribution payload per [`references/lifeos-upgrade-runbook.md`](references/lifeos-upgrade-runbook.md) (staged release tarball → `install/install.sh` bootstrap → `bun Tools/InstallAll.ts --yes ...` overlay → data-home re-link via `LinkUser.ts`/`ScaffoldUser.ts`/`Migrate.ts`). The omp profile + hooks bridge (`OmpHooksBridge.ts`) deploy through the sandboxed install hooks:
+Deploy the LifeOS distribution payload per [`docs/LIFEOS_UPGRADE_RUNBOOK.md`](docs/LIFEOS_UPGRADE_RUNBOOK.md) (staged release tarball → `install/install.sh` bootstrap → `bun Tools/InstallAll.ts --yes ...` overlay → data-home re-link via `LinkUser.ts`/`ScaffoldUser.ts`/`Migrate.ts`). The omp profile + hooks bridge (`OmpHooksBridge.ts`) deploy through the sandboxed install hooks:
 
 ```bash
 ./submodules/agents-shared/scripts/sandbox-ctl install --new-config-from .   # run from this repo root
@@ -160,16 +160,14 @@ When any of `lifeos`, `ephemeral-omp`, or `ephemeral-lifeos` is called on the ho
 
 ## Documentation Index
 
-- [**`USAGE.md`**](USAGE.md) — Complete operational guide for OMP, LifeOS, subagents, and skills.
+Build locally with `make docs` (MkDocs Material, `mkdocs.yml`) or browse directly in `docs/`:
+
 - [**`AGENTS.md`**](AGENTS.md) — System realities, agent operating guidelines, and code style.
-
-Host & LifeOS:
-- [**`references/mypai-lifeos-host-linux.md`**](references/mypai-lifeos-host-linux.md) — LifeOS topology, config plumbing, OS translation on this host. Companion harness-delta reference: [`references/lifeos-omp-difference.md`](references/lifeos-omp-difference.md); upgrade procedure: [`references/lifeos-upgrade-runbook.md`](references/lifeos-upgrade-runbook.md).
-- [**`references/omp-lifeos-OmpHooksBridge.md`**](references/omp-lifeos-OmpHooksBridge.md) / [**-changelog.md**](references/omp-lifeos-OmpHooksBridge-changelog.md) — hooks bridge implementation; per-version upgrade mechanics.
-- [**`references/mypai-layout.md`**](references/mypai-layout.md) — repo layout & full references index. · [`mypai-portmap.md`](references/mypai-portmap.md) — canonical port allocations. · [`mypai-host-memorymap.md`](references/mypai-host-memorymap.md) — VRAM/RAM co-running map.
-
-OMP internals:
-- [**`references/omp-runtime-config.md`**](references/omp-runtime-config.md) — OMP runtime configuration, prompt layering, and subagent resolution.
-- [`omp-eval-tool.md`](references/omp-eval-tool.md) · [`omp-rpc-functions.md`](references/omp-rpc-functions.md) · [`omp-speedtests.md`](references/omp-speedtests.md) — eval tool & loopback bridge, `omp_rpc` Python SDK, model speed benchmarks.
-- [`omp-hindsight.md`](references/omp-hindsight.md) · [`hindsight-memorybank.md`](references/hindsight-memorybank.md) — Hindsight memory plane (retired fallback; primary is omp's internal Mnemopi store).
+- [**`docs/USAGE.md`**](docs/USAGE.md) — Operational guide, repo layout, agent roster, skills, and slash commands.
+- [**`docs/HOST_TOPOLOGY.md`**](docs/HOST_TOPOLOGY.md) — Linux host topology, data-home contract, canonical port map, VRAM allocation map, Pulse jobs & `lifeos-workflows-tick`.
+- [**`docs/LIFEOS_OMP_ARCHITECTURE.md`**](docs/LIFEOS_OMP_ARCHITECTURE.md) — LifeOS-on-OMP architecture, `OmpHooksBridge.ts`, `claude-shim.py`, guard enforcement, web verification, and upgrade history.
+- [**`docs/LIFEOS_UPGRADE_RUNBOOK.md`**](docs/LIFEOS_UPGRADE_RUNBOOK.md) — Step-by-step LifeOS payload upgrade procedure and overlay diffing.
+- [**`docs/OMP_RUNTIME.md`**](docs/OMP_RUNTIME.md) — `omp` 19.1.1+ runtime configuration, prompt assembly, `eval` loopback bridge, and `omp_rpc` Python SDK.
+- [**`docs/MEMORY_AND_BENCHMARKS.md`**](docs/MEMORY_AND_BENCHMARKS.md) — Mnemopi long-term memory, retired Hindsight fallback, and model speed benchmarks.
+- [**`docs/TODO.md`**](docs/TODO.md) — Research backlog, candidate models, MCP servers, and skills.
 

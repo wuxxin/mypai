@@ -1,0 +1,30 @@
+site_name: MyPAI Infrastructure
+
+theme:
+  name: material
+
+plugins:
+  - search
+  - include-markdown
+
+markdown_extensions:
+  - smarty
+  - toc:
+      permalink: "#"
+  - pymdownx.magiclink
+  - pymdownx.snippets
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+
+nav:
+  - Overview: index.md
+  - Operational Guide: USAGE.md
+  - Host Topology & Ports: HOST_TOPOLOGY.md
+  - LifeOS on OMP Architecture: LIFEOS_OMP_ARCHITECTURE.md
+  - LifeOS Upgrade Runbook: LIFEOS_UPGRADE_RUNBOOK.md
+  - OMP Runtime & SDK: OMP_RUNTIME.md
+  - Memory & Benchmarks: MEMORY_AND_BENCHMARKS.md
+  - Backlog & TODO: TODO.md
