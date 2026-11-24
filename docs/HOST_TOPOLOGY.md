@@ -42,7 +42,7 @@ All local services use unprivileged ports in **`20000`–`29000`** (below Linux'
 | ---: | :--- | :--- | :--- |
 | `31337` | Pulse Dashboard (`bun`, `omp.service`) | Active | LifeOS dashboard, observability, job runner |
 | `21080` | `local-router` | Active | Unified OpenAI-compatible gateway |
-| `20080` | `local-chat` (`llama-server`) | Active | Chat & vision GGUF (`qwen3.8-flash-next` / `qwen3.6-35B-A3B`) |
+| `20080` | `local-chat-strata` (`strata-engine`) | Active | Chat & vision MoE (`qwen3.8-flash-next` via Strata HIP; `qwen3.6-35B-A3B` fallback) |
 | `20082` | `local-embedding` (`llama-server`) | Active | `Qwen3-Embedding-0.6B` (32K ctx, 6×8K parallel) |
 | `20086` | `local-rerank` (`llama-server`/TEI) | Disabled | `Qwen3-Reranker-0.6B` / `ettin-reranker-400m-v1` |
 | `20090` | `local-speech-to-text` (`whisper-server`) | Active | `ggml-large-v3-turbo-q5_0` |
