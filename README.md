@@ -1,4 +1,4 @@
-# mypai — a private, local-first **Personal Artificial Intelligence (PAI) infrastructure**
+# mypai — a private, local-first **Personal AI Assistant**
 
 - **LifeOS** — Intent engineering platform and DA (Digital Assistant) system that articulates done, hill-climbs from current state to ideal state, and verifies claims via tool evidence.
 - **Oh-My-Pi (`omp`)** — High-performance agent execution harness with native tool orchestration, subagents, and extensibility.
@@ -11,7 +11,7 @@
 
 1. **Local Inference & Sandboxing (`submodules/agents-shared/`)**:
    - `local-router` on port `:21080` (OpenAI-compatible unified router for chat, embedding, rerank, vision, stt, tts, imagegen).
-   - `sandbox-ctl` script for bubblewrap / systemd cgroup sandboxing and launcher generation using `omp.env`.
+   - `sandbox-ctl` script for bubblewrap / systemd cgroup sandboxing and harness launcher for generation using `omp.env`.
 
 2. **Agent Harness (`omp/agent/`)**:
    - Base configuration (`config.yml`, `models.yml`, `lsp.json`).

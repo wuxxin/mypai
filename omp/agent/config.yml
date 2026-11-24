@@ -2,40 +2,42 @@ providers:
   webKeyless: true   # paid/keyless aux fallbacks; localhost-router policy (omp >=18.22)
   maxInFlightRequests:
     llama.cpp: 2
-    google-antigravity: 6
+    antigravity-cli: 2   # one agy child serves a session; ACP tool turns cap at 180s
     deepseek: 4
     anthropic: 2
   webSearchOrder:
     []
   imageOrder:
     []
+# Subscription access to Google runs through `antigravity-cli` (omp drives Google's own `agy acp` over ACP, auth stays inside agy)
+# NOT the paused direct-OAuth `google-antigravity`: Antigravity ToS clause 6 bans third-party product sign-in
+# Deliberately left empty — unpausing re-arms the prohibited access path, and a second flag is permanent.
+# No `auth.accountPolicies` rows: the quota-reserve layer is bound to providers that report windows,
+# which is only google-antigravity; ACP reports context occupancy alone (no /usage rows for it).
 auth:
   unpausedProviders: []
-  #   - google-antigravity
-  # accountPolicies:
-  #   - provider: google-antigravity
-  #     account: x.y@z
-  #     reservePct: 10        # enter reserve when measured quota usage >= 90%
-  #     reclaimAbovePct: 20   # auto-return pinned sessions once >20% quota is left after window reset
+# Model ids verified against the installed catalog (oh-my-pi-git 19.1.1.r184.g0aefd54,
+# packages/catalog/src/compat/rules/providers/antigravity-cli.kdl; agy 1.5.12 roster).
+# ACP has no flash-lite tier: the smol roles now cost real subscription quota — watch them.
 modelRoles:
-  default: google-antigravity/gemini-3.8-flash
-  smol: google-antigravity/gemini-3.1-flash-lite
-  task: google-antigravity/gemini-3.8-flash
-  slow: google-antigravity/claude-opus-4-6:high
-  plan: google-antigravity/gemini-3.1-pro:high
+  default: antigravity-cli/gemini-4-carbon
+  smol: antigravity-cli/gemini-3.8-flash
+  task: antigravity-cli/gemini-4-carbon
+  slow: antigravity-cli/claude-opus-5-5:high
+  plan: antigravity-cli/gemini-4-neon:xhigh
   review: deepseek/deepseek-v4-pro:low
-  scout: google-antigravity/gemini-3.1-flash-lite
-  patcher: google-antigravity/gemini-3.1-flash-lite
-  debugger: google-antigravity/claude-opus-4-6:high
-  security-reviewer: google-antigravity/claude-opus-4-6:high
-  orchestrator: google-antigravity/gemini-3.8-flash
-  advisor: google-antigravity/gemini-3.8-flash:low
-  vision: google-antigravity/gemini-3.8-flash
-  tiny: google-antigravity/gemini-3.1-flash-lite
+  scout: antigravity-cli/gemini-3.8-flash
+  patcher: antigravity-cli/gemini-3.8-flash
+  debugger: antigravity-cli/claude-opus-5-5:high
+  security-reviewer: antigravity-cli/claude-opus-5-5:high
+  orchestrator: antigravity-cli/gemini-4-carbon
+  advisor: antigravity-cli/gemini-3.8-flash:low
+  vision: antigravity-cli/gemini-4-carbon
+  tiny: antigravity-cli/gemini-3.8-flash
   image: llama.cpp/z-image-turbo
   speech: llama.cpp/kokoro
   dictation: llama.cpp/whisper-1
-  judge: google-antigravity/gemini-3.8-flash
+  judge: antigravity-cli/gemini-4-carbon
 symbolPreset: unicode
 theme:
   dark: titanium
