@@ -95,6 +95,7 @@ To perform research or execute tasks without recording shell command history, in
 ### 1. Dedicated Wrappers (`bin/ephemeral-omp` & `bin/ephemeral-lifeos`)
 
 `bin/ephemeral-omp` and `bin/ephemeral-lifeos` (copied to `~/.local/bin/` by `omp.env`) automate ephemeral containment:
+
 - Sets `HISTFILE=/dev/null`
 - Allocates an isolated scratch directory in `/tmp` for `PI_CODING_AGENT_DIR`
 - Symlinks static configs (`config.yml`, `models.yml`, `lsp.json`, `mcp.json`, `extensions/`, `skills/`, `tools/`, `commands/`, `prompts/`, `APPEND_SYSTEM.md`, `RULES.md`) so existing models, tools, and append instructions remain fully active
