@@ -1,0 +1,9 @@
+/* Hide right "On this page" TOC sidebar (desktop & mobile) and widen content grid. */
+.md-sidebar--secondary,
+.md-sidebar--secondary:not([hidden]) {
+  display: none;
+}
+
+.md-grid {
+  max-width: 90rem;
+}

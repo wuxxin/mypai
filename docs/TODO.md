@@ -44,6 +44,11 @@
 - https://github.com/mvanhorn/last30days-skill
 - `printing-press-library` skills: `amazon-orders`, `archive-is`, `booking-com`, `domain-goat`, `trendhunter`, `wikipedia`
 
+## Documentation / MkDocs → Zensical Migration
+- **Material for MkDocs EOL:** May 5, 2027. Maintained successor: **Zensical** (https://zensical.org/docs/compatibility/mkdocs/migration/).
+- **Status (tested `zensical 0.1.3`):** Builds `mkdocs.yml` cleanly in strict mode (`0.21s`, 0 warnings); Mermaid, search, and `docs/stylesheets/extra.css` (hidden right TOC + `90rem` `.md-grid`) all work out of the box.
+- **Why staying on MkDocs Material for now:** Zensical `0.1.3`'s built-in `include-markdown` adapter translates tags to `pymdownx.snippets` and ignores `rewrite-relative-urls`, leaving `docs/...` links inside `../README.md` (included by `docs/index.md`) as `href="docs/..."` (404 on the generated homepage). Revisit once Zensical supports relative URL rewriting or if `docs/index.md` is decoupled from `README.md`.
+
 ## Plugin Marketplace Notes
 ```text
 /plugin marketplace add anthropics/claude-plugins-official

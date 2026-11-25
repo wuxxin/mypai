@@ -1,6 +1,6 @@
 # LifeOS Distribution Upgrade Runbook
 
-Repeatable procedure for upgrading the **LifeOS payload** (`~/.claude/LIFEOS`) on this Linux `omp` host (proven on v7.40.4 → v8.761.0). For `omp` harness upgrades, see [`submodules/aur-packages/oh-my-pi-git/README.md`](../submodules/aur-packages/oh-my-pi-git/README.md) and [`LIFEOS_OMP_ARCHITECTURE.md`](LIFEOS_OMP_ARCHITECTURE.md).
+Repeatable procedure for upgrading the **LifeOS payload** (`~/.claude/LIFEOS`) on this Linux `omp` host (proven on v7.40.4 → v8.761.0). For `omp` harness upgrades, see `submodules/aur-packages/oh-my-pi-git/README.md` and [`LIFEOS_OMP_ARCHITECTURE.md`](LIFEOS_OMP_ARCHITECTURE.md).
 
 ---
 

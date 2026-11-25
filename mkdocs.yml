@@ -3,6 +3,9 @@ site_name: MyPAI Infrastructure
 theme:
   name: material
 
+extra_css:
+  - stylesheets/extra.css
+
 plugins:
   - search
   - include-markdown
