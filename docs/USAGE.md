@@ -25,10 +25,12 @@ Operational guide for **MyPAI** — running **Oh-My-Pi (`omp` 19.1.1+)** as the 
 ```bash
 lifeos
 ```
+
 `bin/lifeos` exports `OMP_VOICE=0`, `LIFEOS_DIR`, `LIFEOS_CWD`, and `LIFEOS_CONFIG_DIR`, then execs `omp --cwd "$LIFEOS_CWD"` with the concatenated LifeOS system prompt + `~/.omp/agent/LIFEOS_OMP_APPEND_SYSTEM.md`. Standard `omp` flags pass through (`--offline`, `--no-judge`, `--resume`, etc.).
 
 ### Ephemeral Sessions (Zero History & Transcripts)
 `bin/ephemeral-omp` and `bin/ephemeral-lifeos` run with `HISTFILE=/dev/null`, a disposable `/tmp` `PI_CODING_AGENT_DIR`, `--no-session`, `--no-title`, `--no-judge`, `--no-spotlight`, and `OMP_EPHEMERAL=1` (rendering the `⚡ EPHEMERAL` badge), cleaning up `/tmp` on exit:
+
 ```bash
  ephemeral-omp
  ephemeral-omp -p "One-shot query"
@@ -40,7 +42,10 @@ lifeos
 Install `bin/sandboxed-omp` to `~/.local/bin/sandboxed-omp` and symlink `lifeos`, `ephemeral-omp`, and `ephemeral-lifeos` to it so host terminals, scripts, and desktop launchers transparently enter the `omp` sandbox.
 
 ### Managing Pulse (`:31337`)
-Pulse runs supervised as the **primary service** of the systemd user unit `~/.config/systemd/user/omp.service` (`Restart=always`, configured via `LAUNCHER_SERVICE_CMD` in `omp.env`). Periodic jobs run as `[[job]]` entries in `USER/CONFIG/PULSE.user.toml` (or via the single `workflows-clock` job calling `lifeos-workflows-tick`):
+Pulse runs supervised as the **primary service** of the systemd user unit `~/.config/systemd/user/omp.service` (`Restart=always`, configured via `LAUNCHER_SERVICE_CMD` in `omp.env`). 
+
+Periodic jobs run as `[[job]]` entries in `USER/CONFIG/PULSE.user.toml` (or via the single `workflows-clock` job calling `lifeos-workflows-tick`):
+
 ```bash
 systemctl --user status omp.service
 # Dashboard: http://localhost:31337
@@ -80,14 +85,17 @@ Delegate isolated subtasks via `task(agent: "...")` or `@<role>`:
 ## 4. Skills & Custom Slash Commands
 
 ### Core Engineering Skills (`omp/agent/skills/`)
+- `german` — Natural German prose style.
+- `lilac`, `archlinux-pkgbuild` — Arch Linux packaging and Lilac build automation.
 - `systematic-debugging` — Reproduce → Isolate → Hypothesize → Fix & Verify.
 - `review-work` — Multi-pass review rubric (P0–P3).
-- `lilac`, `archlinux-pkgbuild` — Arch Linux packaging and Lilac build automation.
 - `system-prompts` — Prompt and agent-spec authoring.
 - `arbor` — Graph-native code intelligence (`arbor --help` / `mcp__arbor__*`).
 - `openadapt` — Headless browser DOM inspection & automation (`openadapt --help` / `mcp__openadapt__*`).
-- `german` — Natural German prose style.
-- **Plugin bundles (`omp/agent/plugins/`):** `diagram-design-plugin`, `modern-web-guidance-plugin` (`modern-web-guidance`, `chrome-extensions`).
+
+### Plugin bundles (`omp/agent/plugins/`)
+- `diagram-design-plugin`, 
+- `modern-web-guidance-plugin` 
 
 ### Slash Commands (`omp/agent/commands/` & Built-ins)
 - `/debug`, `/patch`, `/scout`, `/security-review`, `/source-review`, `/writer` — Custom specialist workflow commands.

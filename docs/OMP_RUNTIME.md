@@ -8,6 +8,7 @@ Reference for `omp`'s runtime configuration layering, prompt assembly, `eval` pe
 
 ### Config Files (`~/.omp/agent/` ⊕ `<repo>/.omp/`)
 Project `<repo>/.omp/config.yml` deep-merges over `~/.omp/agent/config.yml` (array rules like `bashInterceptor.patterns` prepend). Key host settings in [`omp/agent/config.yml`](../omp/agent/config.yml):
+
 - **`tools.commands` / `tools.commandDocs: inline`** (`19.1.0+`, replaced `tools.xdev*`): mounts discoverable tools as bash commands (`<tool> --help`, `<tool> <args>`, docs via `help://<tool>/<topic>`).
 - **`computer.takeover: fallback`** (`19.1.1+`, replaced `computer.backgroundFallback`).
 - **`mcp.shared: true` / `mcp.idleStopMinutes: 5`** (`19.1.0+` defaults): per-user `omp` daemon hosts MCP servers with lazy startup and cached discovery; `/mcp list` and `omp ps` inspect live state.
@@ -73,6 +74,7 @@ async with RpcClient(cwd="/path/to/repo") as client:
 ## 4. Active Long-Term Memory: Mnemopi
 
 Primary long-term memory is `omp`'s built-in **Mnemopi** store (`memory.backend: mnemopi` in [`omp/agent/config.yml`](../omp/agent/config.yml)):
+
 - **Scoping:** `per-project-tagged` (project-local writes + global recall visibility).
 - **Automatic hooks:** `autoRetain: false`, `autoRecall: false` (normal turns stay free of automatic memory traffic; invoke `recall`, `retain`, `reflect`, or `/learn` explicitly).
 - **Graph & linking:** `polyphonicRecall: true`, `proactiveLinking: true`.

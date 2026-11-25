@@ -99,6 +99,7 @@ All periodic LifeOS clocks run inside the supervised `omp.service` Pulse daemon 
 
 ### Adopting Native LifeOS `WORKFLOWS` Without Modifying Host `systemd`
 To run upstream declarative `LIFEOS/WORKFLOWS` definitions with **zero** host `systemd` unit generation and minimal upstream diff:
+
 1. `omp.env` installs [`bin/lifeos-workflows-tick.ts`](../bin/lifeos-workflows-tick.ts) to `~/.local/bin/lifeos-workflows-tick`.
 2. Add **one** 1-minute clock job to `USER/CONFIG/PULSE.user.toml`:
    ```toml
@@ -115,6 +116,7 @@ To run upstream declarative `LIFEOS/WORKFLOWS` definitions with **zero** host `s
 ## 7. Doctor Declines & LifeOS Capability Status
 
 Declined in `USER/MEMORY/STATE/capabilities.json` (gitignored, disk-local):
+
 - `codex` (needs OpenAI login; local models handle audits), `cloudflare` (no `CLOUDFLARE_API_TOKEN`), `fabric` (`-y` fixCmd is macOS-only; patterns run natively via bun), `interceptor` (macOS `.pkg` only; replaced by `omp` internal `browser` + Chrome native messaging host).
 - Active subsystems: Pulse, Conduit, Vigil (records only, `VIGIL_SEND=off`), Observability, Hooks (`OmpHooksBridge`), Memory (Mnemopi), Router (`:21080`), Algorithm/ISA/Assay, Skills, Config/Sessions.
 - Inactive/macOS-only: `pulse-menubar`, iMessage/Tex, HealthKit, Conduit `appFocus` (requires X11/Wayland socket pass-through), Bunker monitor (maintainer-private; `DeployRegistrationGate` ported).
