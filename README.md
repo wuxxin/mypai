@@ -9,20 +9,20 @@
 
 ## Core System Components
 
-1. **Local Inference & Sandboxing (`submodules/agents-shared/`)**:
-   - `local-router` on port `:21080` (OpenAI-compatible unified router for chat, embedding, rerank, vision, stt, tts, imagegen).
-   - `sandbox-ctl` script for bubblewrap / systemd cgroup sandboxing and harness launcher for generation using `omp.env`.
-2. **Agent Harness (`omp/agent/`)**:
-   - Base configuration (`config.yml`, `models.yml`, `lsp.json`).
-   - Specialist agent roster (`agents/orchestrator.md`, `scout.md`, `debugger.md`, `reviewer.md`, `security-reviewer.md`, `task.md`, `writer.md`, `patcher.md`, `librarian.md`, `designer.md`).
-   - Engineering skills (`systematic-debugging`, `review-work`, `lilac`, `archlinux-pkgbuild`, `system-prompts`), MCP-backed tool-command skills (`arbor` code-graph intelligence, `openadapt` browser verification), the `german` language-style skill, and plugin bundles (`diagram-design-plugin`, `modern-web-guidance-plugin`).
-   - Claude Code hooks bridge extension (`extensions/OmpHooksBridge.ts`).
-3. **LifeOS Integration (`~/.omp/LIFEOS` via `~/.claude` symlink)**:
-   - Primary immediate engineering effort: layering LifeOS into OMP (basically working, actively undergoing adjustments).
-   - Private data repo of record in `~/agent-private/lifeos` (v8 layout: `USER/` with `MEMORY/` under it, single-file `TELOS.md`; `LIFEOS_CONFIG_DIR` exported by the launcher).
-   - Pulse dashboard on port `:31337`, supervised as the primary service of the systemd user unit `~/.config/systemd/user/omp.service` (`LAUNCHER_SERVICE_CMD` in `omp.env`; periodic jobs run as `[[job]]` entries in `USER/CONFIG/PULSE.user.toml` or via `bin/lifeos-workflows-tick.ts`).
-   - `OmpHooksBridge.ts` translating Claude Code hook events (`SessionStart`, `UserPromptSubmit`, `PreToolUse`, `PostToolUse`/`PostToolUseFailure`, `Stop`, `SessionEnd`, `PermissionRequest`) for OMP, with incremental transcript mirroring under `~/.claude/lifeos-bridge-transcripts/` and live per-session `session_id` isolation.
-   - Utility inference compatibility via [`bin/claude-shim.py`](bin/claude-shim.py) (documented in [`docs/LIFEOS_OMP_ARCHITECTURE.md`](docs/LIFEOS_OMP_ARCHITECTURE.md)).
+- **Local Inference & Sandboxing (`submodules/agents-shared/`)**:
+    - `local-router` on port `:21080` (OpenAI-compatible unified router for chat, embedding, rerank, vision, stt, tts, imagegen).
+    - `sandbox-ctl` script for bubblewrap / systemd cgroup sandboxing and harness launcher for generation using `omp.env`.
+- **Agent Harness (`omp/agent/`)**:
+    - Base configuration (`config.yml`, `models.yml`, `lsp.json`).
+    - Specialist agent roster (`agents/orchestrator.md`, `scout.md`, `debugger.md`, `reviewer.md`, `security-reviewer.md`, `task.md`, `writer.md`, `patcher.md`, `librarian.md`, `designer.md`).
+    - Engineering skills (`systematic-debugging`, `review-work`, `lilac`, `archlinux-pkgbuild`, `system-prompts`), MCP-backed tool-command skills (`arbor` code-graph intelligence, `openadapt` browser verification), the `german` language-style skill, and plugin bundles (`diagram-design-plugin`, `modern-web-guidance-plugin`).
+    - Claude Code hooks bridge extension (`extensions/OmpHooksBridge.ts`).
+- **LifeOS Integration (`~/.omp/LIFEOS` via `~/.claude` symlink)**:
+    - Primary immediate engineering effort: layering LifeOS into OMP (basically working, actively undergoing adjustments).
+    - Private data repo of record in `~/agent-private/lifeos` (v8 layout: `USER/` with `MEMORY/` under it, single-file `TELOS.md`; `LIFEOS_CONFIG_DIR` exported by the launcher).
+    - Pulse dashboard on port `:31337`, supervised as the primary service of the systemd user unit `~/.config/systemd/user/omp.service` (`LAUNCHER_SERVICE_CMD` in `omp.env`; periodic jobs run as `[[job]]` entries in `USER/CONFIG/PULSE.user.toml` or via `bin/lifeos-workflows-tick.ts`).
+    - `OmpHooksBridge.ts` translating Claude Code hook events (`SessionStart`, `UserPromptSubmit`, `PreToolUse`, `PostToolUse`/`PostToolUseFailure`, `Stop`, `SessionEnd`, `PermissionRequest`) for OMP, with incremental transcript mirroring under `~/.claude/lifeos-bridge-transcripts/` and live per-session `session_id` isolation.
+    - Utility inference compatibility via [`bin/claude-shim.py`](bin/claude-shim.py) (documented in [`docs/LIFEOS_OMP_ARCHITECTURE.md`](docs/LIFEOS_OMP_ARCHITECTURE.md)).
 
 ---
 
